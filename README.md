@@ -1,5 +1,12 @@
 # PH Gestión
 
+[![CI](https://github.com/Nanielitow/Propiedad-horizontal/actions/workflows/ci.yml/badge.svg)](https://github.com/Nanielitow/Propiedad-horizontal/actions/workflows/ci.yml)
+![Python 3.12](https://img.shields.io/badge/Python-3.12-1f3a5f?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-async-1f3a5f?logo=fastapi&logoColor=white)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-1f3a5f?logo=nextdotjs&logoColor=white)
+![PostgreSQL + pgvector](https://img.shields.io/badge/PostgreSQL_17-pgvector_·_RLS-1f3a5f?logo=postgresql&logoColor=white)
+![Gemini / OpenAI](https://img.shields.io/badge/IA-Gemini_·_OpenAI-1f3a5f?logo=googlegemini&logoColor=white)
+
 **Gestión documental con IA para edificios y conjuntos residenciales (propiedad horizontal).**
 
 Una plataforma SaaS multi-copropiedad donde la administración sube sus documentos (reglamentos, actas, contratos, pólizas, cotizaciones, incluso escaneados) y obtiene:
