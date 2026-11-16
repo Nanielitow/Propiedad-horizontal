@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     # URL pública del frontend, para los enlaces de los correos
     app_url: str = "http://localhost:3000"
 
+    # Demo pública: restauración nocturna de los datos y límites por red (todos
+    # los visitantes comparten las mismas cuentas demo)
+    demo_mode: bool = False
+
     @model_validator(mode="after")
     def _production_safety(self) -> "Settings":
         """En producción, negarse a arrancar con secretos de ejemplo."""

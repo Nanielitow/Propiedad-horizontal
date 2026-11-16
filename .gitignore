@@ -27,3 +27,6 @@ Thumbs.db
 
 # Worker de pdf.js (se copia desde node_modules en predev/prebuild)
 apps/web/public/pdf.worker.min.mjs
+
+# Secretos de producción (solo existen en el servidor)
+.env.production

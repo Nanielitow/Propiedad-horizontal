@@ -16,6 +16,7 @@ celery_app = Celery(
         "app.workers.tasks.reminders",
         "app.workers.tasks.quotes",
         "app.workers.tasks.minutes",
+        "app.workers.tasks.demo",
     ],
 )
 
@@ -39,6 +40,11 @@ celery_app.conf.update(
         "recordatorios-vencimientos": {
             "task": "deadlines.send_reminders",
             "schedule": crontab(hour=7, minute=0),
+        },
+        # Solo actúa con DEMO_MODE=true: deja la demo pública como nueva cada noche
+        "reinicio-demo": {
+            "task": "demo.reset",
+            "schedule": crontab(hour=4, minute=0),
         },
     },
 )

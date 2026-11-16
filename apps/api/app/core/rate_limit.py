@@ -43,6 +43,12 @@ SEARCH_PER_MINUTE = Limit("search-min", 60, 60, "Demasiadas búsquedas seguidas.
 UPLOADS_PER_HOUR = Limit("upload-hour", 60, 3_600, "Alcanzó el límite de subidas por hora.")
 # Tareas de IA costosas: por edificio (no por usuario) para acotar el gasto total
 AI_JOBS_PER_DAY = Limit("ai-jobs-day", 40, 86_400, "La copropiedad alcanzó el límite diario de análisis con IA.")
+# Demo pública: todos comparten las mismas cuentas, así que un límite por usuario
+# lo agotaría un solo visitante para todos. Se limita además por red (IP).
+DEMO_ASK_PER_IP_DAY = Limit("demo-ask-ip", 40, 86_400, "La demo pública permite 40 preguntas al día por visitante.")
+DEMO_UPLOADS_PER_IP_DAY = Limit(
+    "demo-upload-ip", 10, 86_400, "La demo pública permite 10 subidas al día por visitante."
+)
 LOGIN_PER_ACCOUNT = Limit("login-acct", 10, 900, "Demasiados intentos de inicio de sesión.")
 LOGIN_PER_IP = Limit("login-ip", 50, 900, "Demasiados intentos de inicio de sesión desde esta red.")
 
@@ -81,6 +87,14 @@ async def enforce(request: Request, limit: Limit, subject: str) -> None:
             detail=f"{limit.message} Intente de nuevo en {_humanize(retry_after)}.",
             headers={"Retry-After": str(retry_after)},
         )
+
+
+async def enforce_demo(request: Request, limit: Limit) -> None:
+    """Límite adicional por visitante, solo cuando la app corre como demo pública."""
+    from app.core.config import get_settings
+
+    if get_settings().demo_mode:
+        await enforce(request, limit, client_ip(request))
 
 
 def client_ip(request: Request) -> str:

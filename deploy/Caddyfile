@@ -1,0 +1,27 @@
+# Caddy: HTTPS automático (Let's Encrypt) y proxy hacia Next.js.
+# SITE_ADDRESS = el dominio (p. ej. app.phgestion.com). Con "localhost" usa un
+# certificado local, útil para probar el stack de producción en su equipo.
+{$SITE_ADDRESS} {
+	# Solo se publica el frontend (y su BFF /api/*). La API de FastAPI no es
+	# accesible desde internet: vive en la red interna de Docker.
+	reverse_proxy web:3000 {
+		# El chat responde por SSE: reenviar cada fragmento sin acumularlo
+		flush_interval -1
+	}
+
+	header {
+		# Solo HTTPS durante un año (el navegador recuerda no usar HTTP)
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	# Subidas: los PDF van directo a R2, aquí solo pasan JSON pequeños
+	request_body {
+		max_size 2MB
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

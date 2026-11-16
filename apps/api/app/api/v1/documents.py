@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import AdminCtx, DbSession, TenantContext, TenantCtx
 from app.core.config import get_settings
-from app.core.rate_limit import UPLOADS_PER_HOUR, enforce
+from app.core.rate_limit import DEMO_UPLOADS_PER_IP_DAY, UPLOADS_PER_HOUR, enforce, enforce_demo
 from app.models import Document, ProcessingJob
 from app.models.enums import (
     PUBLIC_BY_DEFAULT,
@@ -112,6 +112,7 @@ async def _enqueue_ingestion(db: AsyncSession, ctx: TenantContext, doc: Document
 @router.post("/uploads", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
 async def create_upload(body: UploadRequest, ctx: AdminCtx, db: DbSession, request: Request) -> UploadResponse:
     await enforce(request, UPLOADS_PER_HOUR, str(ctx.user_id))
+    await enforce_demo(request, DEMO_UPLOADS_PER_IP_DAY)
     settings = get_settings()
     if body.size_bytes > settings.max_upload_bytes:
         raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"Máximo {settings.max_upload_mb} MB por archivo")

@@ -90,6 +90,19 @@ Atajos útiles: `npm run test`, `npm run logs`, `npm run db:psql`, `npm run rese
 
 ---
 
+## Producción
+
+La aplicación se despliega en **un VPS con Docker** (unos 5–7 USD al mes):
+
+- **Caddy** sirve la app por HTTPS con certificado automático y es lo único expuesto a internet. La API, Postgres y Redis viven en la red interna.
+- **GitHub Actions** publica las imágenes en GHCR y despliega por SSH en cada *push* a `main` que pasa el CI.
+- **Cloudflare R2** guarda los archivos y las copias diarias de la base de datos; **Resend** envía los correos.
+- **Modo demo pública:** límites por visitante, aviso visible y **restauración nocturna** de los datos desde una instantánea, en menos de un segundo y sin llamadas a la IA.
+
+Guía completa, desde comprar el dominio hasta pasar a uso real: **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
+---
+
 ## Arquitectura
 
 ```mermaid
@@ -272,8 +285,10 @@ apps/
     src/app/api/       BFF: login, logout, renovación y proxy hacia la API
     src/components/    chat · documents · deadlines · quotes · minutes · pdf-viewer · layout
 infra/                 Inicialización de Postgres y configuración de SeaweedFS
-docs/                  ARCHITECTURE.md (40+ decisiones de diseño) y capturas
+deploy/                Caddyfile y scripts del servidor: preparación, secretos, despliegue, copias
+docs/                  ARCHITECTURE.md (40+ decisiones de diseño), DEPLOY.md y capturas
 docker-compose.yml     Entorno local completo
+docker-compose.prod.yml  Producción: imágenes de GHCR, Caddy + HTTPS, solo los puertos 80/443
 ```
 
 La explicación de cada decisión de diseño, con sus pros y contras, está en **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.

@@ -1,0 +1,164 @@
+# =============================================================================
+#  PH Gestión · Producción (un VPS con Docker)
+#
+#  En el servidor:  docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+#  (deploy/deploy.sh lo hace por usted: ver docs/DEPLOY.md)
+#
+#  Diferencias con el entorno de desarrollo:
+#   - Imágenes ya construidas por GitHub Actions (GHCR): el servidor no compila.
+#   - Solo Caddy publica puertos (80/443, HTTPS automático). API, Postgres y
+#     Redis viven en la red interna: la API NO es accesible desde internet,
+#     solo el BFF de Next.js habla con ella.
+#   - Archivos en Cloudflare R2 y correo en un proveedor SMTP real (Resend).
+#   - Migraciones como paso previo: la API no arranca si fallan.
+#   - Límites de memoria y rotación de logs para no llenar el disco.
+# =============================================================================
+
+name: ph-gestion
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-api-image: &api-image
+  image: ${API_IMAGE:-ghcr.io/nanielitow/propiedad-horizontal-api}:${IMAGE_TAG:-latest}
+  env_file: .env.production
+  environment:
+    ENVIRONMENT: production
+  logging: *logging
+  restart: unless-stopped
+
+services:
+  # ---------------------------------------------------------------------------
+  # Entrada pública: HTTPS con certificado de Let's Encrypt automático
+  # ---------------------------------------------------------------------------
+  caddy:
+    image: caddy:2.10.2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificados: si se pierden, se emiten de nuevo
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    logging: *logging
+    restart: unless-stopped
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/nanielitow/propiedad-horizontal-web}:${IMAGE_TAG:-latest}
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      api:
+        condition: service_healthy
+    mem_limit: 512m
+    logging: *logging
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Backend
+  # ---------------------------------------------------------------------------
+  migrate:
+    <<: *api-image
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *api-image
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    mem_limit: 768m
+
+  worker:
+    <<: *api-image
+    # OCR y embeddings consumen memoria: 2 procesos y reinicio de cada proceso
+    # tras 50 tareas para liberar la memoria que deja PyMuPDF/Tesseract
+    command: ["celery", "-A", "app.workers.celery_app", "worker", "-Q", "ingestion,default", "--concurrency", "2", "--max-tasks-per-child", "50", "--loglevel", "INFO"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    mem_limit: 1536m
+
+  beat:
+    <<: *api-image
+    command: ["celery", "-A", "app.workers.celery_app", "beat", "--loglevel", "INFO", "--schedule", "/tmp/celerybeat-schedule"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    mem_limit: 256m
+
+  # ---------------------------------------------------------------------------
+  # Datos (sin puertos publicados)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    shm_size: 256mb
+    mem_limit: 1g
+    logging: *logging
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    # Contraseña aunque no tenga puertos públicos: defensa en profundidad
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\" --maxmemory 192mb --maxmemory-policy noeviction"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 256m
+    logging: *logging
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

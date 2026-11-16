@@ -90,6 +90,35 @@ class S3Storage:
     def delete(self, key: str) -> None:
         self._internal.delete_object(Bucket=self.bucket, Key=key)
 
+    def list_keys(self, prefix: str) -> list[str]:
+        keys: list[str] = []
+        for page in self._internal.get_paginator("list_objects_v2").paginate(Bucket=self.bucket, Prefix=prefix):
+            keys.extend(obj["Key"] for obj in page.get("Contents", []))
+        return keys
+
+    def delete_many(self, keys: list[str]) -> None:
+        for i in range(0, len(keys), 1000):  # límite de DeleteObjects por llamada
+            batch = [{"Key": k} for k in keys[i : i + 1000]]
+            self._internal.delete_objects(Bucket=self.bucket, Delete={"Objects": batch, "Quiet": True})
+
+    def configure_cors(self, origins: list[str]) -> None:
+        """El navegador sube (PUT) y lee (GET) los PDF directamente con URLs
+        firmadas: el bucket debe permitir esas peticiones desde el dominio de la app."""
+        self._internal.put_bucket_cors(
+            Bucket=self.bucket,
+            CORSConfiguration={
+                "CORSRules": [
+                    {
+                        "AllowedOrigins": origins,
+                        "AllowedMethods": ["GET", "PUT", "HEAD"],
+                        "AllowedHeaders": ["content-type", "range"],
+                        "ExposeHeaders": ["ETag", "Content-Length", "Content-Range", "Accept-Ranges"],
+                        "MaxAgeSeconds": 3600,
+                    }
+                ]
+            },
+        )
+
 
 @lru_cache
 def get_storage() -> S3Storage:

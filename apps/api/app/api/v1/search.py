@@ -26,7 +26,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import DbSession, TenantContext, TenantCtx
 from app.core.config import get_settings
-from app.core.rate_limit import ASK_PER_DAY, ASK_PER_MINUTE, SEARCH_PER_MINUTE, enforce
+from app.core.rate_limit import (
+    ASK_PER_DAY,
+    ASK_PER_MINUTE,
+    DEMO_ASK_PER_IP_DAY,
+    SEARCH_PER_MINUTE,
+    enforce,
+    enforce_demo,
+)
 from app.db.rls import set_rls_context
 from app.db.session import SessionLocal
 from app.models import Conversation, Message, Tenant
@@ -114,6 +121,7 @@ async def search(
 async def ask(body: AskRequest, ctx: TenantCtx, db: DbSession, request: Request) -> StreamingResponse:
     await enforce(request, ASK_PER_MINUTE, str(ctx.user_id))
     await enforce(request, ASK_PER_DAY, str(ctx.user_id))
+    await enforce_demo(request, DEMO_ASK_PER_IP_DAY)
     started = time.perf_counter()
     settings = get_settings()
     try:

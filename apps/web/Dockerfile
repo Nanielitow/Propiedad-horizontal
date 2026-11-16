@@ -20,6 +20,9 @@ CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
 # prod
 # ---------------------------------------------------------------------------
 FROM base AS builder
+# Las variables NEXT_PUBLIC_* se incrustan en el JavaScript del navegador AL COMPILAR
+ARG NEXT_PUBLIC_DEMO_MODE=false
+ENV NEXT_PUBLIC_DEMO_MODE=$NEXT_PUBLIC_DEMO_MODE
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
