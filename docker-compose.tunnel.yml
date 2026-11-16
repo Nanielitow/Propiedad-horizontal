@@ -1,0 +1,65 @@
+# =============================================================================
+#  Demo pública desde este computador con Cloudflare Tunnel (costo $0)
+#
+#  npm run demo:up     -> levanta todo y publica la app en internet
+#  npm run demo:down   -> deja de publicarla (los datos se conservan)
+#
+#  Se combina con docker-compose.yml (mismos datos que el entorno local):
+#    https://app.propiedadhorizontal.app       -> web-demo:3000  (la app)
+#    https://archivos.propiedadhorizontal.app  -> seaweedfs:8333 (PDF, URLs firmadas)
+#  Las dos rutas se configuran en Cloudflare: Zero Trust -> Networks -> Tunnels.
+#  Requiere CLOUDFLARE_TUNNEL_TOKEN en .env (nunca en Git).
+# =============================================================================
+
+x-demo-env: &demo-env
+  DEMO_MODE: "true"   # límites por visitante y aviso de demo
+  APP_URL: https://app.propiedadhorizontal.app
+  CORS_ORIGINS: http://localhost:3000,https://app.propiedadhorizontal.app
+  # Las URLs firmadas de los PDF deben apuntar a una dirección pública
+  S3_PUBLIC_ENDPOINT_URL: https://archivos.propiedadhorizontal.app
+
+services:
+  api:
+    environment: *demo-env
+  worker:
+    environment: *demo-env
+  beat:
+    environment: *demo-env
+
+  seaweedfs:
+    command:
+      - server
+      - -dir=/data
+      - -s3
+      - -s3.port=8333
+      - -s3.config=/etc/seaweedfs/s3.json
+      - -s3.allowedOrigins=http://localhost:3000,https://app.propiedadhorizontal.app
+      - -master.telemetry=false
+
+  # Frontend compilado para producción (rápido, cookies Secure)
+  web-demo:
+    build:
+      context: ./apps/web
+      target: prod
+      args:
+        NEXT_PUBLIC_DEMO_MODE: "true"
+    image: ph-saas/web:demo
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    ports:
+      - "127.0.0.1:3001:3000"   # prueba local: http://localhost:3001
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Conexión saliente a Cloudflare: no abre puertos en el router
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.7
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Falta CLOUDFLARE_TUNNEL_TOKEN en .env}
+    depends_on:
+      - web-demo
+      - seaweedfs
+    restart: unless-stopped
