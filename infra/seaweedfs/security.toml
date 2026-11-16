@@ -1,0 +1,4 @@
+# Solo desarrollo local. En producción el almacenamiento es Cloudflare R2.
+# Sin esta clave, SeaweedFS 4.x no logra cargar el IAM y deja el S3 SIN autenticación.
+[jwt.filer_signing]
+key = "ph-dev-filer-signing-key-change-me"

@@ -1,0 +1,29 @@
+# Entorno
+.env
+.env*.local
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+celerybeat-schedule*
+
+# Editores / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Worker de pdf.js (se copia desde node_modules en predev/prebuild)
+apps/web/public/pdf.worker.min.mjs

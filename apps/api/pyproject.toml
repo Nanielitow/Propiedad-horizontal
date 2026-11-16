@@ -1,0 +1,72 @@
+[project]
+name = "ph-api"
+version = "0.1.0"
+description = "API y workers del SaaS de Propiedad Horizontal"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  # Web
+  "fastapi[standard]>=0.115",
+  "pydantic-settings>=2.7",
+  # Base de datos
+  "sqlalchemy[asyncio]>=2.0.36",
+  "asyncpg>=0.30",
+  "psycopg[binary]>=3.2",
+  "alembic>=1.14",
+  "pgvector>=0.3.6",
+  # Colas
+  "celery[redis]>=5.4",
+  "redis>=5.2",
+  # Almacenamiento
+  "boto3>=1.35",
+  # Documentos / OCR
+  "pymupdf>=1.25",
+  "ocrmypdf>=16.7",
+  "tiktoken>=0.8",
+  # IA
+  "openai>=1.59",
+  "google-genai>=1.0",
+  # Auth / observabilidad
+  "argon2-cffi>=23.1",
+  "pyjwt>=2.10",
+  "structlog>=24.4",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "testcontainers[postgres]>=4.9",
+  "ruff>=0.9",
+  "mypy>=1.14",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
+# E501: el largo de línea lo gestiona `ruff format`; las líneas que quedan largas son
+# textos (prompts, SQL, HTML de correos) que no conviene partir.
+ignore = ["S101", "E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Patrón estándar de FastAPI: Query()/Depends() como valor por defecto
+extend-immutable-calls = ["fastapi.Query", "fastapi.Depends"]
+
+[tool.ruff.lint.per-file-ignores]
+# Datos de demostración: contraseña de ejemplo intencional
+"app/scripts/*" = ["S105"]
+"tests/*" = ["S105", "S106"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["."]
+markers = ["integration: requiere la base de datos de docker compose"]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]

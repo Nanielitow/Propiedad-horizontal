@@ -1,0 +1,174 @@
+# =============================================================================
+#  PH-SaaS · Entorno de desarrollo local
+#
+#  docker compose up -d --build                 -> infraestructura + api + workers
+#  docker compose --profile full up -d --build  -> además el frontend en contenedor
+#
+#  En Windows se recomienda correr el frontend nativo (npm run web:dev): los
+#  bind mounts de Docker Desktop no propagan eventos de archivos y el hot reload
+#  de Next.js por polling es lento.
+# =============================================================================
+
+name: ph-saas
+
+x-api-common: &api-common
+  build:
+    context: ./apps/api
+    target: dev
+  image: ph-saas/api:dev
+  env_file: .env
+  environment:
+    WATCHFILES_FORCE_POLLING: "true"   # hot reload sobre bind mount en Windows/macOS
+  volumes:
+    - ./apps/api:/app
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    s3-init:
+      condition: service_completed_successfully
+  restart: unless-stopped
+
+services:
+  # ---------------------------------------------------------------------------
+  # Datos
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # S3 compatible local (en producción: Cloudflare R2).
+  # MinIO retiró sus imágenes públicas en 2025; SeaweedFS es Apache 2.0.
+  # Credenciales: infra/seaweedfs/s3.json (deben coincidir con S3_* del .env)
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.53
+    command:
+      - server
+      - -dir=/data
+      - -s3
+      - -s3.port=8333
+      - -s3.config=/etc/seaweedfs/s3.json
+      - -s3.allowedOrigins=${CORS_ORIGINS}
+      - -master.telemetry=false
+    ports:
+      - "8333:8333"   # API S3 (las URLs firmadas apuntan aquí desde el navegador)
+    volumes:
+      - seaweed_data:/data
+      # s3.json (identidades) + security.toml (clave de firma; sin ella el S3 queda abierto)
+      - ./infra/seaweedfs:/etc/seaweedfs:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # Crea el bucket privado (idempotente) y termina
+  s3-init:
+    image: amazon/aws-cli:2.27.0
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${S3_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket "$${S3_BUCKET}" 2>/dev/null
+        || aws --endpoint-url http://seaweedfs:8333 s3 mb "s3://$${S3_BUCKET}"
+    restart: "no"
+
+  # Correo de desarrollo: atrapa los recordatorios y los muestra en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "8025:8025"   # bandeja web
+      - "1025:1025"   # SMTP
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Backend (misma imagen para API, worker y beat)
+  # ---------------------------------------------------------------------------
+  api:
+    <<: *api-common
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  worker:
+    <<: *api-common
+    # Cola "ingestion" (OCR/embeddings, pesada) separada de "default" (extracciones LLM, emails)
+    command: ["celery", "-A", "app.workers.celery_app", "worker", "-Q", "ingestion,default", "--concurrency", "2", "--loglevel", "INFO"]
+
+  beat:
+    <<: *api-common
+    command: ["celery", "-A", "app.workers.celery_app", "beat", "--loglevel", "INFO", "--schedule", "/tmp/celerybeat-schedule"]
+
+  # ---------------------------------------------------------------------------
+  # Frontend (opcional en contenedor)
+  # ---------------------------------------------------------------------------
+  web:
+    profiles: ["full"]
+    build:
+      context: ./apps/web
+      target: dev
+    image: ph-saas/web:dev
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      API_INTERNAL_URL: http://api:8000
+      NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-false}
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules   # node_modules del contenedor (binarios Linux), no los de Windows
+      - /app/.next
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  redis_data:
+  seaweed_data:

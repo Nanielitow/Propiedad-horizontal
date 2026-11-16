@@ -1,0 +1,27 @@
+{
+  "name": "ph-saas",
+  "private": true,
+  "description": "Atajos del monorepo (reemplaza al Makefile; funciona igual en Windows, macOS y Linux)",
+  "scripts": {
+    "up": "docker compose up -d --build",
+    "up:full": "docker compose --profile full up -d --build",
+    "down": "docker compose down",
+    "reset": "docker compose down -v",
+    "logs": "docker compose logs -f api worker beat",
+    "ps": "docker compose ps",
+    "setup": "npm run up && npm run db:migrate && npm run db:seed",
+    "db:migrate": "docker compose exec api alembic upgrade head",
+    "db:seed": "docker compose exec api python -m app.scripts.seed",
+    "db:psql": "docker compose exec postgres psql -U ph_owner -d ph_saas",
+    "samples": "docker compose exec api python -m app.scripts.make_sample_pdfs",
+    "test": "docker compose exec api pytest -q",
+    "test:unit": "docker compose exec api pytest -q tests/unit",
+    "api:shell": "docker compose exec api bash",
+    "worker:ping": "docker compose exec worker celery -A app.workers.celery_app call system.ping",
+    "web:install": "npm --prefix apps/web install",
+    "web:dev": "npm --prefix apps/web run dev",
+    "lint": "docker compose exec api ruff check app tests alembic && docker compose exec api ruff format --check app tests alembic",
+    "test:web": "npm --prefix apps/web run typecheck",
+    "mail": "echo Bandeja de correo de desarrollo: http://localhost:8025"
+  }
+}

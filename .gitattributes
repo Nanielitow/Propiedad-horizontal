@@ -1,0 +1,6 @@
+# Los scripts que se ejecutan dentro de contenedores Linux deben tener LF.
+# Con CRLF (checkout por defecto en Windows) fallan con "bad interpreter".
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.sql text eol=lf

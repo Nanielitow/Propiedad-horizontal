@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1.7
+# Imagen única para API (uvicorn), worker y beat (Celery).
+
+FROM python:3.12-slim-bookworm AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    TIKTOKEN_CACHE_DIR=/opt/tiktoken \
+    PATH="/opt/venv/bin:$PATH"
+
+# Dependencias de sistema para OCR (ocrmypdf -> tesseract + ghostscript)
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      tesseract-ocr tesseract-ocr-spa ghostscript \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:0.5.29 /uv /uvx /bin/
+
+WORKDIR /app
+COPY pyproject.toml uv.lock* ./
+
+# ---------------------------------------------------------------------------
+# dev: incluye dependencias de desarrollo; el código llega por bind mount.
+# El venv vive en /opt/venv para que el bind mount de /app no lo oculte.
+# ---------------------------------------------------------------------------
+FROM base AS dev
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-install-project
+# Pre-descarga el tokenizador (tiktoken lo baja de internet en el primer uso)
+RUN python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# ---------------------------------------------------------------------------
+# prod
+# ---------------------------------------------------------------------------
+FROM base AS prod
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev --no-install-project
+RUN python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
+COPY . .
+RUN useradd --create-home --uid 10001 app && chown -R app /app
+USER app
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers"]

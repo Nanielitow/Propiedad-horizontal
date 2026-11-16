@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint, migraciones, tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.0-pg17
+        env:
+          POSTGRES_USER: ph_owner
+          POSTGRES_PASSWORD: ph_owner_ci
+          POSTGRES_DB: ph_saas
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ph_owner -d ph_saas"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      # Valores de CI (no son secretos reales). Los tests de integración usan el
+      # rol app_user, sujeto a RLS, igual que la API en producción.
+      DATABASE_URL: postgresql+asyncpg://app_user:app_user_ci@localhost:5432/ph_saas
+      SYNC_DATABASE_URL: postgresql+psycopg://app_user:app_user_ci@localhost:5432/ph_saas
+      MIGRATIONS_DATABASE_URL: postgresql+psycopg://ph_owner:ph_owner_ci@localhost:5432/ph_saas
+      REDIS_URL: redis://localhost:6379/0
+      CELERY_BROKER_URL: redis://localhost:6379/1
+      CELERY_RESULT_BACKEND: redis://localhost:6379/2
+      S3_ENDPOINT_URL: http://localhost:8333
+      S3_PUBLIC_ENDPOINT_URL: http://localhost:8333
+      S3_ACCESS_KEY_ID: ci
+      S3_SECRET_ACCESS_KEY: ci
+      S3_BUCKET: ci
+      JWT_SECRET: ci-only-secret-not-used-anywhere-else
+      EMBEDDING_PROVIDER: fake
+      TIKTOKEN_CACHE_DIR: /tmp/tiktoken
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.29"
+          enable-cache: true
+
+      - name: Instalar dependencias
+        run: uv sync --frozen
+
+      - name: Lint y formato
+        run: |
+          uv run ruff check app tests alembic
+          uv run ruff format --check app tests alembic
+
+      - name: Preparar base de datos (extensiones + rol app_user)
+        working-directory: .
+        env:
+          PGHOST: localhost
+          PGPASSWORD: ph_owner_ci
+          POSTGRES_USER: ph_owner
+          POSTGRES_DB: ph_saas
+          APP_DB_USER: app_user
+          APP_DB_PASSWORD: app_user_ci
+        run: |
+          psql -U ph_owner -d ph_saas -v ON_ERROR_STOP=1 -f infra/postgres/init/01-extensions.sql
+          bash infra/postgres/init/02-app-role.sh
+
+      - name: Migraciones
+        run: uv run alembic upgrade head
+
+      - name: Tests (unitarios + RLS contra Postgres real)
+        run: uv run pytest -q
+
+  frontend:
+    name: Frontend (tipos y build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+  docker:
+    name: Imágenes de producción
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir API (target prod)
+        run: docker build --target prod -t ph-api:ci apps/api
+      - name: Construir web (target prod)
+        run: docker build --target prod -t ph-web:ci apps/web

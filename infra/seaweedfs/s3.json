@@ -1,0 +1,11 @@
+{
+  "identities": [
+    {
+      "name": "ph-dev",
+      "credentials": [
+        { "accessKey": "phdevaccesskey", "secretKey": "phdevsecretkey" }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}
