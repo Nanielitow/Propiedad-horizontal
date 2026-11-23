@@ -56,7 +56,7 @@ def tareas(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, list[Any]]]:
 
 
 @pytest.fixture
-async def api(mundo: Mundo) -> AsyncIterator[Cliente]:
+async def api(mundo: Mundo, sin_limites: None) -> AsyncIterator[Cliente]:
     for clave, rol in (("CONSEJO", "CONSEJO"), ("AUXILIAR2", "AUXILIAR")):
         await mundo.usuario(clave, rol)
 

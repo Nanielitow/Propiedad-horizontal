@@ -87,7 +87,7 @@ class AlmacenFalso:
 
 @pytest.fixture
 async def http(
-    mundo: Mundo, monkeypatch: pytest.MonkeyPatch
+    mundo: Mundo, monkeypatch: pytest.MonkeyPatch, sin_limites: None
 ) -> AsyncIterator[tuple[httpx.AsyncClient, Mundo, AlmacenFalso, list[Any]]]:
     almacen = AlmacenFalso()
     encoladas: list[Any] = []

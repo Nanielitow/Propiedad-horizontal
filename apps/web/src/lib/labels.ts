@@ -54,6 +54,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   AUXILIAR: "Recepción",
   CONTABILIDAD: "Contabilidad",
   CONSEJO: "Consejo de administración",
+  MANTENIMIENTO: "Mantenimiento",
 };
 
 export const STATUS: Record<DocStatus, { label: string; tone: "neutral" | "info" | "success" | "danger" }> = {

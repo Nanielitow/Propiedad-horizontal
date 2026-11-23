@@ -30,6 +30,7 @@ _AUDIENCE = {
     UserRole.AUXILIAR: "el personal de recepción del conjunto",
     UserRole.CONTABILIDAD: "el área de contabilidad del conjunto",
     UserRole.CONSEJO: "un miembro del consejo de administración",
+    UserRole.MANTENIMIENTO: "el personal de mantenimiento del conjunto",
 }
 
 _CONDENSE_SYSTEM = (

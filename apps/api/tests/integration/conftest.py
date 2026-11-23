@@ -79,3 +79,14 @@ async def mundo() -> AsyncIterator[Mundo]:
             await db.close()
             await tx.rollback()
     await engine.dispose()
+
+
+@pytest.fixture
+def sin_limites(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Los tests de API no deben depender de los contadores de uso guardados en Redis
+    (en modo demo, ejecuciones anteriores agotarían el límite diario por visitante)."""
+
+    async def _libre(*_: object, **__: object) -> None:
+        return None
+
+    monkeypatch.setattr("app.core.rate_limit.hit", _libre)

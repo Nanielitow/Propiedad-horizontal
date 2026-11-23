@@ -1,3 +1,18 @@
+from app.models.activo import (
+    ActividadProgramada,
+    Activo,
+    ActivoDocumento,
+    AuditoriaActivo,
+    CategoriaActivo,
+    Contratista,
+    Evidencia,
+    LecturaUso,
+    MantenimientoEjecutado,
+    Novedad,
+    PlanPreventivo,
+    RecomendacionTecnica,
+    Reprogramacion,
+)
 from app.models.base import Base
 from app.models.chat import Conversation, Message
 from app.models.deadline import Deadline, DeadlineNotification
@@ -29,6 +44,19 @@ from app.models.recaudo import (
 )
 
 __all__ = [
+    "Activo",
+    "ActividadProgramada",
+    "ActivoDocumento",
+    "AuditoriaActivo",
+    "CategoriaActivo",
+    "Contratista",
+    "Evidencia",
+    "LecturaUso",
+    "MantenimientoEjecutado",
+    "Novedad",
+    "PlanPreventivo",
+    "RecomendacionTecnica",
+    "Reprogramacion",
     "AlertaRecaudo",
     "AuditoriaRecaudo",
     "CierreCaja",

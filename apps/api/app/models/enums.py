@@ -12,6 +12,7 @@ class UserRole(StrEnum):
     AUXILIAR = "AUXILIAR"  # recepción: registra recaudos y cierra su caja
     CONTABILIDAD = "CONTABILIDAD"  # verifica y concilia; no registra
     CONSEJO = "CONSEJO"  # solo lectura de dashboard y cortes mensuales
+    MANTENIMIENTO = "MANTENIMIENTO"  # todero / técnico interno (migración 0005)
 
 
 class AccessLevel(StrEnum):
@@ -159,6 +160,110 @@ class SeveridadAlerta(StrEnum):
 class EstadoAlerta(StrEnum):
     ABIERTA = "ABIERTA"
     ATENDIDA = "ATENDIDA"
+
+
+# --- Activos y mantenimiento (migración 0005) ---------------------------------
+
+
+class EstadoActivo(StrEnum):
+    OPERATIVO = "OPERATIVO"
+    OPERATIVO_CON_OBSERVACIONES = "OPERATIVO_CON_OBSERVACIONES"
+    EN_MANTENIMIENTO = "EN_MANTENIMIENTO"
+    FUERA_DE_SERVICIO = "FUERA_DE_SERVICIO"
+    DADO_DE_BAJA = "DADO_DE_BAJA"
+
+
+class Criticidad(StrEnum):
+    ALTA = "ALTA"
+    MEDIA = "MEDIA"
+    BAJA = "BAJA"
+
+
+class TipoDocumentoActivo(StrEnum):
+    MANUAL = "MANUAL"
+    PLANO = "PLANO"
+    FICHA_TECNICA = "FICHA_TECNICA"
+    GARANTIA = "GARANTIA"
+    CONTRATO = "CONTRATO"
+    ACTA = "ACTA"
+    CERTIFICACION = "CERTIFICACION"
+    FACTURA = "FACTURA"
+    INFORME_TECNICO = "INFORME_TECNICO"
+    OTRO = "OTRO"
+
+
+class EntidadEvidencia(StrEnum):
+    ACTIVO = "ACTIVO"
+    MANTENIMIENTO = "MANTENIMIENTO"
+    NOVEDAD = "NOVEDAD"
+
+
+class MomentoEvidencia(StrEnum):
+    ANTES = "ANTES"
+    DESPUES = "DESPUES"
+    EVIDENCIA = "EVIDENCIA"
+    FOTO_ACTIVO = "FOTO_ACTIVO"
+    INFORME = "INFORME"
+    FACTURA = "FACTURA"
+
+
+class Periodicidad(StrEnum):
+    SEMANAL = "SEMANAL"
+    QUINCENAL = "QUINCENAL"
+    MENSUAL = "MENSUAL"
+    BIMESTRAL = "BIMESTRAL"
+    TRIMESTRAL = "TRIMESTRAL"
+    SEMESTRAL = "SEMESTRAL"
+    ANUAL = "ANUAL"
+    POR_HORAS_USO = "POR_HORAS_USO"
+
+
+class BaseCalculo(StrEnum):
+    CALENDARIO_FIJO = "CALENDARIO_FIJO"  # siempre las mismas fechas (p. ej. el 5 de cada mes)
+    DESDE_ULTIMA_EJECUCION = "DESDE_ULTIMA_EJECUCION"  # el periodo cuenta desde la última vez que se hizo
+
+
+class EstadoActividad(StrEnum):
+    PROGRAMADA = "PROGRAMADA"
+    EJECUTADA = "EJECUTADA"
+    CANCELADA = "CANCELADA"
+
+
+class TipoMantenimiento(StrEnum):
+    PREVENTIVO = "PREVENTIVO"
+    CORRECTIVO = "CORRECTIVO"
+    PREDICTIVO = "PREDICTIVO"
+    INSPECCION_TECNICA = "INSPECCION_TECNICA"
+
+
+class PrioridadNovedad(StrEnum):
+    BAJA = "BAJA"
+    MEDIA = "MEDIA"
+    ALTA = "ALTA"
+    CRITICA = "CRITICA"
+
+
+class EstadoNovedad(StrEnum):
+    REPORTADA = "REPORTADA"
+    EN_GESTION = "EN_GESTION"
+    PENDIENTE_COTIZACION = "PENDIENTE_COTIZACION"
+    PROGRAMADA = "PROGRAMADA"
+    EN_EJECUCION = "EN_EJECUCION"
+    CERRADA = "CERRADA"
+    DESCARTADA = "DESCARTADA"
+
+
+class PrioridadRecomendacion(StrEnum):
+    ALTA = "ALTA"
+    MEDIA = "MEDIA"
+    BAJA = "BAJA"
+
+
+class EstadoRecomendacion(StrEnum):
+    PENDIENTE = "PENDIENTE"
+    EN_PROCESO = "EN_PROCESO"
+    EJECUTADA = "EJECUTADA"
+    DESCARTADA_CON_JUSTIFICACION = "DESCARTADA_CON_JUSTIFICACION"
 
 
 def pg_enum(enum_cls: type[StrEnum], name: str) -> ENUM:

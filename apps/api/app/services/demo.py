@@ -61,9 +61,24 @@ TABLES = [
     "auditoria_recaudos",
     "alertas_recaudo",
     "cortes_mensuales",
+    # Activos y mantenimiento (0005)
+    "categorias_activos",
+    "contratistas",
+    "activos",
+    "activo_documentos",
+    "evidencias",
+    "lecturas_uso",
+    "planes_preventivos",
+    "actividades_programadas",
+    "reprogramaciones",
+    "novedades",
+    "mantenimientos_ejecutados",
+    "recomendaciones_tecnicas",
+    "auditoria_activos",
+    "notificaciones_mantenimiento",
 ]
 # Tablas con id IDENTITY cuya secuencia debe continuar tras restaurar
-_IDENTITY_TABLES = ["audit_logs", "auditoria_recaudos"]
+_IDENTITY_TABLES = ["audit_logs", "auditoria_recaudos", "auditoria_activos"]
 _KEY = re.compile(r"^tenants/[0-9a-f-]{36}/documents/(?P<doc>[0-9a-f-]{36})/")
 _SOPORTE = re.compile(r"^tenants/[0-9a-f-]{36}/recaudos/soportes/")
 
@@ -153,6 +168,7 @@ def restore_snapshot() -> dict[str, int]:
             )
         # Copropiedades restauradas desde una foto sin conceptos de recaudo: crearlos (idempotente)
         conn.execute(text("SELECT seed_conceptos_recaudo(id) FROM public.tenants"))
+        conn.execute(text("SELECT seed_categorias_activos(id) FROM public.tenants"))
     log.info("demo restaurada: %s", counts)
     return counts
 

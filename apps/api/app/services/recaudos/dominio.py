@@ -8,61 +8,29 @@ Los tests verifican que ambas definiciones coincidan.
 
 import math
 import re
-import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Protocol
-from zoneinfo import ZoneInfo
 
 from app.models.enums import EstadoRecaudo, MedioPago, TipoCobro, UserRole
+from app.services.comun import (  # noqa: F401  (reexportados)
+    TZ,
+    Actor,
+    ActorSimple,
+    ErrorDominio,
+    NoEncontrado,
+    PermisoDenegado,
+    TransicionInvalida,
+    ValidacionError,
+    exigir,
+    pesos,
+)
 
-TZ = ZoneInfo("America/Bogota")
 E = EstadoRecaudo
 
-
-# --- Errores de dominio (la API los traduce a 400/403/404/409) -----------------
-
-
-class RecaudoError(Exception):
-    """Error de negocio con mensaje apto para mostrar al usuario."""
-
-
-class ValidacionError(RecaudoError):
-    pass
-
-
-class PermisoDenegado(RecaudoError):
-    pass
-
-
-class NoEncontrado(RecaudoError):
-    pass
-
-
-class TransicionInvalida(RecaudoError):
-    pass
-
-
-# --- Quién actúa ---------------------------------------------------------------
-
-
-class Actor(Protocol):
-    """Lo cumple TenantContext de la API; el servicio no depende de FastAPI."""
-
-    @property
-    def tenant_id(self) -> uuid.UUID: ...
-    @property
-    def user_id(self) -> uuid.UUID: ...
-    @property
-    def role(self) -> UserRole: ...
-
-
-@dataclass(frozen=True)
-class ActorSimple:
-    tenant_id: uuid.UUID
-    user_id: uuid.UUID
-    role: UserRole
+# Errores, actor y permisos viven en app.services.comun (compartidos con el módulo
+# de activos); se reexportan aquí para no cambiar las importaciones existentes.
+RecaudoError = ErrorDominio
 
 
 # --- Permisos (matriz de docs/RECAUDOS.md §2) -------------------------------
@@ -82,11 +50,6 @@ PUEDE_CONSIGNAR = frozenset({R.ADMIN, R.AUXILIAR})
 PUEDE_APROBAR_CONSIGNACION = frozenset({R.ADMIN, R.CONTABILIDAD})
 PUEDE_VER_ALERTAS = frozenset({R.ADMIN, R.CONTABILIDAD})
 PUEDE_ATENDER_ALERTAS = frozenset({R.ADMIN})
-
-
-def exigir(actor: Actor, permitidos: frozenset[UserRole], accion: str) -> None:
-    if actor.role not in permitidos:
-        raise PermisoDenegado(f"Su rol ({actor.role.value}) no permite {accion}")
 
 
 # --- Máquina de estados -------------------------------------------------------
@@ -147,12 +110,6 @@ def valor_por_defecto(tipo: TipoCobro, tarifa_base: Decimal | None) -> Decimal |
 
 def es_mismo_dia_bogota(a: datetime, b: datetime) -> bool:
     return a.astimezone(TZ).date() == b.astimezone(TZ).date()
-
-
-def pesos(valor: Decimal) -> str:
-    """Formato colombiano para mensajes: Decimal('1234567.5') -> '$1.234.568'."""
-    signo = "-" if valor < 0 else ""
-    return f"{signo}${abs(valor):,.0f}".replace(",", ".")
 
 
 _SOPORTE = re.compile(r"^tenants/(?P<tenant>[0-9a-f-]{36})/recaudos/soportes/[0-9a-f-]{36}\.(pdf|jpg|png|webp)$")

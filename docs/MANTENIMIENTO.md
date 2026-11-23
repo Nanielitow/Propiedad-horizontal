@@ -2,7 +2,7 @@
 
 Diseño del segundo gran módulo: la **hoja de vida técnica** de equipos e infraestructura, el **plan de mantenimiento preventivo** con semáforo, las **novedades y correctivos**, los **contratistas**, las **recomendaciones técnicas** y la **proyección de costos**. El objetivo es pasar de una administración reactiva a una preventiva.
 
-Estado: **diseño propuesto, pendiente de aprobación** antes de escribir código.
+Estado: **fase 1 implementada** (base de datos y lógica). Ver §7.
 
 ---
 
@@ -424,3 +424,30 @@ Se usa el **stack actual**. Piezas nuevas:
 - Portal para que los contratistas registren sus propios mantenimientos.
 - Lectura automática de horómetros (IoT).
 - Análisis predictivo con IA, por ejemplo detectar activos con fallas recurrentes. Los datos quedarán listos para hacerlo después.
+
+---
+
+## 7. Estado de implementación
+
+### Fase 1: base de datos y dominio (hecha)
+
+| Pieza | Archivo |
+|---|---|
+| Migración: 14 tablas, rol `MANTENIMIENTO`, triggers, RLS por rol, vista del semáforo, semillas | `apps/api/alembic/sql/0005_activos.up.sql` (+ `.down.sql`) |
+| Modelos | `apps/api/app/models/activo.py` |
+| Esquemas de entrada | `apps/api/app/schemas/activos.py` |
+| Reglas puras: permisos, periodicidad, semáforo, horas de uso, flujo de novedades | `apps/api/app/services/activos/dominio.py` |
+| Servicios: catálogo, activos, planes, mantenimientos, novedades, recomendaciones, semáforo | `apps/api/app/services/activos/*.py` |
+| Piezas compartidas con recaudos (errores, actor, permisos, motivo de auditoría) | `apps/api/app/services/comun.py` |
+| Tests | `tests/unit/test_activos_dominio.py`, `tests/integration/test_activos.py` |
+
+Decisiones tomadas al implementar:
+
+- **La siguiente fecha de los planes "desde la última ejecución" la crea la base de datos.** Lo hace el mismo trigger privilegiado que marca la actividad como ejecutada. Así funciona aunque registre el técnico, que a propósito no puede crear actividades, y si el mantenimiento se anula, esa fecha se cancela.
+- **Las fechas se calculan siempre desde el inicio del plan, nunca encadenando.** Un plan del 31 de enero cae el 28 de febrero y vuelve al 31 en marzo.
+- **"Quincenal" = cada 15 días.**
+- **No se reprograma al pasado.** Una actividad atrasada se ejecuta (con fecha real) o se reprograma hacia adelante.
+- **Una novedad crítica puede poner el activo fuera de servicio al reportarla.** Si la reporta el técnico, solo queda la novedad y la administración decide el estado del activo.
+- **Cerrar una novedad exige la solución escrita o un mantenimiento vinculado.** Lo validan el servicio (mensaje claro) y el trigger (última defensa).
+
+Pendiente: fases 2 a 5.
