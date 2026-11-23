@@ -49,6 +49,11 @@ class S3Storage:
     def recaudos_prefix(tenant_id: uuid.UUID) -> str:
         return f"tenants/{tenant_id}/recaudos/"
 
+    @staticmethod
+    def activo_evidencia_key(tenant_id: uuid.UUID, extension: str) -> str:
+        """Fotos y archivos de evidencia del módulo de activos."""
+        return f"tenants/{tenant_id}/activos/evidencias/{uuid.uuid4()}.{extension}"
+
     # -- URLs firmadas ------------------------------------------------------------
     def presign_put(self, key: str, content_type: str) -> str:
         # ContentType queda dentro de la firma: el navegador debe enviar

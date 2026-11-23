@@ -128,3 +128,30 @@ def monthly_cut(*, tenant_name: str, period: str, lines: list[tuple[str, str]], 
   <p style="font-size:12px;color:#8a929e">Recibe este correo como administrador o miembro del consejo de {escape(tenant_name)}.</p>
 </div>"""
     return subject, text, html
+
+
+def maintenance_alerts(*, tenant_name: str, items: list[tuple[str, str]], url: str) -> tuple[str, str, str]:
+    """Correo diario de mantenimiento. `items` = [(sección, mensaje)], ya en orden de prioridad."""
+    secciones: dict[str, list[str]] = {}
+    for seccion, mensaje in items:
+        secciones.setdefault(seccion, []).append(mensaje)
+    urgente = any(s.startswith(("Novedades críticas", "Mantenimientos vencidos")) for s in secciones)
+    n = len(items)
+    subject = f"{'⚠ ' if urgente else ''}Mantenimiento: {n} aviso{'s' if n != 1 else ''} · {tenant_name}"
+    lines = [f"Mantenimiento de {tenant_name}", ""]
+    for seccion, mensajes in secciones.items():
+        lines += [seccion, *[f"- {m}" for m in mensajes], ""]
+    lines.append(f"Ver en PH Gestión: {url}")
+    bloques = "".join(
+        f'<h3 style="margin:20px 0 6px;font-size:15px;color:#1f3a5f">{escape(s)}</h3>'
+        f'<ul style="margin:0;padding-left:18px;font-size:14px">{"".join(f"<li style='margin:0 0 6px'>{escape(m)}</li>" for m in ms)}</ul>'
+        for s, ms in secciones.items()
+    )
+    html = f"""<div style="font-family:Arial,sans-serif;color:#1b2430;max-width:560px">
+  <p style="color:#5b6573;margin:0 0 4px">Mantenimiento · {escape(tenant_name)}</p>
+  <h2 style="margin:0 0 8px;color:#1f3a5f">{n} aviso{"s" if n != 1 else ""} de mantenimiento</h2>
+  {bloques}
+  <p style="margin:24px 0"><a href="{escape(url)}" style="background:#1f3a5f;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Ver mantenimiento</a></p>
+  <p style="font-size:12px;color:#8a929e">Recibe este correo por su rol en {escape(tenant_name)} en PH Gestión.</p>
+</div>"""
+    return subject, "\n".join(lines), html

@@ -10,9 +10,11 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, mo
 from app.models.enums import (
     BaseCalculo,
     Criticidad,
+    EntidadEvidencia,
     EstadoActivo,
     EstadoNovedad,
     EstadoRecomendacion,
+    MomentoEvidencia,
     Periodicidad,
     PrioridadNovedad,
     PrioridadRecomendacion,
@@ -271,3 +273,19 @@ class NovedadAvance(_Base):
     costo_reparacion: Dinero | None = None
     motivo_descarte: Annotated[str, Field(min_length=10, max_length=1000)] | None = None
     nota: Annotated[str, Field(max_length=1000)] | None = None
+
+
+# --- Evidencias ------------------------------------------------------------------------
+
+
+class EvidenciaUploadIn(_Base):
+    content_type: str
+    size_bytes: Annotated[int, Field(gt=0)]
+
+
+class EvidenciaIn(_Base):
+    entidad: EntidadEvidencia
+    entidad_id: uuid.UUID
+    momento: MomentoEvidencia
+    storage_key: Annotated[str, Field(max_length=300)]
+    descripcion: Annotated[str, Field(max_length=300)] | None = None

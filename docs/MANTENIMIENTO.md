@@ -2,7 +2,7 @@
 
 Diseño del segundo gran módulo: la **hoja de vida técnica** de equipos e infraestructura, el **plan de mantenimiento preventivo** con semáforo, las **novedades y correctivos**, los **contratistas**, las **recomendaciones técnicas** y la **proyección de costos**. El objetivo es pasar de una administración reactiva a una preventiva.
 
-Estado: **fase 1 implementada** (base de datos y lógica). Ver §7.
+Estado: **fases 1 y 2 implementadas** (base de datos, lógica, QR, evidencias y alertas). Ver §7.
 
 ---
 
@@ -450,4 +450,24 @@ Decisiones tomadas al implementar:
 - **Una novedad crítica puede poner el activo fuera de servicio al reportarla.** Si la reporta el técnico, solo queda la novedad y la administración decide el estado del activo.
 - **Cerrar una novedad exige la solución escrita o un mantenimiento vinculado.** Lo validan el servicio (mensaje claro) y el trigger (última defensa).
 
-Pendiente: fases 2 a 5.
+### Fase 2: QR, evidencias, vencimientos y alertas (hecha)
+
+| Pieza | Archivo |
+|---|---|
+| QR en SVG y PNG, hoja de etiquetas A4 (10 por hoja, con línea de corte) | `apps/api/app/services/activos/qr.py` (librería **segno**) |
+| Evidencias: subida con URL firmada, registro validado, listado con URL temporal | `apps/api/app/services/activos/evidencias.py` |
+| Vencimientos (detectados por IA) de los documentos vinculados al activo | `activos.vencimientos()` |
+| Reestimación de fechas por horómetro | `planes.reestimar_por_horas()` |
+| Cálculo de avisos, registro sin duplicados y reparto por destinatario | `apps/api/app/services/activos/alertas.py` |
+| Tareas: programación (00:30), alertas (7:10) y novedad crítica inmediata | `apps/api/app/workers/tasks/activos.py` |
+| Tests | `tests/integration/test_activos_fase2.py` |
+
+Decisiones de esta fase:
+
+- **Un correo por persona y día**, con los avisos agrupados por sección (críticas y vencidos primero). La administración y el auxiliar reciben todo, el técnico solo lo que tiene asignado, contabilidad los contratos y cada responsable sus recomendaciones.
+- **Si el correo falla, los avisos no se pierden:** el registro de "ya avisado" se confirma solo después de enviar, y se reintenta en la próxima ejecución.
+- **La reestimación por horómetro es una reprogramación más**, con su motivo ("quedan 40 h de 100 h") en el historial. Solo mueve la fecha si cambia 3 días o más, para no llenar el historial de ajustes mínimos.
+- **Sin mantenimientos previos, las horas se cuentan desde la primera lectura;** con mantenimientos, desde la lectura vigente al último.
+- **Los vencimientos son de la administración:** el técnico no los ve en la hoja de vida (RLS del módulo de vencimientos).
+
+Pendiente: fases 3 a 5 (API, pantallas, dashboard y reportes).

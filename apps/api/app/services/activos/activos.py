@@ -6,8 +6,8 @@ from datetime import date
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Activo, ActivoDocumento, Document, LecturaUso
-from app.models.enums import EstadoActivo, UserRole
+from app.models import Activo, ActivoDocumento, Deadline, Document, LecturaUso
+from app.models.enums import DeadlineStatus, EstadoActivo, UserRole
 from app.schemas.activos import ActivoIn, ActivoUpdate, BajaIn, LecturaIn, VinculoDocumentoIn
 from app.services.activos import catalogo
 from app.services.activos.dominio import (
@@ -183,3 +183,21 @@ async def registrar_lectura(db: AsyncSession, actor: Actor, activo_id: uuid.UUID
 
 def puede_ver_costos(role: UserRole) -> bool:
     return role in (UserRole.ADMIN, UserRole.CONTABILIDAD)
+
+
+async def vencimientos(db: AsyncSession, actor: Actor, activo_id: uuid.UUID) -> list[Deadline]:
+    """Vencimientos detectados por la IA en los documentos vinculados al activo (contratos,
+    garantías, certificados). El módulo de vencimientos es de la administración: para otros
+    roles RLS devuelve una lista vacía."""
+    await obtener(db, actor, activo_id)
+    return list(
+        await db.scalars(
+            select(Deadline)
+            .join(ActivoDocumento, ActivoDocumento.document_id == Deadline.document_id)
+            .where(
+                ActivoDocumento.activo_id == activo_id,
+                Deadline.status.in_([DeadlineStatus.PENDING_REVIEW, DeadlineStatus.ACTIVE]),
+            )
+            .order_by(Deadline.due_date)
+        )
+    )

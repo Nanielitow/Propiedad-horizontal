@@ -10,12 +10,20 @@ Reprogramar nunca borra la fecha original: queda el historial con motivo.
 
 import uuid
 from datetime import UTC, date, datetime
+from decimal import Decimal
 
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import ActividadProgramada, Membership, PlanPreventivo, Reprogramacion
+from app.models import (
+    ActividadProgramada,
+    LecturaUso,
+    MantenimientoEjecutado,
+    Membership,
+    PlanPreventivo,
+    Reprogramacion,
+)
 from app.models.enums import BaseCalculo, EstadoActividad, Periodicidad, UserRole
 from app.schemas.activos import PlanIn, PlanUpdate, ReprogramacionIn
 from app.services.activos import activos as servicio_activos
@@ -24,10 +32,12 @@ from app.services.activos.dominio import (
     PUEDE_APROBAR_PLAN,
     PUEDE_CREAR_PLAN,
     PUEDE_REPROGRAMAR,
+    estado_por_horas,
     fechas_programables,
     sumar_meses,
 )
 from app.services.comun import (
+    TZ,
     Actor,
     NoEncontrado,
     TransicionInvalida,
@@ -231,3 +241,64 @@ async def extender_programacion(db: AsyncSession, hoy: date | None = None) -> in
     for plan in planes:
         total += await generar_actividades(db, plan, hoy)
     return total
+
+
+async def reestimar_por_horas(db: AsyncSession, hoy: date | None = None, *, tolerancia_dias: int = 3) -> int:
+    """Tarea nocturna (SYSTEM): ajusta la fecha de las actividades de planes por horas de uso
+    según el horómetro. Cada ajuste queda como reprogramación con su motivo. Devuelve cuántas movió."""
+    hoy = hoy or hoy_bogota()
+    planes_horas = await db.scalars(
+        select(PlanPreventivo).where(
+            PlanPreventivo.periodicidad == Periodicidad.POR_HORAS_USO,
+            PlanPreventivo.activo,
+            PlanPreventivo.aprobado_at.is_not(None),
+        )
+    )
+    movidas = 0
+    for plan in planes_horas:
+        act = await db.scalar(
+            select(ActividadProgramada).where(
+                ActividadProgramada.plan_id == plan.id, ActividadProgramada.estado == A.PROGRAMADA
+            )
+        )
+        lecturas = list(
+            await db.execute(
+                select(LecturaUso.fecha, LecturaUso.horas_acumuladas)
+                .where(LecturaUso.activo_id == plan.activo_id)
+                .order_by(LecturaUso.fecha)
+            )
+        )
+        if act is None or not lecturas or plan.intervalo_horas is None:
+            continue
+        ultima_fecha, ultima = lecturas[-1]
+        ejecucion = await db.scalar(
+            select(func.max(MantenimientoEjecutado.fecha_ejecucion))
+            .join(ActividadProgramada, ActividadProgramada.id == MantenimientoEjecutado.actividad_id)
+            .where(ActividadProgramada.plan_id == plan.id, MantenimientoEjecutado.anulado_at.is_(None))
+        )
+        # Horas de referencia: la lectura vigente al último mantenimiento; sin mantenimientos, la primera
+        previas = [h for f, h in lecturas if ejecucion is not None and f.astimezone(TZ).date() <= ejecucion]
+        base = previas[-1] if previas else lecturas[0][1]
+        # Uso diario: lecturas de los últimos 30 días
+        ventana = [(f, h) for f, h in lecturas if (ultima_fecha - f).days <= 30]
+        dias = (ventana[-1][0] - ventana[0][0]).total_seconds() / 86400
+        uso = (ventana[-1][1] - ventana[0][1]) / Decimal(str(dias)) if dias >= 1 else None
+        estado = estado_por_horas(plan.intervalo_horas, ultima - base, uso, hoy)
+        nueva = estado.fecha_estimada
+        if nueva is None or nueva < hoy or abs((nueva - act.fecha_programada).days) < tolerancia_dias:
+            continue
+        db.add(
+            Reprogramacion(
+                id=uuid.uuid4(),
+                tenant_id=plan.tenant_id,
+                actividad_id=act.id,
+                fecha_anterior=act.fecha_programada,
+                nueva_fecha=nueva,
+                motivo=f"Reestimada por horómetro: quedan {estado.horas_restantes} h de {plan.intervalo_horas} h",
+            )
+        )
+        await db.flush()
+        act.fecha_programada = nueva
+        await db.flush()
+        movidas += 1
+    return movidas

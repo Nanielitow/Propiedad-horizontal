@@ -18,6 +18,7 @@ celery_app = Celery(
         "app.workers.tasks.minutes",
         "app.workers.tasks.demo",
         "app.workers.tasks.recaudos",
+        "app.workers.tasks.activos",
     ],
 )
 
@@ -54,6 +55,14 @@ celery_app.conf.update(
         "recaudos-corte-mensual": {
             "task": "recaudos.corte_mensual",
             "schedule": crontab(day_of_month=1, hour=6, minute=0),
+        },
+        "activos-programacion": {
+            "task": "activos.programacion",
+            "schedule": crontab(hour=0, minute=30),
+        },
+        "activos-alertas": {
+            "task": "activos.alertas",
+            "schedule": crontab(hour=7, minute=10),
         },
     },
 )
