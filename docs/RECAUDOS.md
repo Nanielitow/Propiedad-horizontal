@@ -2,7 +2,7 @@
 
 Diseño del módulo de **ingresos extraordinarios** de la copropiedad (parqueadero de visitantes, alquiler de zonas sociales, aseo y otros), con control de caja, conciliación bancaria y trazabilidad completa.
 
-Estado: **fases 1 a 3 implementadas** (base de datos, lógica, caja, conciliación, alertas y API completa). Ver §5.
+Estado: **fases 1 a 4 implementadas** (base de datos, lógica, API y pantallas). Ver §5.
 
 ---
 
@@ -354,7 +354,7 @@ Se usa el **stack actual**, sin piezas nuevas de infraestructura:
 | Excel | **openpyxl** | Sí, una dependencia de Python |
 | PDF | **PyMuPDF** (ya instalado; su API `Story` maqueta HTML a PDF) | — |
 | Tareas | Celery beat | — |
-| Frontend | Next.js + shadcn/ui; gráficos con **Recharts** | Sí, una dependencia de npm |
+| Frontend | Next.js + shadcn/ui; gráficos propios con HTML y CSS (al implementar se descartó Recharts: los tres gráficos son de una sola serie y no justificaban una dependencia) | — |
 
 **Fases de implementación** (cada una con tests y verificable por separado):
 
@@ -433,4 +433,20 @@ Decisiones de esta fase:
 - **Soportes aislados por copropiedad.** Un recaudo solo puede referenciar archivos subidos en la carpeta de su propia copropiedad. La limpieza nocturna de la demo borra los soportes que suban los visitantes.
 - **Orden de rutas.** Las rutas fijas (`/caja`, `/entregas`, `/alertas`...) se registran antes que `/{recaudo_id}`.
 
-Pendiente: fase 4 (pantallas) y fase 5 (reportes en Excel y PDF, corte mensual).
+### Fase 4: pantallas (hecha)
+
+Sección **Recaudos** en el menú lateral, con los ítems de cada rol:
+
+| Pantalla | Ruta | Roles | Qué hace |
+|---|---|---|---|
+| Resumen | `/recaudos` | Admin, Contabilidad, Consejo | KPIs del mes, recaudo diario, por concepto, por medio, estado del dinero y alertas. Recepción es redirigida a Registrar |
+| Registrar | `/recaudos/nuevo` | Admin, Recepción | Cobro rápido con campos según el concepto: tarifa del parqueadero en vivo y alquiler con reserva y desglose |
+| Movimientos | `/recaudos/movimientos` | Admin, Contabilidad, Recepción | Buscador con filtros en la URL; detalle con acciones e historial de auditoría |
+| Caja | `/recaudos/caja` | Admin, Recepción | Turno, cierre con diferencia en vivo, entregas internas, historial de arqueos |
+| Conciliación | `/recaudos/conciliacion` | Admin, Contabilidad, Recepción | Efectivo por consignar, consignaciones parciales, aprobar, verificar y rechazar |
+| Alertas | `/recaudos/alertas` | Admin, Contabilidad | Feed de alertas; la administración las atiende con resolución escrita |
+| Configuración | `/recaudos/configuracion` | Admin | Conceptos, tarifas y zonas sociales |
+
+Componentes en `apps/web/src/components/recaudos/`; tipos, etiquetas y permisos de interfaz en `apps/web/src/lib/recaudos.ts`. Lo probé de punta a punta con los cuatro roles en el navegador: registro, cierre con faltante, entrega, consignación, aprobación y verificación, sin errores de JavaScript.
+
+Pendiente: fase 5 (reportes en Excel y PDF, corte mensual automático).

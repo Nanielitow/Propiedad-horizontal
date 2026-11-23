@@ -5,11 +5,18 @@ import {
   CalendarClock,
   Check,
   ChevronsUpDown,
+  CirclePlus,
   ClipboardList,
   FileText,
+  Landmark,
+  LayoutDashboard,
+  ListOrdered,
   LogOut,
   MessageSquareText,
   Scale,
+  Settings2,
+  ShieldAlert,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -24,9 +31,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import useSWR from "swr";
+
 import { useDeadlines } from "@/hooks/use-deadlines";
+import { fetcher } from "@/lib/api";
 import { alertCount } from "@/lib/deadlines";
 import { ROLE_LABEL } from "@/lib/labels";
+import { type Alerta, base, puede } from "@/lib/recaudos";
 import { cn } from "@/lib/utils";
 
 import { useTenant } from "./tenant-context";
@@ -37,6 +48,7 @@ interface NavItem {
   description: string;
   icon: LucideIcon;
   soon?: boolean;
+  exact?: boolean;
 }
 
 const MAIN_NAV: NavItem[] = [
@@ -48,6 +60,17 @@ const ADMIN_NAV: NavItem[] = [
   { href: "deadlines", label: "Vencimientos", description: "Pólizas, contratos, mantenimientos", icon: CalendarClock },
   { href: "quotes", label: "Cotizaciones", description: "Comparar proveedores", icon: Scale },
   { href: "minutes", label: "Actas", description: "Acuerdos y tareas de asambleas", icon: ClipboardList },
+];
+
+// Módulo de recaudos: cada ítem se muestra solo a los roles que lo usan
+const RECAUDOS_NAV: (NavItem & { permiso: Parameters<typeof puede>[1] })[] = [
+  { href: "recaudos", label: "Resumen", description: "Ingresos del mes", icon: LayoutDashboard, permiso: "resumen", exact: true },
+  { href: "recaudos/nuevo", label: "Registrar", description: "Cobro rápido en recepción", icon: CirclePlus, permiso: "registrar" },
+  { href: "recaudos/movimientos", label: "Movimientos", description: "Buscar y auditar recaudos", icon: ListOrdered, permiso: "movimientos" },
+  { href: "recaudos/caja", label: "Caja", description: "Cierres y entregas de efectivo", icon: Wallet, permiso: "caja" },
+  { href: "recaudos/conciliacion", label: "Conciliación", description: "Consignaciones y bancos", icon: Landmark, permiso: "conciliacion" },
+  { href: "recaudos/alertas", label: "Alertas", description: "Descuadres y pendientes", icon: ShieldAlert, permiso: "alertas" },
+  { href: "recaudos/configuracion", label: "Configuración", description: "Conceptos y tarifas", icon: Settings2, permiso: "configurar" },
 ];
 
 function initials(name: string) {
@@ -67,6 +90,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   // Misma clave SWR que la página de vencimientos: el contador se actualiza al confirmar
   const { data: deadlines } = useDeadlines(tenant.tenant_id, isAdmin);
   const alerts = alertCount(deadlines?.deadlines);
+  const recaudos = RECAUDOS_NAV.filter((i) => puede(tenant.role, i.permiso));
+  const { data: alertasRecaudo } = useSWR<Alerta[]>(
+    puede(tenant.role, "alertas") ? `${base(tenant.tenant_id)}/alertas` : null,
+    fetcher,
+    { refreshInterval: 60_000 },
+  );
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -77,7 +106,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const renderItem = (item: NavItem) => {
     const href = `/${tenant.tenant_slug}/${item.href}`;
-    const active = pathname.startsWith(href);
+    const active = item.exact ? pathname === href : pathname.startsWith(href);
     return (
       <li key={item.href}>
         <Link
@@ -103,6 +132,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               title="Por revisar o con vencimiento en 7 días o menos"
             >
               {alerts}
+            </span>
+          )}
+          {item.href === "recaudos/alertas" && (alertasRecaudo?.length ?? 0) > 0 && (
+            <span
+              className="flex h-5 min-w-5 items-center justify-center rounded-full bg-warning-soft px-1.5 text-[11px] font-semibold text-warning"
+              aria-label={`${alertasRecaudo?.length} alertas de recaudos abiertas`}
+            >
+              {alertasRecaudo?.length}
             </span>
           )}
           {item.soon && (
@@ -169,6 +206,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               Herramientas de administración
             </p>
             <ul className="space-y-1">{ADMIN_NAV.map(renderItem)}</ul>
+          </div>
+        )}
+        {recaudos.length > 0 && (
+          <div>
+            <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">Recaudos</p>
+            <ul className="space-y-1">{recaudos.map(renderItem)}</ul>
           </div>
         )}
       </nav>
