@@ -45,6 +45,10 @@ class Document(UUIDPk, CreatedAt, Base):
     processed_at: Mapped[datetime | None]
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
     deleted_at: Mapped[datetime | None]
+    # Origen (migración 0004): UPLOAD o GOOGLE_DRIVE, con el id y el enlace del original
+    source: Mapped[str] = mapped_column(default="UPLOAD")
+    source_ref: Mapped[str | None]
+    source_url: Mapped[str | None]
 
 
 class DocumentPage(UUIDPk, Base):

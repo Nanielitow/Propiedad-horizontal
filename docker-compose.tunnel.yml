@@ -46,6 +46,10 @@ services:
     image: ph-saas/web:demo
     environment:
       API_INTERNAL_URL: http://api:8000
+      # Importar desde Google Drive (opcional; sin estas variables el botón no aparece)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER:-}
     ports:
       - "127.0.0.1:3001:3000"   # prueba local: http://localhost:3001
     depends_on:

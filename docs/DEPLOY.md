@@ -202,6 +202,31 @@ Para recuperar una copia que solo está en R2, descárguela antes con el mismo `
 | Reiniciar la demo ahora | `dc exec api python -m app.scripts.demo restore` |
 | Consola de la base de datos | `dc exec postgres psql -U ph_owner -d ph_saas` |
 
+## 13b. Importar desde Google Drive (opcional)
+
+Permite que la administración traiga documentos desde su Google Drive con el selector oficial de Google. La app pide el alcance **`drive.file`**: solo accede a los archivos que el usuario elige, nunca al resto de su Drive. El permiso de Google se usa en la misma petición para descargar y no se guarda.
+
+En [Google Cloud Console](https://console.cloud.google.com), dentro del proyecto de la app (puede ser el mismo de la key de Gemini):
+
+1. **APIs y servicios → Biblioteca:** habilite **Google Drive API** y **Google Picker API**.
+2. **Google Auth Platform → Marca:** nombre «PH Gestión» y correo de soporte. En **Público**, elija *Externo* y deje la app en modo **Prueba**. Agregue como *usuarios de prueba* los correos que van a importar (hasta 100). En **Acceso a datos**, agregue el alcance `.../auth/drive.file`.
+3. **Credenciales → Crear credenciales → ID de cliente de OAuth**, tipo *Aplicación web*. En **Orígenes de JavaScript autorizados**, agregue `https://app.su-dominio.com`, y `http://localhost:3000` y `http://localhost:3001` para pruebas locales. No hace falta URI de redirección.
+4. **Credenciales → Crear credenciales → Clave de API.** Restrínjala:
+   - *Sitios web*: los mismos orígenes con `/*` al final.
+   - *APIs*: solo **Google Picker API**.
+5. **Configuración del proyecto:** copie el **número de proyecto**.
+6. Complete en `.env.production` (o en `.env` para la demo local) y vuelva a desplegar:
+   ```
+   GOOGLE_CLIENT_ID=....apps.googleusercontent.com
+   GOOGLE_API_KEY=...
+   GOOGLE_PROJECT_NUMBER=...
+   ```
+   Con `npm run web:dev`, póngalos en `apps/web/.env.local`.
+
+Los valores se leen al arrancar la web, sin recompilar. Si faltan, el botón «Desde Google Drive» no aparece.
+
+**Para clientes reales:** en modo Prueba solo pueden importar los usuarios de prueba. Al pasar la app a *En producción*, Google revisa la marca (nombre, logo, política de privacidad en su dominio). `drive.file` no requiere la auditoría de seguridad que exigen los alcances amplios de Drive.
+
 ## 14. De la demo al uso real
 
 Antes de cargar documentos de un edificio real:

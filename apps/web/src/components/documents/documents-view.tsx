@@ -48,6 +48,7 @@ import type { Category, DocumentItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { StatusCell } from "./status-cell";
+import { DriveImportDialog } from "./drive-import-dialog";
 import { UploadDialog } from "./upload-dialog";
 
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -118,7 +119,14 @@ export function DocumentsView() {
             ? "Archivo documental de la copropiedad. Lo que suba aquí queda disponible en el buscador."
             : "Documentos publicados por la administración para los residentes."
         }
-        actions={isAdmin && <UploadDialog onUploaded={() => void mutate()} />}
+        actions={
+          isAdmin && (
+            <>
+              <DriveImportDialog onImported={() => void mutate()} />
+              <UploadDialog onUploaded={() => void mutate()} />
+            </>
+          )
+        }
       />
 
       <div className="space-y-4 p-6">
@@ -214,6 +222,24 @@ export function DocumentsView() {
                             {d.is_scanned && (
                               <span className="inline-flex items-center gap-0.5" title="Documento escaneado: el texto se obtuvo con OCR">
                                 · <ScanText className="size-3" /> Escaneado
+                              </span>
+                            )}
+                            {d.source === "GOOGLE_DRIVE" && (
+                              <span title="Importado desde Google Drive">
+                                ·{" "}
+                                {d.source_url ? (
+                                  <a
+                                    href={d.source_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="underline-offset-2 hover:text-foreground hover:underline"
+                                  >
+                                    Drive
+                                  </a>
+                                ) : (
+                                  "Drive"
+                                )}
                               </span>
                             )}
                           </p>

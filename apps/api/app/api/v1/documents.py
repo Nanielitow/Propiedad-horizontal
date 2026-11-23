@@ -6,10 +6,12 @@ Flujo de subida (3 pasos, el archivo nunca pasa por la API):
   3. POST /{id}/complete        -> la API verifica el objeto y encola la ingesta (QUEUED)
 """
 
+import hashlib
 import uuid
 from datetime import UTC, datetime
 from pathlib import PurePath
 
+import httpx
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select, text
@@ -30,11 +32,15 @@ from app.models.enums import (
 )
 from app.schemas.document import (
     DocumentOut,
+    DriveImportRequest,
+    DriveImportResponse,
+    DriveImportResult,
     FileUrlResponse,
     JobOut,
     UploadRequest,
     UploadResponse,
 )
+from app.services import google_drive
 from app.services.storage.s3 import get_storage
 from app.workers.celery_app import celery_app
 
@@ -162,6 +168,124 @@ async def create_upload(body: UploadRequest, ctx: AdminCtx, db: DbSession, reque
         headers={"Content-Type": PDF_MIME},
         expires_in=settings.s3_presigned_ttl_seconds,
     )
+
+
+@router.post("/import/google-drive", response_model=DriveImportResponse)
+async def import_from_google_drive(
+    body: DriveImportRequest, ctx: AdminCtx, db: DbSession, request: Request
+) -> DriveImportResponse:
+    """Importa archivos elegidos en el selector de Google Drive.
+
+    A diferencia de la subida directa, aquí el archivo SÍ pasa por la API: se
+    descarga de Drive con el token del usuario (alcance drive.file), se valida y
+    se guarda en el almacenamiento. Luego sigue la misma ingesta que una subida.
+    Cada archivo se procesa por separado: uno que falle no detiene a los demás.
+    """
+    for _ in body.files:
+        await enforce(request, UPLOADS_PER_HOUR, str(ctx.user_id))
+        await enforce_demo(request, DEMO_UPLOADS_PER_IP_DAY)
+    settings = get_settings()
+    storage = get_storage()
+    access = body.access_level or (AccessLevel.PUBLIC if body.category in PUBLIC_BY_DEFAULT else AccessLevel.ADMIN)
+    resultados: list[DriveImportResult] = []
+
+    async with google_drive.nuevo_cliente() as cliente:
+        for ref in dict.fromkeys(f.id for f in body.files):  # sin repetidos, en el orden elegido
+            ya = await db.scalar(
+                select(Document.id).where(
+                    Document.tenant_id == ctx.tenant_id,
+                    Document.source == "GOOGLE_DRIVE",
+                    Document.source_ref == ref,
+                    Document.deleted_at.is_(None),
+                )
+            )
+            if ya:
+                resultados.append(
+                    DriveImportResult(
+                        file_id=ref, nombre=None, estado="DUPLICADO", document_id=ya, mensaje="Ya se había importado"
+                    )
+                )
+                continue
+            try:
+                archivo = await google_drive.descargar(cliente, body.access_token, ref, settings.max_upload_bytes)
+            except google_drive.DriveError as exc:
+                resultados.append(DriveImportResult(file_id=ref, nombre=None, estado="ERROR", mensaje=str(exc)))
+                continue
+            except httpx.HTTPError:
+                resultados.append(
+                    DriveImportResult(
+                        file_id=ref, nombre=None, estado="ERROR", mensaje="No se pudo conectar con Google Drive"
+                    )
+                )
+                continue
+
+            sha = hashlib.sha256(archivo.contenido).hexdigest()
+            duplicado = await db.scalar(
+                select(Document.id).where(
+                    Document.tenant_id == ctx.tenant_id, Document.sha256 == sha, Document.deleted_at.is_(None)
+                )
+            )
+            if duplicado:
+                resultados.append(
+                    DriveImportResult(
+                        file_id=ref,
+                        nombre=archivo.nombre,
+                        estado="DUPLICADO",
+                        document_id=duplicado,
+                        mensaje="Este archivo ya estaba en la plataforma",
+                    )
+                )
+                continue
+
+            doc_id = uuid.uuid4()
+            doc = Document(
+                id=doc_id,
+                tenant_id=ctx.tenant_id,
+                uploaded_by=ctx.user_id,
+                title=PurePath(archivo.nombre).stem.strip()[:255],
+                original_filename=archivo.nombre[:255],
+                category=body.category,
+                access_level=access,
+                status=DocumentStatus.UPLOADED,
+                storage_key=storage.document_key(ctx.tenant_id, doc_id, "original.pdf"),
+                mime_type=PDF_MIME,
+                size_bytes=len(archivo.contenido),
+                sha256=sha,
+                source="GOOGLE_DRIVE",
+                source_ref=archivo.id,
+                source_url=archivo.url,
+            )
+            await run_in_threadpool(storage.put_bytes, doc.storage_key, archivo.contenido, PDF_MIME)
+            db.add(doc)
+            await db.execute(
+                _AUDIT_INSERT,
+                {
+                    "tenant_id": ctx.tenant_id,
+                    "user_id": ctx.user_id,
+                    "action": "document.import_drive",
+                    "entity_id": doc_id,
+                    "ip": request.client.host if request.client else None,
+                },
+            )
+            try:
+                await _enqueue_ingestion(db, ctx, doc)  # hace commit y encola la ingesta
+            except IntegrityError:  # carrera: otra importación del mismo archivo en paralelo
+                await db.rollback()
+                await run_in_threadpool(storage.delete, doc.storage_key)
+                resultados.append(
+                    DriveImportResult(
+                        file_id=ref,
+                        nombre=archivo.nombre,
+                        estado="DUPLICADO",
+                        mensaje="Este archivo ya estaba en la plataforma",
+                    )
+                )
+                continue
+            resultados.append(
+                DriveImportResult(file_id=ref, nombre=archivo.nombre, estado="IMPORTADO", document_id=doc_id)
+            )
+
+    return DriveImportResponse(resultados=resultados)
 
 
 @router.post("/{document_id}/complete", response_model=DocumentOut, status_code=status.HTTP_202_ACCEPTED)

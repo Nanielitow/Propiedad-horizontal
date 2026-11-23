@@ -56,6 +56,10 @@ services:
     image: ${WEB_IMAGE:-ghcr.io/nanielitow/propiedad-horizontal-web}:${IMAGE_TAG:-latest}
     environment:
       API_INTERNAL_URL: http://api:8000
+      # Importar desde Google Drive (opcional): ver docs/DEPLOY.md
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER:-}
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
       interval: 15s

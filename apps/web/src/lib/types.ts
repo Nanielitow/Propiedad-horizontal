@@ -53,6 +53,8 @@ export interface DocumentItem {
   error_message: string | null;
   created_at: string;
   processed_at: string | null;
+  source?: "UPLOAD" | "GOOGLE_DRIVE";
+  source_url?: string | null;
   job: Job | null;
 }
 
