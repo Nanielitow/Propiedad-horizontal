@@ -2,7 +2,7 @@
 
 Diseño del módulo de **ingresos extraordinarios** de la copropiedad (parqueadero de visitantes, alquiler de zonas sociales, aseo y otros), con control de caja, conciliación bancaria y trazabilidad completa.
 
-Estado: **fases 1 a 4 implementadas** (base de datos, lógica, API y pantallas). Ver §5.
+Estado: **módulo completo** (fases 1 a 5: base de datos, lógica, API, pantallas y reportes). Ver §5.
 
 ---
 
@@ -449,4 +449,30 @@ Sección **Recaudos** en el menú lateral, con los ítems de cada rol:
 
 Componentes en `apps/web/src/components/recaudos/`; tipos, etiquetas y permisos de interfaz en `apps/web/src/lib/recaudos.ts`. Lo probé de punta a punta con los cuatro roles en el navegador: registro, cierre con faltante, entrega, consignación, aprobación y verificación, sin errores de JavaScript.
 
-Pendiente: fase 5 (reportes en Excel y PDF, corte mensual automático).
+### Fase 5: reportes y corte mensual (hecha)
+
+| Pieza | Archivo |
+|---|---|
+| Constructores de los 6 informes (general, parqueadero, zonas, aseo, caja, auditoría) y del corte | `apps/api/app/services/recaudos/reportes.py` |
+| Exportación a JSON, Excel (openpyxl) y PDF (PyMuPDF) | `apps/api/app/services/recaudos/exportar.py` |
+| Cortes mensuales: generar, guardar y listar | `apps/api/app/services/recaudos/cortes.py` |
+| Tarea del día 1 a las 6:00, con correo y PDF adjunto a administración y consejo | `apps/api/app/workers/tasks/recaudos.py` |
+| Endpoints `/reportes/{tipo}?formato=json|xlsx|pdf`, `/cortes` | `apps/api/app/api/v1/recaudos_panel.py` |
+| Pantalla de reportes | `apps/web/src/components/recaudos/reportes-view.tsx` |
+| Tests | `tests/integration/test_recaudos_reportes.py` |
+
+Decisiones de esta fase:
+
+- **Un informe, tres formatos idénticos.** Cada informe se arma una vez como estructura neutra (resumen + tablas) y se dibuja en pantalla, Excel y PDF. Las cifras no pueden diferir entre formatos.
+- **En el Excel los montos son números**, con formato de pesos, filtros y encabezado fijo. Se pueden sumar y filtrar sin limpiar el archivo.
+- **El arqueo cuadra por construcción.** Saldo inicial y final se calculan como el efectivo en custodia (recibido menos consignado) en cada fecha. Así, inicial + ingresos − consignado = final, y el saldo final de un mes es el inicial del siguiente.
+- **El corte mensual es una foto.** Se genera una sola vez por mes cerrado y no se regenera aunque después cambien los datos. Sus archivos quedan guardados, y el Consejo los descarga sin acceso al detalle de los recaudos.
+- **Los informes respetan RLS.** El arqueo de un auxiliar solo incluye su propio efectivo.
+
+## 6. Posibles extensiones
+
+- Cuotas ordinarias de administración y cartera por unidad.
+- Lectura automática del extracto bancario para sugerir la conciliación.
+- Facturación electrónica DIAN de los recaudos.
+- Pagos en línea (PSE) que entren directamente como transferencias por verificar.
+- Firma o sello de tiempo del corte mensual para efectos legales.

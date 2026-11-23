@@ -13,7 +13,7 @@ servicio async, así que se ejecuta con una sesión async de corta vida.
 import asyncio
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -103,3 +103,88 @@ def transferencias_sin_verificar() -> dict[str, int]:
             notificar_alertas.delay(str(tenant_id), [str(a) for a in nuevas])
     log.info("transferencias sin verificar: %s alertas nuevas", total)
     return {"alertas": total}
+
+
+# --- Corte mensual (día 1, 6:00) -----------------------------------------------------
+
+
+async def _generar_corte(tenant_id: uuid.UUID, anio: int, mes: int) -> tuple[bytes, list[tuple[str, str]], str] | None:
+    """Genera y guarda el corte (como SYSTEM). None si ya existía o no hubo recaudos ese mes."""
+    from app.models import CorteMensual, Recaudo
+    from app.services.recaudos.cortes import generar_corte, nombre_periodo
+    from app.services.recaudos.reportes import _fin_de_mes, _inicio
+
+    engine = create_async_engine(get_settings().database_url)
+    try:
+        async with async_sessionmaker(engine, class_=AsyncSession)() as db:
+            await set_rls_context(db, tenant_id=tenant_id, role="SYSTEM")
+            desde = datetime(anio, mes, 1).date()
+            if await db.scalar(select(CorteMensual.id).where(CorteMensual.periodo == desde)):
+                return None
+            hubo = await db.scalar(
+                select(Recaudo.id)
+                .where(
+                    Recaudo.fecha_recaudo >= _inicio(desde),
+                    Recaudo.fecha_recaudo < _inicio(_fin_de_mes(desde)) + timedelta(days=1),
+                )
+                .limit(1)
+            )
+            if hubo is None:  # la copropiedad no usó el módulo ese mes
+                return None
+            generado = await generar_corte(db, tenant_id, anio, mes)
+            await db.commit()
+            return generado.pdf, generado.reporte.resumen, nombre_periodo(desde)
+    finally:
+        await engine.dispose()
+
+
+@celery_app.task(name="recaudos.corte_mensual")
+def corte_mensual(anio: int | None = None, mes: int | None = None) -> dict[str, int]:
+    from app.services.notifications.email import monthly_cut
+    from app.services.recaudos.cortes import mes_anterior
+
+    if anio is None or mes is None:
+        anio, mes = mes_anterior()
+    with SyncSessionLocal() as db:
+        tenants = list(db.execute(select(Tenant.id, Tenant.name, Tenant.slug).where(Tenant.deleted_at.is_(None))))
+    generados = enviados = 0
+    for tenant_id, nombre, slug in tenants:
+        resultado = asyncio.run(_generar_corte(tenant_id, anio, mes))
+        if resultado is None:
+            continue
+        generados += 1
+        pdf, lineas, periodo = resultado
+        if not email_enabled():
+            continue
+        with _system_session(tenant_id) as db:
+            destinatarios = list(
+                db.scalars(
+                    select(User.email)
+                    .join(Membership, Membership.user_id == User.id)
+                    .where(
+                        Membership.tenant_id == tenant_id,
+                        Membership.role.in_([UserRole.ADMIN, UserRole.CONSEJO]),
+                        User.is_active,
+                    )
+                )
+            )
+        if destinatarios:
+            asunto, texto, html = monthly_cut(
+                tenant_name=nombre,
+                period=periodo,
+                lines=lineas,
+                url=f"{get_settings().app_url}/{slug}/recaudos/reportes",
+            )
+            try:
+                send_email(
+                    destinatarios,
+                    asunto,
+                    texto,
+                    html,
+                    [(f"corte-recaudos-{anio}-{mes:02d}.pdf", pdf, "application/pdf")],
+                )
+                enviados += 1
+            except OSError:  # el corte ya quedó guardado; el correo no debe tumbar a las demás copropiedades
+                log.exception("no se pudo enviar el corte de %s", nombre)
+    log.info("cortes mensuales %s-%02d: %s generados, %s enviados", anio, mes, generados, enviados)
+    return {"generados": generados, "enviados": enviados}

@@ -302,3 +302,14 @@ class DashboardOut(BaseModel):
     efectivo_en_administracion: Decimal
     transferencias_pendientes: TransferenciasPendientes
     alertas_abiertas: int
+
+
+class CorteOut(BaseModel):
+    periodo: date
+    nombre: str
+    total_mes: Decimal
+    cantidad_mes: int
+    generado_at: datetime
+    pdf_url: str | None
+    xlsx_url: str | None
+    resumen: dict[str, str]

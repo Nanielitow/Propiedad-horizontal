@@ -51,5 +51,9 @@ celery_app.conf.update(
             "task": "recaudos.transferencias_sin_verificar",
             "schedule": crontab(hour=8, minute=0),
         },
+        "recaudos-corte-mensual": {
+            "task": "recaudos.corte_mensual",
+            "schedule": crontab(day_of_month=1, hour=6, minute=0),
+        },
     },
 )

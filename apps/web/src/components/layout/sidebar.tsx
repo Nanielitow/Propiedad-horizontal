@@ -16,6 +16,7 @@ import {
   Scale,
   Settings2,
   ShieldAlert,
+  FileBarChart,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -70,6 +71,7 @@ const RECAUDOS_NAV: (NavItem & { permiso: Parameters<typeof puede>[1] })[] = [
   { href: "recaudos/caja", label: "Caja", description: "Cierres y entregas de efectivo", icon: Wallet, permiso: "caja" },
   { href: "recaudos/conciliacion", label: "Conciliación", description: "Consignaciones y bancos", icon: Landmark, permiso: "conciliacion" },
   { href: "recaudos/alertas", label: "Alertas", description: "Descuadres y pendientes", icon: ShieldAlert, permiso: "alertas" },
+  { href: "recaudos/reportes", label: "Reportes", description: "Excel, PDF y cortes mensuales", icon: FileBarChart, permiso: "reportes" },
   { href: "recaudos/configuracion", label: "Configuración", description: "Conceptos y tarifas", icon: Settings2, permiso: "configurar" },
 ];
 

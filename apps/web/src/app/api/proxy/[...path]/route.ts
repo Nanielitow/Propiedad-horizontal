@@ -12,7 +12,7 @@ import { refreshSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-const FORWARD_RESPONSE_HEADERS = ["content-type", "cache-control", "x-accel-buffering", "retry-after"];
+const FORWARD_RESPONSE_HEADERS = ["content-type", "content-disposition", "cache-control", "x-accel-buffering", "retry-after"];
 
 async function handler(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const store = await cookies();

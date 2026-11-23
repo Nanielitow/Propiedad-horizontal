@@ -96,6 +96,9 @@ class S3Storage:
     def upload(self, src: Path, key: str, content_type: str = "application/pdf") -> None:
         self._internal.upload_file(str(src), self.bucket, key, ExtraArgs={"ContentType": content_type})
 
+    def put_bytes(self, key: str, data: bytes, content_type: str) -> None:
+        self._internal.put_object(Bucket=self.bucket, Key=key, Body=data, ContentType=content_type)
+
     def delete(self, key: str) -> None:
         self._internal.delete_object(Bucket=self.bucket, Key=key)
 

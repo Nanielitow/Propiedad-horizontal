@@ -250,3 +250,23 @@ async def test_errores_de_triggers_se_traducen_con_su_mensaje(api: Cliente) -> N
         assert traducido[0] == codigo
         assert mensaje in traducido[1]
         assert "<class" not in traducido[1]
+
+
+async def test_descarga_de_reportes_por_http(api: Cliente) -> None:
+    await api.post("AUXILIAR", "", parqueadero(await api.concepto("PARQUEADERO")))
+    r = await api.get("ADMIN", "/reportes/general")
+    assert r.status_code == 200
+    assert r.json()["resumen"][0] == {"etiqueta": "Total recaudado", "valor": "$4.000"}
+
+    xlsx = await api.get("ADMIN", "/reportes/parqueadero", formato="xlsx")
+    assert xlsx.headers["content-type"].startswith("application/vnd.openxmlformats")
+    assert xlsx.headers["content-disposition"].startswith('attachment; filename="parqueadero-')
+    assert xlsx.content[:2] == b"PK"  # un .xlsx es un ZIP
+    pdf = await api.get("CONTABILIDAD", "/reportes/auditoria", formato="pdf")
+    assert (pdf.headers["content-type"], pdf.content[:4]) == ("application/pdf", b"%PDF")
+
+    assert (await api.get("AUXILIAR", "/reportes/caja")).status_code == 200
+    assert (await api.get("AUXILIAR", "/reportes/general")).status_code == 403
+    assert (await api.get("CONSEJO", "/reportes/general")).status_code == 403
+    assert (await api.get("ADMIN", "/reportes/inventado")).status_code == 422
+    assert (await api.get("CONSEJO", "/cortes")).json() == []

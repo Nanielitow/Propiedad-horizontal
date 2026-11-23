@@ -15,6 +15,7 @@ Una plataforma SaaS multi-copropiedad donde la administración sube sus document
 - **vencimientos detectados automáticamente** (pólizas, contratos, mantenimientos) con calendario y recordatorios por correo;
 - **comparación de cotizaciones** con tabla de precios, garantías y plazos, más un análisis para el consejo;
 - **resúmenes de actas** con acuerdos, votaciones y compromisos con seguimiento.
+- **control de recaudos** (parqueadero de visitantes, alquiler de zonas sociales, aseo): caja por turno, conciliación bancaria, auditoría inmutable y reportes en Excel y PDF.
 
 ![Buscador con cita abierta en el visor PDF](docs/screenshots/02-buscador.png)
 
@@ -47,6 +48,7 @@ Una plataforma SaaS multi-copropiedad donde la administración sube sus document
 | **Vencimientos** | Administración | Detecta fechas en pólizas, contratos, actas y certificados, incluidas las **calculadas** ("12 meses desde el 1 de febrero", "preaviso de 30 días"). Quedan pendientes de revisión, con la frase de origen. Incluye agenda en lista o calendario, recurrencias y recordatorios 30/15/7/1 días antes. |
 | **Cotizaciones** | Administración | Compara de 2 a 4 propuestas: total con IVA, garantía, plazo, forma de pago y alcance. Marca el mejor de cada criterio y redacta un análisis que **advierte cuando el precio más bajo engaña** (por ejemplo, si no incluye andamios). |
 | **Actas** | Administración | Resume la reunión: quórum, acuerdos, votaciones con porcentajes y compromisos con responsable y fecha, que se siguen hasta cerrarlos. |
+| **Recaudos** | Administración, recepción, contabilidad y consejo | Ingresos extraordinarios con su ciclo completo: registro rápido (tarifa de parqueadero por tiempo, alquiler con reserva desglosado en alquiler + aseo), cierre de caja con diferencias justificadas, entregas internas, consignaciones parciales, verificación contra el extracto, alertas de auditoría, dashboard y reportes. **Nada se borra:** los errores se anulan con motivo y todo queda en una auditoría que escribe la propia base de datos. Diseño en [docs/RECAUDOS.md](docs/RECAUDOS.md). |
 
 <table>
   <tr>
@@ -59,6 +61,8 @@ Una plataforma SaaS multi-copropiedad donde la administración sube sus document
   </tr>
 </table>
 
+![Dashboard del módulo de recaudos](docs/screenshots/07-recaudos.png)
+
 ---
 
 ## Pruébalo en 5 minutos
@@ -69,6 +73,7 @@ Una plataforma SaaS multi-copropiedad donde la administración sube sus document
 cp .env.example .env            # y añade GEMINI_API_KEY u OPENAI_API_KEY
 npm run setup                   # levanta los servicios, aplica migraciones y crea los datos demo
 npm run samples                 # genera PDFs de ejemplo en apps/api/samples
+docker compose exec api python -m app.scripts.demo recaudos   # ~6 semanas de movimientos de recaudos
 npm run web:install && npm run web:dev
 ```
 
@@ -84,6 +89,9 @@ npm run web:install && npm run web:dev
 |---|---|---|
 | `admin@lospinos.demo` | Administración | Conjunto Residencial Los Pinos |
 | `residente@lospinos.demo` | Residente | Conjunto Residencial Los Pinos |
+| `recepcion@lospinos.demo` | Recepción (registra recaudos y cierra su caja) | Conjunto Residencial Los Pinos |
+| `contabilidad@lospinos.demo` | Contabilidad (verifica y concilia) | Conjunto Residencial Los Pinos |
+| `consejo@lospinos.demo` | Consejo (dashboard y cortes mensuales) | Conjunto Residencial Los Pinos |
 | `admin@torrecentral.demo` | Administración | Edificio Torre Central (para probar el aislamiento) |
 
 Atajos útiles: `npm run test`, `npm run logs`, `npm run db:psql`, `npm run reset`.
@@ -277,16 +285,16 @@ En producción con datos reales debe usarse el **plan pago** de la API: en el pl
 apps/
   api/                 FastAPI + Celery
     alembic/sql/       Migraciones SQL-first (RLS, políticas, triggers, búsqueda híbrida)
-    app/api/v1/        Rutas: auth, documents, search, deadlines, quotes, minutes
-    app/services/      ingestion · retrieval · extraction · llm · storage · notifications
+    app/api/v1/        Rutas: auth, documents, search, deadlines, quotes, minutes, recaudos
+    app/services/      ingestion · retrieval · extraction · llm · storage · notifications · recaudos
     app/workers/       Tareas de Celery y programación diaria
     tests/             Unitarios e integración (RLS)
   web/                 Next.js
     src/app/api/       BFF: login, logout, renovación y proxy hacia la API
-    src/components/    chat · documents · deadlines · quotes · minutes · pdf-viewer · layout
+    src/components/    chat · documents · deadlines · quotes · minutes · recaudos · pdf-viewer · layout
 infra/                 Inicialización de Postgres y configuración de SeaweedFS
 deploy/                Caddyfile y scripts del servidor: preparación, secretos, despliegue, copias
-docs/                  ARCHITECTURE.md (40+ decisiones de diseño), DEPLOY.md y capturas
+docs/                  ARCHITECTURE.md (40+ decisiones de diseño), RECAUDOS.md, DEPLOY.md y capturas
 docker-compose.yml     Entorno local completo
 docker-compose.prod.yml  Producción: imágenes de GHCR, Caddy + HTTPS, solo los puertos 80/443
 ```

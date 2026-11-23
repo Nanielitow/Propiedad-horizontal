@@ -298,7 +298,10 @@ type Accion =
   | "alertas"
   | "atender"
   | "configurar"
-  | "recibir";
+  | "recibir"
+  | "reportes"
+  | "cortes"
+  | "generarCorte";
 
 const PERMISOS: Record<Accion, Role[]> = {
   resumen: ["ADMIN", "CONTABILIDAD", "CONSEJO"],
@@ -314,6 +317,9 @@ const PERMISOS: Record<Accion, Role[]> = {
   atender: ["ADMIN"],
   configurar: ["ADMIN"],
   recibir: ["ADMIN"],
+  reportes: ["ADMIN", "CONTABILIDAD", "AUXILIAR", "CONSEJO"],
+  cortes: ["ADMIN", "CONTABILIDAD", "CONSEJO"],
+  generarCorte: ["ADMIN"],
 };
 
 export function puede(rol: Role, accion: Accion): boolean {
@@ -372,3 +378,56 @@ export function desdeDatetimeLocal(valor: string): string {
 }
 
 export const base = (tenantId: string) => `/tenants/${tenantId}/recaudos`;
+
+// --- Reportes y cortes ------------------------------------------------------------
+
+export type TipoReporte = "general" | "parqueadero" | "zonas" | "aseo" | "caja" | "auditoria";
+export type TipoColumna = "texto" | "dinero" | "entero" | "fecha" | "fechahora" | "porcentaje";
+
+export const REPORTES: Record<TipoReporte, { titulo: string; descripcion: string; roles: Role[] }> = {
+  general: { titulo: "General de ingresos", descripcion: "Totales por concepto, medio de pago y estado del dinero", roles: ["ADMIN", "CONTABILIDAD"] },
+  parqueadero: { titulo: "Parqueadero", descripcion: "Cada vehículo con placa, horas, tiempo y cobro", roles: ["ADMIN", "CONTABILIDAD"] },
+  zonas: { titulo: "Zonas sociales", descripcion: "Alquileres con fecha del evento, alquiler y aseo", roles: ["ADMIN", "CONTABILIDAD"] },
+  aseo: { titulo: "Aseo", descripcion: "Aseo cobrado directamente y con alquileres", roles: ["ADMIN", "CONTABILIDAD"] },
+  caja: { titulo: "Caja (arqueo)", descripcion: "Saldos, ingresos en efectivo, entregas, consignaciones y diferencias", roles: ["ADMIN", "CONTABILIDAD", "AUXILIAR"] },
+  auditoria: { titulo: "Trazabilidad y auditoría", descripcion: "Historial de movimientos, anulaciones y alertas", roles: ["ADMIN", "CONTABILIDAD"] },
+};
+
+export interface ReporteJson {
+  tipo: TipoReporte;
+  titulo: string;
+  copropiedad: string;
+  periodo: string;
+  desde: string;
+  hasta: string;
+  generado: string;
+  resumen: { etiqueta: string; valor: string }[];
+  tablas: {
+    titulo: string;
+    columnas: { titulo: string; tipo: TipoColumna }[];
+    filas: (string | number | null)[][];
+    totales: (string | number | null)[] | null;
+    nota: string | null;
+  }[];
+}
+
+export interface Corte {
+  periodo: string;
+  nombre: string;
+  total_mes: string;
+  cantidad_mes: number;
+  generado_at: string;
+  pdf_url: string | null;
+  xlsx_url: string | null;
+  resumen: Record<string, string>;
+}
+
+export function celdaReporte(valor: string | number | null, tipo: TipoColumna): string {
+  if (valor === null || valor === "") return "";
+  if (tipo === "dinero") return pesos(valor);
+  if (tipo === "porcentaje") return `${Number(valor).toLocaleString("es-CO", { maximumFractionDigits: 1 })} %`;
+  if (tipo === "entero") return Number(valor).toLocaleString("es-CO");
+  if (tipo === "fechahora") return fechaHora(String(valor));
+  if (tipo === "fecha") return fechaCorta(String(valor).slice(0, 10));
+  return String(valor);
+}
