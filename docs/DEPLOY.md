@@ -18,7 +18,7 @@ Solo Caddy recibe tráfico de internet (puertos 80 y 443). La API, Postgres y Re
 
 | Pieza | Servicio | Costo |
 |---|---|---|
-| Servidor (2–4 vCPU, 4–8 GB) | Hetzner Cloud | ~€4–6 al mes |
+| Servidor (2–4 vCPU, **mínimo 4 GB**) | Hetzner Cloud u otro VPS | ~$20 o más al mes tras las subidas de Hetzner en 2026; cotizar al momento |
 | Archivos y copias de seguridad | Cloudflare R2 | Gratis hasta 10 GB, sin costo de descarga |
 | Correo | Resend | Gratis hasta ~3.000 correos al mes (100 al día) |
 | Dominio | Cloudflare Registrar | ~10–15 USD al año |

@@ -1,11 +1,12 @@
 """Herramientas de la demo pública.
 
   python -m app.scripts.demo load               # sube y procesa los documentos de ejemplo
+  python -m app.scripts.demo recaudos           # genera ~6 semanas de movimientos del módulo de recaudos
   python -m app.scripts.demo snapshot           # guarda el estado actual como "demo limpia"
   python -m app.scripts.demo restore            # vuelve a la instantánea (lo hace beat cada noche)
   python -m app.scripts.demo configure-bucket   # CORS del bucket para el dominio de la app
 
-Orden en un servidor nuevo:  migraciones -> seed -> load -> (revisar en la web) -> snapshot
+Orden en un servidor nuevo:  migraciones -> seed -> load -> recaudos -> (revisar en la web) -> snapshot
 """
 
 import hashlib
@@ -177,6 +178,10 @@ def main() -> None:
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "load":
         load()
+    elif command == "recaudos":
+        from app.scripts.demo_recaudos import main as recaudos
+
+        recaudos()
     elif command == "snapshot":
         counts = save_snapshot()
         print("Instantánea guardada:", ", ".join(f"{t}={n}" for t, n in counts.items() if n))

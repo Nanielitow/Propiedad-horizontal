@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 from sqlalchemy import text
 
+from app.api.errores import registrar_manejadores
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.db.session import engine
@@ -40,6 +41,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+registrar_manejadores(app)
 app.include_router(api_router)
 
 

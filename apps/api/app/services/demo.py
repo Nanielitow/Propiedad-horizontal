@@ -46,8 +46,26 @@ TABLES = [
     "conversations",
     "messages",
     "audit_logs",
+    # Recaudos (0003)
+    "secuencias",
+    "conceptos_recaudo",
+    "zonas_sociales",
+    "reservas",
+    "cierres_caja",
+    "entregas_internas",
+    "recaudos",
+    "recaudo_items",
+    "recaudo_parqueadero",
+    "consignaciones",
+    "consignacion_recaudos",
+    "auditoria_recaudos",
+    "alertas_recaudo",
+    "cortes_mensuales",
 ]
+# Tablas con id IDENTITY cuya secuencia debe continuar tras restaurar
+_IDENTITY_TABLES = ["audit_logs", "auditoria_recaudos"]
 _KEY = re.compile(r"^tenants/[0-9a-f-]{36}/documents/(?P<doc>[0-9a-f-]{36})/")
+_SOPORTE = re.compile(r"^tenants/[0-9a-f-]{36}/recaudos/soportes/")
 
 
 def _owner_engine():  # type: ignore[no-untyped-def]
@@ -104,8 +122,19 @@ def restore_snapshot() -> dict[str, int]:
         ).first()
         if not exists:
             raise RuntimeError("No hay instantánea de la demo: ejecute primero `python -m app.scripts.demo snapshot`")
+        in_snapshot = set(
+            conn.scalars(
+                text("SELECT table_name FROM information_schema.tables WHERE table_schema = :s"), {"s": SNAPSHOT_SCHEMA}
+            )
+        )
+        # Los triggers (consecutivos, estado inicial, auditoría, inmutabilidad) no deben
+        # actuar al restaurar una foto ya consistente. Requiere superusuario (el dueño lo es).
+        conn.execute(text("SET LOCAL session_replication_role = replica"))
         conn.execute(text("TRUNCATE " + ", ".join(f"public.{t}" for t in TABLES) + " RESTART IDENTITY CASCADE"))
         for table in map(_ident, TABLES):
+            if table not in in_snapshot:  # instantánea anterior a una migración: la tabla queda vacía
+                counts[table] = 0
+                continue
             cols = ", ".join(_columns(conn, SNAPSHOT_SCHEMA, table))
             result = conn.execute(
                 text(
@@ -114,13 +143,16 @@ def restore_snapshot() -> dict[str, int]:
                 )
             )
             counts[table] = result.rowcount
-        # La secuencia del id de auditoría debe continuar después del máximo restaurado
-        conn.execute(
-            text(
-                "SELECT setval(pg_get_serial_sequence('public.audit_logs', 'id'), "
-                "coalesce((SELECT max(id) FROM public.audit_logs), 0) + 1, false)"
+        # Las secuencias de ids de auditoría deben continuar después del máximo restaurado
+        for table in map(_ident, _IDENTITY_TABLES):
+            conn.execute(
+                text(
+                    f"SELECT setval(pg_get_serial_sequence('public.{table}', 'id'), "  # noqa: S608
+                    f"coalesce((SELECT max(id) FROM public.{table}), 0) + 1, false)"
+                )
             )
-        )
+        # Copropiedades restauradas desde una foto sin conceptos de recaudo: crearlos (idempotente)
+        conn.execute(text("SELECT seed_conceptos_recaudo(id) FROM public.tenants"))
     log.info("demo restaurada: %s", counts)
     return counts
 
@@ -130,8 +162,21 @@ def delete_orphan_files() -> int:
     (los que subieron los visitantes durante el día)."""
     with _owner_engine().connect() as conn:
         alive = {str(r[0]) for r in conn.execute(text("SELECT id FROM public.documents"))}
+        soportes = {
+            r[0]
+            for r in conn.execute(
+                text(
+                    "SELECT soporte_key FROM public.recaudos WHERE soporte_key IS NOT NULL UNION "
+                    "SELECT soporte_bancario_key FROM public.consignaciones WHERE soporte_bancario_key IS NOT NULL"
+                )
+            )
+        }
     storage = get_storage()
-    orphans = [key for key in storage.list_keys("tenants/") if (m := _KEY.match(key)) and m.group("doc") not in alive]
+    orphans = [
+        key
+        for key in storage.list_keys("tenants/")
+        if ((m := _KEY.match(key)) and m.group("doc") not in alive) or (_SOPORTE.match(key) and key not in soportes)
+    ]
     if orphans:
         storage.delete_many(orphans)
     log.info("archivos huérfanos eliminados: %s", len(orphans))

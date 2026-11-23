@@ -40,6 +40,15 @@ class S3Storage:
     def document_key(tenant_id: uuid.UUID, document_id: uuid.UUID, name: str) -> str:
         return f"tenants/{tenant_id}/documents/{document_id}/{name}"
 
+    @staticmethod
+    def recaudo_soporte_key(tenant_id: uuid.UUID, extension: str) -> str:
+        """Soportes de pago y comprobantes bancarios del módulo de recaudos."""
+        return f"tenants/{tenant_id}/recaudos/soportes/{uuid.uuid4()}.{extension}"
+
+    @staticmethod
+    def recaudos_prefix(tenant_id: uuid.UUID) -> str:
+        return f"tenants/{tenant_id}/recaudos/"
+
     # -- URLs firmadas ------------------------------------------------------------
     def presign_put(self, key: str, content_type: str) -> str:
         # ContentType queda dentro de la firma: el navegador debe enviar
@@ -52,7 +61,7 @@ class S3Storage:
             )
         )
 
-    def presign_get(self, key: str, filename: str) -> str:
+    def presign_get(self, key: str, filename: str, content_type: str = "application/pdf") -> str:
         disposition = f"inline; filename*=UTF-8''{quote(filename)}"
         return str(
             self._public.generate_presigned_url(
@@ -61,7 +70,7 @@ class S3Storage:
                     "Bucket": self.bucket,
                     "Key": key,
                     "ResponseContentDisposition": disposition,
-                    "ResponseContentType": "application/pdf",
+                    "ResponseContentType": content_type,
                 },
                 ExpiresIn=self.ttl,
             )

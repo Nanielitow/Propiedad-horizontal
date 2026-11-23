@@ -12,8 +12,36 @@ from app.models.document import (
 from app.models.identity import Membership, Tenant, Unit, User
 from app.models.minutes import ActionItem, MinutesSummary
 from app.models.quote import QuoteComparison, QuoteComparisonDocument
+from app.models.recaudo import (
+    AlertaRecaudo,
+    AuditoriaRecaudo,
+    CierreCaja,
+    ConceptoRecaudo,
+    Consignacion,
+    ConsignacionRecaudo,
+    CorteMensual,
+    EntregaInterna,
+    Recaudo,
+    RecaudoItem,
+    RecaudoParqueadero,
+    Reserva,
+    ZonaSocial,
+)
 
 __all__ = [
+    "AlertaRecaudo",
+    "AuditoriaRecaudo",
+    "CierreCaja",
+    "ConceptoRecaudo",
+    "Consignacion",
+    "ConsignacionRecaudo",
+    "CorteMensual",
+    "EntregaInterna",
+    "Recaudo",
+    "RecaudoItem",
+    "RecaudoParqueadero",
+    "Reserva",
+    "ZonaSocial",
     "EMBEDDING_DIM",
     "ActionItem",
     "MinutesSummary",

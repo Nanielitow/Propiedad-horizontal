@@ -27,6 +27,9 @@ Reglas obligatorias:
 _AUDIENCE = {
     UserRole.ADMIN: "la administración del conjunto",
     UserRole.RESIDENTE: "un residente del conjunto",
+    UserRole.AUXILIAR: "el personal de recepción del conjunto",
+    UserRole.CONTABILIDAD: "el área de contabilidad del conjunto",
+    UserRole.CONSEJO: "un miembro del consejo de administración",
 }
 
 _CONDENSE_SYSTEM = (

@@ -1,6 +1,6 @@
 // Espejo de los esquemas Pydantic del backend (app/schemas).
 
-export type Role = "ADMIN" | "RESIDENTE";
+export type Role = "ADMIN" | "RESIDENTE" | "AUXILIAR" | "CONTABILIDAD" | "CONSEJO";
 export type AccessLevel = "ADMIN" | "PUBLIC";
 export type Category =
   | "MANTENIMIENTO"

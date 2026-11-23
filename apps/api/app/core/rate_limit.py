@@ -103,3 +103,10 @@ def client_ip(request: Request) -> str:
     if forwarded:
         return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
+
+
+# Módulo de recaudos: escrituras por usuario (frena scripts o dobles clics en ráfaga)
+RECAUDOS_WRITES_PER_MINUTE = Limit("recaudos-escritura", 60, 60, "Demasiadas operaciones seguidas.")
+DEMO_RECAUDOS_PER_IP_DAY = Limit(
+    "demo-recaudos-ip", 150, 86_400, "La demo pública permite 150 operaciones de recaudos al día por visitante."
+)

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, deadlines, documents, minutes, quotes, search
+from app.api.v1 import auth, deadlines, documents, minutes, quotes, recaudos, recaudos_caja, recaudos_panel, search
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -9,3 +9,8 @@ api_router.include_router(search.router)
 api_router.include_router(deadlines.router)
 api_router.include_router(quotes.router)
 api_router.include_router(minutes.router)
+# Recaudos: las rutas con prefijo fijo (/caja, /entregas, /alertas...) van ANTES que
+# las de /{recaudo_id}, que de otro modo capturarían esos segmentos.
+api_router.include_router(recaudos_caja.router)
+api_router.include_router(recaudos_panel.router)
+api_router.include_router(recaudos.router)

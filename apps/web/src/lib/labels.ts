@@ -51,6 +51,9 @@ export const ACCESS: Record<AccessLevel, { label: string; short: string }> = {
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: "Administración",
   RESIDENTE: "Residente",
+  AUXILIAR: "Recepción",
+  CONTABILIDAD: "Contabilidad",
+  CONSEJO: "Consejo de administración",
 };
 
 export const STATUS: Record<DocStatus, { label: string; tone: "neutral" | "info" | "success" | "danger" }> = {

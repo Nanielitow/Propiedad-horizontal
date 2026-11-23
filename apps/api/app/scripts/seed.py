@@ -1,13 +1,13 @@
 """Datos de demostración (idempotente): python -m app.scripts.seed
 
 Dos copropiedades para poder demostrar el aislamiento multi-tenant:
-- Conjunto Residencial Los Pinos: un admin y un residente
+- Conjunto Residencial Los Pinos: admin, residente, recepción, contabilidad y consejo
 - Edificio Torre Central: un admin
 """
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.core.security import hash_password
 from app.db.rls import set_rls_context_sync
@@ -24,6 +24,10 @@ TENANTS = [
 USERS = [
     ("admin@lospinos.demo", "Laura Gómez (Administradora)", "los-pinos", UserRole.ADMIN),
     ("residente@lospinos.demo", "Carlos Pérez (Apto 502)", "los-pinos", UserRole.RESIDENTE),
+    # Módulo de recaudos
+    ("recepcion@lospinos.demo", "Marta Rincón (Recepción)", "los-pinos", UserRole.AUXILIAR),
+    ("contabilidad@lospinos.demo", "Jorge Medina (Contabilidad)", "los-pinos", UserRole.CONTABILIDAD),
+    ("consejo@lospinos.demo", "Elena Vargas (Consejo de Administración)", "los-pinos", UserRole.CONSEJO),
     ("admin@torrecentral.demo", "Andrés Ruiz (Administrador)", "torre-central", UserRole.ADMIN),
 ]
 
@@ -54,6 +58,12 @@ def main() -> None:
             )
             if exists is None:
                 db.add(Membership(id=uuid.uuid4(), tenant_id=tenants[slug].id, user_id=user.id, role=role))
+            db.commit()
+
+        # Conceptos de recaudo iniciales de cada copropiedad (idempotente)
+        for tenant in tenants.values():
+            set_rls_context_sync(db, tenant_id=tenant.id, role="SYSTEM")
+            db.execute(text("SELECT seed_conceptos_recaudo(:t)"), {"t": tenant.id})
             db.commit()
 
     print("Datos de demo listos. Contraseña para todos:", DEMO_PASSWORD)

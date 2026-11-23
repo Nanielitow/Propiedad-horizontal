@@ -17,6 +17,7 @@ celery_app = Celery(
         "app.workers.tasks.quotes",
         "app.workers.tasks.minutes",
         "app.workers.tasks.demo",
+        "app.workers.tasks.recaudos",
     ],
 )
 
@@ -45,6 +46,10 @@ celery_app.conf.update(
         "reinicio-demo": {
             "task": "demo.reset",
             "schedule": crontab(hour=4, minute=0),
+        },
+        "recaudos-transferencias-sin-verificar": {
+            "task": "recaudos.transferencias_sin_verificar",
+            "schedule": crontab(hour=8, minute=0),
         },
     },
 )

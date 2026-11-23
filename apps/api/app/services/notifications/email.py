@@ -69,3 +69,29 @@ def deadline_reminder(
   <p style="font-size:12px;color:#8a929e">Recibe este correo porque es administrador de {escape(tenant_name)} en PH Gestión.</p>
 </div>"""
     return subject, "\n".join(lines), html
+
+
+_SEVERIDAD = {"CRITICA": ("Crítica", "#b42318"), "ADVERTENCIA": ("Advertencia", "#b54708"), "INFO": ("Info", "#475467")}
+
+
+def recaudo_alerts(*, tenant_name: str, alertas: list[tuple[str, str]], url: str) -> tuple[str, str, str]:
+    """Correo de alertas de recaudos. `alertas` = [(severidad, mensaje)]. Devuelve (asunto, texto, html)."""
+    criticas = sum(1 for sev, _ in alertas if sev == "CRITICA")
+    n = len(alertas)
+    subject = f"{'⚠ ' if criticas else ''}{n} alerta{'s' if n != 1 else ''} de recaudos · {tenant_name}"
+    lines = [f"Alertas de recaudos de {tenant_name}", ""]
+    lines += [f"- [{_SEVERIDAD.get(sev, (sev, ''))[0]}] {msg}" for sev, msg in alertas]
+    lines += ["", f"Revisar en PH Gestión: {url}"]
+    items = "".join(
+        f'<li style="margin:0 0 12px"><strong style="color:{_SEVERIDAD.get(sev, (sev, "#475467"))[1]}">'
+        f"{escape(_SEVERIDAD.get(sev, (sev, ''))[0])}</strong> · {escape(msg)}</li>"
+        for sev, msg in alertas
+    )
+    html = f"""<div style="font-family:Arial,sans-serif;color:#1b2430;max-width:560px">
+  <p style="color:#5b6573;margin:0 0 4px">Control de recaudos · {escape(tenant_name)}</p>
+  <h2 style="margin:0 0 16px;color:#1f3a5f">{n} alerta{"s" if n != 1 else ""} requiere{"n" if n != 1 else ""} revisión</h2>
+  <ul style="font-size:14px;padding-left:18px">{items}</ul>
+  <p style="margin:24px 0"><a href="{escape(url)}" style="background:#1f3a5f;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Ver alertas</a></p>
+  <p style="font-size:12px;color:#8a929e">Recibe este correo porque es administrador de {escape(tenant_name)} en PH Gestión.</p>
+</div>"""
+    return subject, "\n".join(lines), html

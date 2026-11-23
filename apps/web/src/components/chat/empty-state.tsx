@@ -1,5 +1,7 @@
 import { FileSearch, MessageSquareText, MousePointerClick } from "lucide-react";
 
+import type { Role } from "@/lib/types";
+
 const SUGGESTIONS = {
   RESIDENTE: [
     "¿Se permiten mascotas y qué requisitos hay?",
@@ -26,7 +28,7 @@ export function ChatEmptyState({
   tenantName,
   onPick,
 }: {
-  role: "ADMIN" | "RESIDENTE";
+  role: Role;
   tenantName: string;
   onPick: (q: string) => void;
 }) {
@@ -42,7 +44,7 @@ export function ChatEmptyState({
       </p>
 
       <div className="mt-8 grid w-full gap-2 sm:grid-cols-2">
-        {SUGGESTIONS[role].map((q) => (
+        {(role === "ADMIN" ? SUGGESTIONS.ADMIN : SUGGESTIONS.RESIDENTE).map((q) => (
           <button
             key={q}
             type="button"
