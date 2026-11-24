@@ -1,7 +1,13 @@
 "use client";
 
 import {
+  AlertTriangle,
+  Boxes,
   Building2,
+  CalendarDays,
+  ClipboardCheck,
+  HardHat,
+  ListChecks,
   CalendarClock,
   Check,
   ChevronsUpDown,
@@ -38,6 +44,7 @@ import { useDeadlines } from "@/hooks/use-deadlines";
 import { fetcher } from "@/lib/api";
 import { alertCount } from "@/lib/deadlines";
 import { ROLE_LABEL } from "@/lib/labels";
+import { baseActivos, type Novedad, puedeActivos } from "@/lib/activos";
 import { type Alerta, base, puede } from "@/lib/recaudos";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +71,17 @@ const ADMIN_NAV: NavItem[] = [
 ];
 
 // Módulo de recaudos: cada ítem se muestra solo a los roles que lo usan
+// Módulo de mantenimiento: también por rol (el técnico entra por «Mi trabajo»)
+const ACTIVOS_NAV: (NavItem & { permiso: Parameters<typeof puedeActivos>[1] })[] = [
+  { href: "activos/mi-trabajo", label: "Mi trabajo", description: "Lo asignado a usted", icon: ClipboardCheck, permiso: "miTrabajo" },
+  { href: "activos", label: "Activos", description: "Hojas de vida y semáforo", icon: Boxes, permiso: "ver", exact: true },
+  { href: "activos/calendario", label: "Calendario", description: "Fechas de mantenimiento", icon: CalendarDays, permiso: "ver" },
+  { href: "activos/novedades", label: "Novedades", description: "Fallas y su atención", icon: AlertTriangle, permiso: "ver" },
+  { href: "activos/recomendaciones", label: "Recomendaciones", description: "Sugerencias de los técnicos", icon: ListChecks, permiso: "ver" },
+  { href: "activos/planes", label: "Planes", description: "Mantenimiento preventivo", icon: CalendarClock, permiso: "contratistas" },
+  { href: "activos/contratistas", label: "Contratistas", description: "Empresas y contratos", icon: HardHat, permiso: "contratistas" },
+];
+
 const RECAUDOS_NAV: (NavItem & { permiso: Parameters<typeof puede>[1] })[] = [
   { href: "recaudos", label: "Resumen", description: "Ingresos del mes", icon: LayoutDashboard, permiso: "resumen", exact: true },
   { href: "recaudos/nuevo", label: "Registrar", description: "Cobro rápido en recepción", icon: CirclePlus, permiso: "registrar" },
@@ -93,6 +111,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { data: deadlines } = useDeadlines(tenant.tenant_id, isAdmin);
   const alerts = alertCount(deadlines?.deadlines);
   const recaudos = RECAUDOS_NAV.filter((i) => puede(tenant.role, i.permiso));
+  const activos = ACTIVOS_NAV.filter((i) => puedeActivos(tenant.role, i.permiso));
+  // Contador: novedades reportadas que nadie ha atendido todavía
+  const { data: sinAtender } = useSWR<Novedad[]>(
+    activos.length ? `${baseActivos(tenant.tenant_id)}/novedades?estado=REPORTADA` : null,
+    fetcher,
+    { refreshInterval: 60_000 },
+  );
   const { data: alertasRecaudo } = useSWR<Alerta[]>(
     puede(tenant.role, "alertas") ? `${base(tenant.tenant_id)}/alertas` : null,
     fetcher,
@@ -134,6 +159,15 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               title="Por revisar o con vencimiento en 7 días o menos"
             >
               {alerts}
+            </span>
+          )}
+          {item.href === "activos/novedades" && (sinAtender?.length ?? 0) > 0 && (
+            <span
+              className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-semibold text-white"
+              aria-label={`${sinAtender?.length} novedades sin atender`}
+              title="Reportadas y sin atender"
+            >
+              {sinAtender?.length}
             </span>
           )}
           {item.href === "recaudos/alertas" && (alertasRecaudo?.length ?? 0) > 0 && (
@@ -208,6 +242,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               Herramientas de administración
             </p>
             <ul className="space-y-1">{ADMIN_NAV.map(renderItem)}</ul>
+          </div>
+        )}
+        {activos.length > 0 && (
+          <div>
+            <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">Mantenimiento</p>
+            <ul className="space-y-1">{activos.map(renderItem)}</ul>
           </div>
         )}
         {recaudos.length > 0 && (

@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -15,9 +15,12 @@ export default async function TenantLayout({
   const { tenantSlug } = await params;
   const me = await getMe();
   if (!me) {
+    // Volver a la página pedida tras iniciar sesión (la pone src/proxy.ts); solo rutas de esta copropiedad
+    const pedida = (await headers()).get("x-ruta");
+    const destino = pedida?.startsWith(`/${tenantSlug}/`) ? pedida : `/${tenantSlug}/search`;
     // Acceso vencido pero hay refresh: renovar (un route handler sí puede escribir cookies)
-    if ((await cookies()).get(REFRESH_COOKIE)) redirect(`/api/auth/refresh?next=/${tenantSlug}`);
-    redirect(`/login?expired=1&next=/${tenantSlug}/search`);
+    if ((await cookies()).get(REFRESH_COOKIE)) redirect(`/api/auth/refresh?next=${encodeURIComponent(destino)}`);
+    redirect(`/login?expired=1&next=${encodeURIComponent(destino)}`);
   }
 
   const membership = me.memberships.find((m) => m.tenant_slug === tenantSlug);

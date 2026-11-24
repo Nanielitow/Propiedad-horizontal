@@ -48,7 +48,7 @@ export function LoginForm() {
       const next = params.get("next");
       // Navegación COMPLETA (no router.push): descarta cualquier dato en memoria
       // de una sesión anterior en la misma pestaña (caché de SWR, visor, chat).
-      window.location.assign(next?.startsWith("/") && !next.startsWith("//") ? next : `/${first.tenant_slug}/search`);
+      window.location.assign(next?.startsWith("/") && !next.startsWith("//") ? next : `/${first.tenant_slug}`);
     } catch {
       setError("No se pudo conectar con el servidor.");
     } finally {

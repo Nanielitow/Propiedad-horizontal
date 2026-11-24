@@ -2,7 +2,7 @@
 
 Diseño del segundo gran módulo: la **hoja de vida técnica** de equipos e infraestructura, el **plan de mantenimiento preventivo** con semáforo, las **novedades y correctivos**, los **contratistas**, las **recomendaciones técnicas** y la **proyección de costos**. El objetivo es pasar de una administración reactiva a una preventiva.
 
-Estado: **fases 1 a 3 implementadas** (base de datos, lógica, QR, evidencias, alertas, API y datos demo). Ver §7.
+Estado: **fases 1 a 4 implementadas** (base de datos, lógica, QR, evidencias, alertas, API, datos demo y pantallas). Ver §7.
 
 ---
 
@@ -490,4 +490,26 @@ Decisiones de esta fase:
   - Contenido: 25 activos, 27 planes aprobados hace un año, 121 mantenimientos ( millones), 14 novedades y 9 recomendaciones. La novedad de la cubierta queda vinculada a la comparación de cotizaciones de la demo, y el tanque al certificado de lavado, cuyos vencimientos aparecen en su hoja de vida.
   - Fechas: lo que la base fija con `now()` (reportes, creación, auditoría) se lleva a su fecha simulada al final, con la conexión del dueño de la base y sin *triggers*. Es solo para la demo; la API nunca puede hacerlo.
 
-Pendiente: fases 4 (pantallas, incluida la vista móvil del QR y el calendario) y 5 (panel, presupuesto y reportes).
+### Fase 4: pantallas (hecha)
+
+Rutas bajo `/{copropiedad}/activos`, en `apps/web/src/components/activos/`:
+
+| Pantalla | Para qué |
+|---|---|
+| Activos (`inventario-view`) | Resumen del semáforo (cada tarjeta filtra), buscador y filtros en la URL; tabla en escritorio y tarjetas en el celular; hoja de etiquetas QR |
+| Hoja de vida (`hoja-vida-view`) | Pestañas: resumen (ficha, QR, vida útil, horómetro, costos), plan y agenda, historial, novedades, recomendaciones, documentos (se abren en el visor), fotos y auditoría |
+| Calendario (`calendario-view`) | Mes en cuadrícula (escritorio) o agenda por días (celular); vencidas arriba; ejecutar, reprogramar y asignar desde el día |
+| Novedades y recomendaciones (`novedades-view`) | Bandejas con indicadores (sin atender, críticas, demoradas, costo pendiente) |
+| Planes y contratistas (`planes-view`) | Planes por aprobar, activos y pausados con su costo anual estimado; contratistas con el estado de su contrato |
+| Mi trabajo (`mi-trabajo-view`) | Entrada del técnico: vencido y de hoy primero, próximas, novedades y recomendaciones a su cargo |
+| Vista del QR (`qr-view`) | Lo que ve quien escanea la etiqueta: estado de un vistazo y botones grandes (reportar falla, ejecutar, horómetro) |
+
+Decisiones de esta fase:
+
+- **El QR funciona sin sesión abierta:** `apps/web/src/proxy.ts` pasa la ruta pedida al layout, que manda al login con `next` y vuelve al equipo. Sirve para cualquier enlace profundo.
+- **El técnico entra directo a «Mi trabajo»** (la raíz de la copropiedad redirige por rol).
+- **Formularios únicos reutilizados** desde la hoja de vida, el calendario, el QR y las bandejas (`formulario-mantenimiento`, `formularios-*`). Las fotos se eligen en el formulario y se suben al guardar.
+- **Las pantallas no deciden permisos:** solo ocultan botones. Los costos ya llegan en `null` desde la API.
+- **Verificado con Playwright:** administración en escritorio y técnico en celular entrando por el QR sin sesión.
+
+Pendiente: fase 5 (panel, presupuesto y reportes).
