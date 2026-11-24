@@ -266,6 +266,49 @@ class EstadoRecomendacion(StrEnum):
     DESCARTADA_CON_JUSTIFICACION = "DESCARTADA_CON_JUSTIFICACION"
 
 
+# --- Unidades, copropietarios y residentes (migración 0007) ---------------------
+
+
+class TipoUnidad(StrEnum):
+    APARTAMENTO = "APARTAMENTO"
+    CASA = "CASA"
+    LOCAL = "LOCAL"
+    OFICINA = "OFICINA"
+    PARQUEADERO = "PARQUEADERO"
+    DEPOSITO = "DEPOSITO"
+    OTRO = "OTRO"
+
+
+class OcupacionUnidad(StrEnum):
+    PROPIETARIO = "PROPIETARIO"  # la habita su propietario
+    ARRENDADA = "ARRENDADA"
+    DESOCUPADA = "DESOCUPADA"
+    SIN_INFORMACION = "SIN_INFORMACION"
+
+
+class TipoDocumentoIdentidad(StrEnum):
+    CC = "CC"
+    CE = "CE"
+    NIT = "NIT"
+    PASAPORTE = "PASAPORTE"
+    PPT = "PPT"  # permiso por protección temporal
+    TI = "TI"
+
+
+class RelacionUnidad(StrEnum):
+    PROPIETARIO = "PROPIETARIO"
+    ARRENDATARIO = "ARRENDATARIO"
+    RESIDENTE = "RESIDENTE"  # familiar u ocupante
+    AUTORIZADO = "AUTORIZADO"  # recoge paquetes, paga, autoriza visitas
+
+
+class TipoVehiculo(StrEnum):
+    CARRO = "CARRO"
+    MOTO = "MOTO"
+    BICICLETA = "BICICLETA"
+    OTRO = "OTRO"
+
+
 def pg_enum(enum_cls: type[StrEnum], name: str) -> ENUM:
     # values_callable: SQLAlchemy guarda por defecto el NOMBRE del miembro (USER);
     # el ENUM de Postgres usa el VALOR ('user').

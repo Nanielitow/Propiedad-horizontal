@@ -33,14 +33,6 @@ class User(UUIDPk, CreatedAt, Base):
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
-class Unit(UUIDPk, Base):
-    __tablename__ = "units"
-
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"))
-    tower: Mapped[str] = mapped_column(server_default="")
-    number: Mapped[str]
-
-
 class Membership(UUIDPk, CreatedAt, Base):
     __tablename__ = "memberships"
 

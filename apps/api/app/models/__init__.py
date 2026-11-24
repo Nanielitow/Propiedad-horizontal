@@ -24,7 +24,7 @@ from app.models.document import (
     DocumentPage,
     ProcessingJob,
 )
-from app.models.identity import Membership, Tenant, Unit, User
+from app.models.identity import Membership, Tenant, User
 from app.models.minutes import ActionItem, MinutesSummary
 from app.models.quote import QuoteComparison, QuoteComparisonDocument
 from app.models.recaudo import (
@@ -41,6 +41,14 @@ from app.models.recaudo import (
     RecaudoParqueadero,
     Reserva,
     ZonaSocial,
+)
+from app.models.unidad import (
+    AuditoriaUnidad,
+    ImportacionUnidades,
+    Persona,
+    UnidadPersona,
+    Unit,
+    Vehiculo,
 )
 
 __all__ = [
@@ -88,5 +96,10 @@ __all__ = [
     "QuoteComparisonDocument",
     "Tenant",
     "Unit",
+    "AuditoriaUnidad",
+    "ImportacionUnidades",
+    "Persona",
+    "UnidadPersona",
+    "Vehiculo",
     "User",
 ]

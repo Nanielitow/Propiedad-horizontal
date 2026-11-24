@@ -33,6 +33,12 @@ TABLES = [
     "users",
     "units",
     "memberships",
+    # Unidades, copropietarios y residentes (0007)
+    "personas",
+    "unidad_personas",
+    "vehiculos",
+    "importaciones_unidades",
+    "auditoria_unidades",
     "documents",
     "document_pages",
     "document_chunks",
@@ -78,7 +84,7 @@ TABLES = [
     "notificaciones_mantenimiento",
 ]
 # Tablas con id IDENTITY cuya secuencia debe continuar tras restaurar
-_IDENTITY_TABLES = ["audit_logs", "auditoria_recaudos", "auditoria_activos"]
+_IDENTITY_TABLES = ["audit_logs", "auditoria_recaudos", "auditoria_activos", "auditoria_unidades"]
 _KEY = re.compile(r"^tenants/[0-9a-f-]{36}/documents/(?P<doc>[0-9a-f-]{36})/")
 _SOPORTE = re.compile(r"^tenants/[0-9a-f-]{36}/recaudos/soportes/")
 
