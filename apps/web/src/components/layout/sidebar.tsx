@@ -74,12 +74,14 @@ const ADMIN_NAV: NavItem[] = [
 // Módulo de mantenimiento: también por rol (el técnico entra por «Mi trabajo»)
 const ACTIVOS_NAV: (NavItem & { permiso: Parameters<typeof puedeActivos>[1] })[] = [
   { href: "activos/mi-trabajo", label: "Mi trabajo", description: "Lo asignado a usted", icon: ClipboardCheck, permiso: "miTrabajo" },
+  { href: "activos/panel", label: "Panel", description: "Indicadores y presupuesto", icon: LayoutDashboard, permiso: "panel" },
   { href: "activos", label: "Activos", description: "Hojas de vida y semáforo", icon: Boxes, permiso: "ver", exact: true },
   { href: "activos/calendario", label: "Calendario", description: "Fechas de mantenimiento", icon: CalendarDays, permiso: "ver" },
   { href: "activos/novedades", label: "Novedades", description: "Fallas y su atención", icon: AlertTriangle, permiso: "ver" },
   { href: "activos/recomendaciones", label: "Recomendaciones", description: "Sugerencias de los técnicos", icon: ListChecks, permiso: "ver" },
   { href: "activos/planes", label: "Planes", description: "Mantenimiento preventivo", icon: CalendarClock, permiso: "contratistas" },
   { href: "activos/contratistas", label: "Contratistas", description: "Empresas y contratos", icon: HardHat, permiso: "contratistas" },
+  { href: "activos/reportes", label: "Reportes", description: "Excel, PDF y presupuesto", icon: FileBarChart, permiso: "reportes" },
 ];
 
 const RECAUDOS_NAV: (NavItem & { permiso: Parameters<typeof puede>[1] })[] = [
@@ -114,7 +116,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const activos = ACTIVOS_NAV.filter((i) => puedeActivos(tenant.role, i.permiso));
   // Contador: novedades reportadas que nadie ha atendido todavía
   const { data: sinAtender } = useSWR<Novedad[]>(
-    activos.length ? `${baseActivos(tenant.tenant_id)}/novedades?estado=REPORTADA` : null,
+    puedeActivos(tenant.role, "ver") ? `${baseActivos(tenant.tenant_id)}/novedades?estado=REPORTADA` : null,
     fetcher,
     { refreshInterval: 60_000 },
   );

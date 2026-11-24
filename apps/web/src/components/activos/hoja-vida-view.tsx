@@ -228,6 +228,11 @@ export function HojaDeVidaView({ activoId }: { activoId: string }) {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem asChild>
+                    <a href={`/api/proxy${b}/${a.id}/dossier.pdf`} download>
+                      <FileText className="size-4" /> Descargar hoja de vida (PDF)
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <a href={`/api/proxy${b}/etiquetas.pdf?ids=${a.id}`} download>
                       <Printer className="size-4" /> Imprimir etiqueta QR
                     </a>

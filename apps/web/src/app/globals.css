@@ -37,6 +37,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-serie-preventivo: var(--serie-preventivo);
+  --color-serie-correctivo: var(--serie-correctivo);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -100,6 +102,10 @@
   --chart-4: oklch(0.5 0.1 70);
   --chart-5: oklch(0.505 0.02 255);
 
+  /* Series del panel de mantenimiento (validadas: separación para daltonismo y contraste) */
+  --serie-preventivo: #2a6fb0;
+  --serie-correctivo: #c4622d;
+
   /* Barra lateral azul marino oscuro */
   --sidebar: oklch(0.255 0.042 255);
   --sidebar-foreground: oklch(0.93 0.008 255);
@@ -116,6 +122,8 @@
 }
 
 .dark {
+  --serie-preventivo: #4f94dc;
+  --serie-correctivo: #c96a35;
   --background: oklch(0.2 0.02 255);
   --foreground: oklch(0.94 0.006 255);
   --card: oklch(0.245 0.022 255);

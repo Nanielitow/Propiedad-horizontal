@@ -2,7 +2,7 @@
 
 Diseño del segundo gran módulo: la **hoja de vida técnica** de equipos e infraestructura, el **plan de mantenimiento preventivo** con semáforo, las **novedades y correctivos**, los **contratistas**, las **recomendaciones técnicas** y la **proyección de costos**. El objetivo es pasar de una administración reactiva a una preventiva.
 
-Estado: **fases 1 a 4 implementadas** (base de datos, lógica, QR, evidencias, alertas, API, datos demo y pantallas). Ver §7.
+Estado: **módulo completo (fases 1 a 5)**. Ver §7.
 
 ---
 
@@ -512,4 +512,28 @@ Decisiones de esta fase:
 - **Las pantallas no deciden permisos:** solo ocultan botones. Los costos ya llegan en `null` desde la API.
 - **Verificado con Playwright:** administración en escritorio y técnico en celular entrando por el QR sin sesión.
 
-Pendiente: fase 5 (panel, presupuesto y reportes).
+### Fase 5: panel, presupuesto y reportes (hecha)
+
+| Pieza | Archivo |
+|---|---|
+| Resumen agregado (única fuente de las cifras del panel; vía del Consejo) | `apps/api/alembic/sql/0006_panel_activos.up.sql` (`resumen_mantenimiento`) |
+| Panel: cifras + listas accionables para el personal | `apps/api/app/services/activos/panel.py` · `GET /activos/dashboard` |
+| 6 reportes + dossier (pantalla, Excel y PDF con el motor de recaudos) | `apps/api/app/services/activos/reportes.py` · `GET /activos/reportes/{tipo}` · `GET /activos/{id}/dossier.pdf|xlsx` |
+| Pantallas | `apps/web/src/components/activos/panel-view.tsx` y `reportes-view.tsx` |
+| Tests | `tests/integration/test_activos_panel.py` |
+
+Decisiones de esta fase:
+
+- **El Consejo ve consolidados, nunca el detalle:**
+  - Igual que en recaudos, una función `SECURITY DEFINER` verifica el rol, filtra por copropiedad y devuelve solo agregados (costos incluidos).
+  - Las listas del panel (vencidas, fallas urgentes) son solo para el personal y pasan por RLS.
+- **Recepción y el técnico ven el panel operativo sin dinero:** la API quita costos y proyección.
+- **Proyección de la siguiente vigencia = plan + recomendaciones + contratos:**
+  - Plan: veces al año × costo estimado; por horas de uso, las ejecuciones del último año.
+  - Recomendaciones pendientes, ponderadas: alta 100 %, media 60 %, baja 30 %.
+  - Contratos anuales vigentes.
+  - **Sin doble conteo:** el plan de un contratista con contrato anual vigente no se suma, porque ya está en el valor del contrato.
+- **Una sola regla, dos implementaciones verificadas:** la proyección del informe de costos (partida por partida, en Python) cuadra exactamente con la del panel (SQL). Un test lo comprueba.
+- **Correctivo = tipo «Correctivo»;** preventivo, predictivo e inspección cuentan como preventivo.
+- **Cumplimiento:** actividades cuya fecha ya llegó en el periodo. La ejecutada tarde cuenta como cumplida y aparte se muestra el «% a tiempo».
+- **Colores del gráfico validados** para daltonismo y contraste en modo claro y oscuro (`--serie-preventivo`, `--serie-correctivo`). Cada gráfico tiene leyenda, detalle al pasar el mouse y vista de tabla.

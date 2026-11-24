@@ -19,7 +19,7 @@ export type Periodicidad =
   | "POR_HORAS_USO";
 export type BaseCalculo = "CALENDARIO_FIJO" | "DESDE_ULTIMA_EJECUCION";
 export type EstadoActividad = "PROGRAMADA" | "EJECUTADA" | "CANCELADA";
-export type TipoMantenimiento = "PREVENTIVO" | "CORRECTIVO" | "PREDICTIVO" | "INSPECCION_TECNICA" | "EMERGENCIA";
+export type TipoMantenimiento = "PREVENTIVO" | "CORRECTIVO" | "PREDICTIVO" | "INSPECCION_TECNICA";
 export type PrioridadNovedad = "BAJA" | "MEDIA" | "ALTA" | "CRITICA";
 export type EstadoNovedad =
   | "REPORTADA"
@@ -373,7 +373,6 @@ export const TIPO_MANTENIMIENTO: Record<TipoMantenimiento, { label: string; tono
   CORRECTIVO: { label: "Correctivo", tono: "warning" },
   PREDICTIVO: { label: "Predictivo", tono: "info" },
   INSPECCION_TECNICA: { label: "Inspección técnica", tono: "info" },
-  EMERGENCIA: { label: "Emergencia", tono: "danger" },
 };
 
 export const PRIORIDAD_NOVEDAD: Record<PrioridadNovedad, { label: string; tono: Tono }> = {
@@ -463,6 +462,8 @@ type Accion =
   | "gestionarRecomendacion"
   | "descartarRecomendacion"
   | "miTrabajo"
+  | "panel"
+  | "reportes"
   | "auditoria";
 
 const PERSONAL: Role[] = ["ADMIN", "AUXILIAR", "MANTENIMIENTO", "CONTABILIDAD"];
@@ -488,6 +489,8 @@ const PERMISOS: Record<Accion, Role[]> = {
   gestionarRecomendacion: OPERACION,
   descartarRecomendacion: ["ADMIN"],
   miTrabajo: ["MANTENIMIENTO"],
+  panel: ["ADMIN", "AUXILIAR", "MANTENIMIENTO", "CONTABILIDAD", "CONSEJO"],
+  reportes: ["ADMIN", "AUXILIAR", "MANTENIMIENTO", "CONTABILIDAD"],
   auditoria: ["ADMIN", "AUXILIAR", "CONTABILIDAD"],
 };
 
@@ -514,3 +517,60 @@ export function horasTexto(horas: number): string {
 
 /** Archivo del navegador → evidencia: URL firmada, subida directa y registro. */
 export const TIPOS_EVIDENCIA = "image/jpeg,image/png,image/webp,application/pdf";
+
+// --- Panel y reportes (fase 5) ------------------------------------------------------------
+
+interface Cumplimiento {
+  programadas: number;
+  ejecutadas: number;
+  a_tiempo: number;
+}
+
+export interface PanelActivos {
+  periodo: string;
+  hoy: string;
+  activos: {
+    total: number;
+    por_estado: Partial<Record<EstadoActivo, number>>;
+    por_categoria: { categoria: string; total: number; fuera_de_servicio: number }[];
+    para_reemplazo: number;
+  };
+  semaforo: Record<Color, number>;
+  cumplimiento: { mes: Cumplimiento; anio: Cumplimiento };
+  mantenimientos_mes: Partial<Record<TipoMantenimiento, number>>;
+  costos: {
+    mes: number;
+    anio: number;
+    anio_preventivo: number;
+    anio_correctivo: number;
+    serie: { mes: number; preventivo: number; correctivo: number }[];
+    por_categoria: { categoria: string; total: number }[];
+  } | null;
+  novedades: {
+    abiertas_por_prioridad: Partial<Record<PrioridadNovedad, number>>;
+    sin_atender: number;
+    reportadas_anio: number;
+    respuesta_media_horas: number | null;
+    cierre_medio_dias: number | null;
+  };
+  recomendaciones: { pendientes: number; alta_pendientes: number; vencidas: number; costo_pendiente?: number };
+  proyeccion: { anio: number; plan: number; recomendaciones: number; contratos: number; total: number } | null;
+  puede_ver_costos: boolean;
+  detalle: {
+    vencidas: Actividad[];
+    novedades_urgentes: Novedad[];
+    recomendaciones_altas: Recomendacion[];
+    para_reemplazo: { id: string; codigo: string; nombre: string; vida_util_consumida: string }[];
+  } | null;
+}
+
+export type TipoReporteActivos = "inventario" | "cumplimiento" | "correctivos" | "recomendaciones" | "costos" | "infraestructura";
+
+export const REPORTES_ACTIVOS: Record<TipoReporteActivos, { titulo: string; descripcion: string; periodo: boolean; roles: Role[] }> = {
+  inventario: { titulo: "Inventario y hojas de vida", descripcion: "Todos los activos con estado, vida útil y próximo mantenimiento", periodo: false, roles: ["ADMIN", "AUXILIAR", "MANTENIMIENTO", "CONTABILIDAD"] },
+  cumplimiento: { titulo: "Cumplimiento del plan", descripcion: "Programado vs. ejecutado por plan, a tiempo y pendientes", periodo: true, roles: ["ADMIN", "AUXILIAR", "CONTABILIDAD"] },
+  correctivos: { titulo: "Correctivos y novedades", descripcion: "Fallas con tiempos de respuesta y cierre, y sus reparaciones", periodo: true, roles: ["ADMIN", "AUXILIAR", "CONTABILIDAD"] },
+  recomendaciones: { titulo: "Matriz de recomendaciones", descripcion: "Qué sugirieron los técnicos, prioridad, responsable y estado", periodo: false, roles: ["ADMIN", "AUXILIAR", "CONTABILIDAD"] },
+  costos: { titulo: "Costos y proyección", descripcion: "Por activo, categoría, contratista y mes, y el presupuesto del próximo año", periodo: true, roles: ["ADMIN", "CONTABILIDAD"] },
+  infraestructura: { titulo: "Infraestructura", descripcion: "Fachadas, cubiertas, impermeabilizaciones, tanques y redes", periodo: false, roles: ["ADMIN", "AUXILIAR", "CONTABILIDAD"] },
+};

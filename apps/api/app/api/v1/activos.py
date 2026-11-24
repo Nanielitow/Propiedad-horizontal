@@ -5,17 +5,20 @@ activos_operacion.py, que se registra antes que este router.
 """
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query, Request, Response, status
+from fastapi.concurrency import run_in_threadpool
 
 from app.api.deps import DbSession, TenantCtx
 from app.api.v1.activos_operacion import limitar_escritura, tenant_slug_y_nombre
+from app.api.v1.activos_panel import MIME
 from app.models.enums import Criticidad, EstadoActivo
 from app.schemas.activos import ActivoIn, ActivoUpdate, BajaIn, LecturaIn, VinculoDocumentoIn
 from app.schemas.activos_out import ActivoDetalle, ActivosPagina, Color, LecturaOut
-from app.services.activos import activos, consultas, qr
+from app.services.activos import activos, consultas, qr, reportes
 from app.services.activos.consultas import FiltroActivos
+from app.services.recaudos import exportar
 
 router = APIRouter(prefix="/tenants/{tenant_id}/activos", tags=["activos"])
 
@@ -122,3 +125,19 @@ async def registrar_lectura(
     lectura = await activos.registrar_lectura(db, ctx, activo_id, body)
     await db.commit()
     return LecturaOut.model_validate(lectura)
+
+
+@router.get("/{activo_id}/dossier.{formato}")
+async def dossier(activo_id: uuid.UUID, formato: Literal["pdf", "xlsx"], ctx: TenantCtx, db: DbSession) -> Response:
+    """Hoja de vida individual completa (ficha, planes, historial, fallas, recomendaciones, costos y QR)."""
+    r, qr_url = await reportes.dossier(db, ctx, activo_id)
+    if formato == "pdf":
+        datos = await run_in_threadpool(reportes.dossier_pdf, r, qr_url)
+    else:
+        datos = await run_in_threadpool(exportar.a_excel, r)
+    codigo = r.titulo.split(" · ")[1].split(" ")[0]
+    return Response(
+        content=datos,
+        media_type=MIME[formato],
+        headers={"Content-Disposition": f'attachment; filename="hoja-de-vida-{codigo}.{formato}"'},
+    )

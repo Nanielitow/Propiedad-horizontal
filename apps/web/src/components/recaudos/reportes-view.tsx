@@ -41,7 +41,7 @@ function rango(preset: Preset): { desde: string; hasta: string } {
   return { desde: `${y}-${String(m).padStart(2, "0")}-01`, hasta: fin(y, m) };
 }
 
-function TablaReporte({ t }: { t: ReporteJson["tablas"][number] }) {
+export function TablaReporte({ t }: { t: ReporteJson["tablas"][number] }) {
   const numerica = (i: number) => ["dinero", "entero", "porcentaje"].includes(t.columnas[i]?.tipo ?? "");
   const filas = t.filas.slice(0, FILAS_VISTA);
   return (

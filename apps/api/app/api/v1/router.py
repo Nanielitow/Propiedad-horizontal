@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     activos,
     activos_operacion,
+    activos_panel,
     auth,
     deadlines,
     documents,
@@ -28,4 +29,5 @@ api_router.include_router(recaudos_panel.router)
 api_router.include_router(recaudos.router)
 # Activos: igual, /planes, /novedades, /qr... antes que /{activo_id}
 api_router.include_router(activos_operacion.router)
+api_router.include_router(activos_panel.router)
 api_router.include_router(activos.router)
