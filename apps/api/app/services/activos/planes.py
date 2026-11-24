@@ -9,6 +9,7 @@ Reprogramar nunca borra la fecha original: queda el historial con motivo.
 """
 
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -32,6 +33,7 @@ from app.services.activos.dominio import (
     PUEDE_APROBAR_PLAN,
     PUEDE_CREAR_PLAN,
     PUEDE_REPROGRAMAR,
+    EstadoPorHoras,
     estado_por_horas,
     fechas_programables,
     sumar_meses,
@@ -243,6 +245,44 @@ async def extender_programacion(db: AsyncSession, hoy: date | None = None) -> in
     return total
 
 
+@dataclass(frozen=True)
+class MedicionHoras:
+    horas_desde_ultimo: Decimal
+    uso_diario: Decimal | None
+    estado: EstadoPorHoras
+
+
+async def medir_horas(db: AsyncSession, plan: PlanPreventivo, hoy: date) -> MedicionHoras | None:
+    """Estado de un plan por horas de uso según el horómetro (None si no hay lecturas).
+
+    Horas de referencia: la lectura vigente al último mantenimiento del plan; sin
+    mantenimientos, la primera lectura. Uso diario: lecturas de los últimos 30 días."""
+    if plan.intervalo_horas is None:
+        return None
+    lecturas = list(
+        await db.execute(
+            select(LecturaUso.fecha, LecturaUso.horas_acumuladas)
+            .where(LecturaUso.activo_id == plan.activo_id)
+            .order_by(LecturaUso.fecha)
+        )
+    )
+    if not lecturas:
+        return None
+    ultima_fecha, ultima = lecturas[-1]
+    ejecucion = await db.scalar(
+        select(func.max(MantenimientoEjecutado.fecha_ejecucion))
+        .join(ActividadProgramada, ActividadProgramada.id == MantenimientoEjecutado.actividad_id)
+        .where(ActividadProgramada.plan_id == plan.id, MantenimientoEjecutado.anulado_at.is_(None))
+    )
+    previas = [h for f, h in lecturas if ejecucion is not None and f.astimezone(TZ).date() <= ejecucion]
+    base = previas[-1] if previas else lecturas[0][1]
+    ventana = [(f, h) for f, h in lecturas if (ultima_fecha - f).days <= 30]
+    dias = (ventana[-1][0] - ventana[0][0]).total_seconds() / 86400
+    uso = (ventana[-1][1] - ventana[0][1]) / Decimal(str(dias)) if dias >= 1 else None
+    desde = ultima - base
+    return MedicionHoras(desde, uso, estado_por_horas(plan.intervalo_horas, desde, uso, hoy))
+
+
 async def reestimar_por_horas(db: AsyncSession, hoy: date | None = None, *, tolerancia_dias: int = 3) -> int:
     """Tarea nocturna (SYSTEM): ajusta la fecha de las actividades de planes por horas de uso
     según el horómetro. Cada ajuste queda como reprogramación con su motivo. Devuelve cuántas movió."""
@@ -261,29 +301,10 @@ async def reestimar_por_horas(db: AsyncSession, hoy: date | None = None, *, tole
                 ActividadProgramada.plan_id == plan.id, ActividadProgramada.estado == A.PROGRAMADA
             )
         )
-        lecturas = list(
-            await db.execute(
-                select(LecturaUso.fecha, LecturaUso.horas_acumuladas)
-                .where(LecturaUso.activo_id == plan.activo_id)
-                .order_by(LecturaUso.fecha)
-            )
-        )
-        if act is None or not lecturas or plan.intervalo_horas is None:
+        medicion = await medir_horas(db, plan, hoy)
+        if act is None or medicion is None:
             continue
-        ultima_fecha, ultima = lecturas[-1]
-        ejecucion = await db.scalar(
-            select(func.max(MantenimientoEjecutado.fecha_ejecucion))
-            .join(ActividadProgramada, ActividadProgramada.id == MantenimientoEjecutado.actividad_id)
-            .where(ActividadProgramada.plan_id == plan.id, MantenimientoEjecutado.anulado_at.is_(None))
-        )
-        # Horas de referencia: la lectura vigente al último mantenimiento; sin mantenimientos, la primera
-        previas = [h for f, h in lecturas if ejecucion is not None and f.astimezone(TZ).date() <= ejecucion]
-        base = previas[-1] if previas else lecturas[0][1]
-        # Uso diario: lecturas de los últimos 30 días
-        ventana = [(f, h) for f, h in lecturas if (ultima_fecha - f).days <= 30]
-        dias = (ventana[-1][0] - ventana[0][0]).total_seconds() / 86400
-        uso = (ventana[-1][1] - ventana[0][1]) / Decimal(str(dias)) if dias >= 1 else None
-        estado = estado_por_horas(plan.intervalo_horas, ultima - base, uso, hoy)
+        estado = medicion.estado
         nueva = estado.fecha_estimada
         if nueva is None or nueva < hoy or abs((nueva - act.fecha_programada).days) < tolerancia_dias:
             continue

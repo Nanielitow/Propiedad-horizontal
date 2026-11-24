@@ -110,3 +110,9 @@ RECAUDOS_WRITES_PER_MINUTE = Limit("recaudos-escritura", 60, 60, "Demasiadas ope
 DEMO_RECAUDOS_PER_IP_DAY = Limit(
     "demo-recaudos-ip", 150, 86_400, "La demo pública permite 150 operaciones de recaudos al día por visitante."
 )
+
+# Módulo de activos y mantenimiento
+ACTIVOS_WRITES_PER_MINUTE = Limit("activos-escritura", 60, 60, "Demasiadas operaciones seguidas.")
+DEMO_ACTIVOS_PER_IP_DAY = Limit(
+    "demo-activos-ip", 150, 86_400, "La demo pública permite 150 operaciones de mantenimiento al día por visitante."
+)

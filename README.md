@@ -74,6 +74,7 @@ cp .env.example .env            # y añade GEMINI_API_KEY u OPENAI_API_KEY
 npm run setup                   # levanta los servicios, aplica migraciones y crea los datos demo
 npm run samples                 # genera PDFs de ejemplo en apps/api/samples
 docker compose exec api python -m app.scripts.demo recaudos   # ~6 semanas de movimientos de recaudos
+docker compose exec api python -m app.scripts.demo activos    # un año de historial de mantenimiento
 npm run web:install && npm run web:dev
 ```
 
@@ -92,6 +93,7 @@ npm run web:install && npm run web:dev
 | `recepcion@lospinos.demo` | Recepción (registra recaudos y cierra su caja) | Conjunto Residencial Los Pinos |
 | `contabilidad@lospinos.demo` | Contabilidad (verifica y concilia) | Conjunto Residencial Los Pinos |
 | `consejo@lospinos.demo` | Consejo (dashboard y cortes mensuales) | Conjunto Residencial Los Pinos |
+| `tecnico@lospinos.demo` | Técnico de mantenimiento (consulta por QR, reporta fallas y registra trabajos) | Conjunto Residencial Los Pinos |
 | `admin@torrecentral.demo` | Administración | Edificio Torre Central (para probar el aislamiento) |
 
 Atajos útiles: `npm run test`, `npm run logs`, `npm run db:psql`, `npm run reset`.

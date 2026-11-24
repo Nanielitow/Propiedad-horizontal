@@ -1,7 +1,7 @@
 """Datos de demostración (idempotente): python -m app.scripts.seed
 
 Dos copropiedades para poder demostrar el aislamiento multi-tenant:
-- Conjunto Residencial Los Pinos: admin, residente, recepción, contabilidad y consejo
+- Conjunto Residencial Los Pinos: admin, residente, recepción, contabilidad, consejo y técnico
 - Edificio Torre Central: un admin
 """
 
@@ -28,6 +28,8 @@ USERS = [
     ("recepcion@lospinos.demo", "Marta Rincón (Recepción)", "los-pinos", UserRole.AUXILIAR),
     ("contabilidad@lospinos.demo", "Jorge Medina (Contabilidad)", "los-pinos", UserRole.CONTABILIDAD),
     ("consejo@lospinos.demo", "Elena Vargas (Consejo de Administración)", "los-pinos", UserRole.CONSEJO),
+    # Módulo de mantenimiento
+    ("tecnico@lospinos.demo", "Pedro Ramírez (Técnico de mantenimiento)", "los-pinos", UserRole.MANTENIMIENTO),
     ("admin@torrecentral.demo", "Andrés Ruiz (Administrador)", "torre-central", UserRole.ADMIN),
 ]
 
@@ -60,10 +62,11 @@ def main() -> None:
                 db.add(Membership(id=uuid.uuid4(), tenant_id=tenants[slug].id, user_id=user.id, role=role))
             db.commit()
 
-        # Conceptos de recaudo iniciales de cada copropiedad (idempotente)
+        # Conceptos de recaudo y categorías de activos de cada copropiedad (idempotente)
         for tenant in tenants.values():
             set_rls_context_sync(db, tenant_id=tenant.id, role="SYSTEM")
             db.execute(text("SELECT seed_conceptos_recaudo(:t)"), {"t": tenant.id})
+            db.execute(text("SELECT seed_categorias_activos(:t)"), {"t": tenant.id})
             db.commit()
 
     print("Datos de demo listos. Contraseña para todos:", DEMO_PASSWORD)

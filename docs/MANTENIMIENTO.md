@@ -2,7 +2,7 @@
 
 Diseño del segundo gran módulo: la **hoja de vida técnica** de equipos e infraestructura, el **plan de mantenimiento preventivo** con semáforo, las **novedades y correctivos**, los **contratistas**, las **recomendaciones técnicas** y la **proyección de costos**. El objetivo es pasar de una administración reactiva a una preventiva.
 
-Estado: **fases 1 y 2 implementadas** (base de datos, lógica, QR, evidencias y alertas). Ver §7.
+Estado: **fases 1 a 3 implementadas** (base de datos, lógica, QR, evidencias, alertas, API y datos demo). Ver §7.
 
 ---
 
@@ -344,17 +344,17 @@ Prefijo `/api/v1/tenants/{tenant_id}/activos`, con el mismo patrón que `recaudo
 
 | Grupo | Endpoints |
 |---|---|
-| Catálogos | `GET/POST/PATCH /categorias` · `GET/POST/PATCH /contratistas` · `GET /contratistas/{id}` (con su calificación y sus activos) |
+| Catálogos | `GET /categorias` · `GET/POST/PATCH /contratistas` · `GET /contratistas/{id}` (con sus activos, intervenciones y costo) · `GET /personal` (a quién asignar trabajo) |
 | Activos | `GET /` (buscador: categoría, ubicación, estado, semáforo, criticidad, texto) · `POST /` · `GET /{id}` (hoja de vida completa) · `PATCH /{id}` · `POST /{id}/baja` |
 | QR | `GET /{id}/qr.svg` · `GET /etiquetas.pdf?ids=` (hoja imprimible de etiquetas) · `POST /{id}/qr/regenerar` · `GET /qr/{token}` (resuelve el token a la vista rápida) |
-| Documentos y evidencias | `POST /{id}/documentos` (vincular un documento existente o recién subido) · `DELETE /{id}/documentos/{doc}` (desvincula, no borra el documento) · `POST /evidencias/upload-url` · `POST /evidencias` |
+| Documentos y evidencias | `POST /{id}/documentos` (vincular un documento existente o recién subido) · `DELETE /{id}/documentos/{doc}` (desvincula, no borra el documento) · `POST /evidencias/upload-url` · `POST /evidencias` · `GET /evidencias?entidad=&entidad_id=` |
 | Uso | `POST /{id}/lecturas` · `GET /{id}/lecturas` |
-| Planes | `GET/POST/PATCH /planes` · `POST /planes/{id}/aprobar` · `POST /planes/{id}/pausar` |
-| Actividades | `GET /actividades?desde=&hasta=&semaforo=` (calendario y cronograma) · `POST /actividades/{id}/reprogramar` (motivo obligatorio) · `POST /actividades/{id}/asignar` |
+| Planes | `GET/POST /planes` · `GET/PATCH /planes/{id}` · `POST /planes/{id}/aprobar` · `POST /planes/{id}/pausar` (motivo) · `POST /planes/{id}/reanudar` |
+| Actividades | `GET /actividades?desde=&hasta=&semaforo=` (calendario y cronograma; `mias=true` para el técnico) · `GET /actividades/{id}` · `GET /actividades/{id}/reprogramaciones` · `POST /actividades/{id}/reprogramar` (motivo obligatorio) · `POST /actividades/{id}/asignar` |
 | Mantenimientos | `POST /mantenimientos` · `GET /mantenimientos` · `GET /mantenimientos/{id}` · `POST /mantenimientos/{id}/anular` |
-| Novedades | `POST /novedades` · `GET /novedades` · `GET /novedades/{id}` · `POST /novedades/{id}/estado` (transición con sus datos) · `POST /novedades/{id}/cerrar` · `POST /novedades/{id}/descartar` |
+| Novedades | `POST /novedades` · `GET /novedades` · `GET /novedades/{id}` · `POST /novedades/{id}/estado` (cualquier paso del flujo con sus datos, incluidos el cierre y el descarte) |
 | Recomendaciones | `GET /recomendaciones` · `POST /recomendaciones` · `PATCH /recomendaciones/{id}` |
-| Panel | `GET /dashboard?anio=&categoria=&ubicacion=` · `GET /auditoria/{entidad}/{id}` |
+| Panel | `GET /dashboard?anio=&categoria=&ubicacion=` (fase 5) · `GET /auditoria/{entidad}/{id}` (para un activo incluye sus planes, actividades, mantenimientos y novedades) |
 | Reportes | `GET /reportes/{tipo}?formato=json\|xlsx\|pdf`: `inventario`, `cumplimiento`, `correctivos`, `recomendaciones`, `costos`, `infraestructura` · `GET /{id}/dossier.pdf` (hoja de vida individual) |
 
 ### Tareas de Celery
@@ -470,4 +470,24 @@ Decisiones de esta fase:
 - **Sin mantenimientos previos, las horas se cuentan desde la primera lectura;** con mantenimientos, desde la lectura vigente al último.
 - **Los vencimientos son de la administración:** el técnico no los ve en la hoja de vida (RLS del módulo de vencimientos).
 
-Pendiente: fases 3 a 5 (API, pantallas, dashboard y reportes).
+### Fase 3: API y datos de demostración (hecha)
+
+| Pieza | Archivo |
+|---|---|
+| 35 endpoints (§4, salvo panel y reportes) | `apps/api/app/api/v1/activos.py` (activo por id) y `activos_operacion.py` (rutas fijas, registradas antes) |
+| Respuestas | `apps/api/app/schemas/activos_out.py` |
+| Consultas: buscador, hoja de vida, calendario, historial, QR, auditoría | `apps/api/app/services/activos/consultas.py` |
+| Datos demo de Los Pinos | `apps/api/app/scripts/demo_activos.py` (`python -m app.scripts.demo activos`) y el usuario `tecnico@lospinos.demo` en `seed.py` |
+| Tests | `tests/integration/test_activos_api.py` |
+
+Decisiones de esta fase:
+
+- **Los costos los oculta la API, no la pantalla.** Para auxiliar y técnico llegan en `null` los costos de mantenimientos, planes, recomendaciones y contratos, las facturas y los campos de costo de la auditoría (`puede_ver_costos` le dice a la web qué mostrar). El técnico sí *registra* costos al reportar un trabajo.
+- **Un solo endpoint para el flujo de novedades** (`/novedades/{id}/estado`): el cuerpo dice a qué estado pasa y con qué datos. Cerrar y descartar son pasos más, con sus reglas en el servicio y en el *trigger*.
+- **El consejo y los residentes no entran al módulo (403).** El consejo verá los consolidados del panel en la fase 5.
+- **El estado por horas de la hoja de vida usa el mismo cálculo que la reestimación nocturna** (`planes.medir_horas`), así los dos números coinciden siempre.
+- **Datos demo con los mismos casos de uso de la API:**
+  - Contenido: 25 activos, 27 planes aprobados hace un año, 121 mantenimientos ( millones), 14 novedades y 9 recomendaciones. La novedad de la cubierta queda vinculada a la comparación de cotizaciones de la demo, y el tanque al certificado de lavado, cuyos vencimientos aparecen en su hoja de vida.
+  - Fechas: lo que la base fija con `now()` (reportes, creación, auditoría) se lleva a su fecha simulada al final, con la conexión del dueño de la base y sin *triggers*. Es solo para la demo; la API nunca puede hacerlo.
+
+Pendiente: fases 4 (pantallas, incluida la vista móvil del QR y el calendario) y 5 (panel, presupuesto y reportes).

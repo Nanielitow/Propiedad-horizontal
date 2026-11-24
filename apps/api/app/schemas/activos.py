@@ -289,3 +289,7 @@ class EvidenciaIn(_Base):
     momento: MomentoEvidencia
     storage_key: Annotated[str, Field(max_length=300)]
     descripcion: Annotated[str, Field(max_length=300)] | None = None
+
+
+class MotivoIn(_Base):
+    motivo: Motivo

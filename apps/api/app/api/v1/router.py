@@ -1,6 +1,18 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, deadlines, documents, minutes, quotes, recaudos, recaudos_caja, recaudos_panel, search
+from app.api.v1 import (
+    activos,
+    activos_operacion,
+    auth,
+    deadlines,
+    documents,
+    minutes,
+    quotes,
+    recaudos,
+    recaudos_caja,
+    recaudos_panel,
+    search,
+)
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -14,3 +26,6 @@ api_router.include_router(minutes.router)
 api_router.include_router(recaudos_caja.router)
 api_router.include_router(recaudos_panel.router)
 api_router.include_router(recaudos.router)
+# Activos: igual, /planes, /novedades, /qr... antes que /{activo_id}
+api_router.include_router(activos_operacion.router)
+api_router.include_router(activos.router)
