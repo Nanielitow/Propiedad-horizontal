@@ -4,6 +4,9 @@ import {
   AlertTriangle,
   Boxes,
   Building,
+  CalendarPlus,
+  Megaphone,
+  MessageSquareWarning,
   CalendarRange,
   HandCoins,
   PiggyBank,
@@ -55,6 +58,7 @@ import { baseActivos, type Novedad, puedeActivos } from "@/lib/activos";
 import { type Alerta, base, puede } from "@/lib/recaudos";
 import { puedeUnidades } from "@/lib/unidades";
 import { puedeCartera } from "@/lib/cartera";
+import { basePortal, type PendientesPersonal, puedePortal } from "@/lib/portal";
 import { cn } from "@/lib/utils";
 
 import { useTenant } from "./tenant-context";
@@ -95,19 +99,34 @@ const ACTIVOS_NAV: (NavItem & { permiso: Parameters<typeof puedeActivos>[1] })[]
 
 // Censo de la copropiedad: unidades y directorio (el residente ve «Mi unidad»)
 const UNIDADES_NAV: (NavItem & { permiso: Parameters<typeof puedeUnidades>[1] })[] = [
-  { href: "mi-unidad", label: "Mi unidad", description: "Sus datos, familia y vehículos", icon: Home, permiso: "miUnidad" },
   { href: "unidades", label: "Unidades", description: "Censo, coeficientes y ocupación", icon: Building, permiso: "verUnidades", exact: true },
   { href: "unidades/directorio", label: "Directorio", description: "Propietarios y residentes", icon: Contact, permiso: "directorio" },
 ];
 
 // Cartera de cuotas de administración (el residente ve «Mi cuenta»)
 const CARTERA_NAV: (NavItem & { permiso: Parameters<typeof puedeCartera>[1] })[] = [
-  { href: "mi-cuenta", label: "Mi cuenta", description: "Cuotas, pagos y paz y salvo", icon: PiggyBank, permiso: "miCartera" },
   { href: "cartera", label: "Cartera", description: "Facturado, recaudado y mora", icon: LayoutDashboard, permiso: "ver", exact: true },
   { href: "cartera/periodos", label: "Facturación", description: "Cuotas de cada mes", icon: CalendarRange, permiso: "ver" },
   { href: "cartera/pagos", label: "Pagos", description: "Recibos de caja", icon: HandCoins, permiso: "ver" },
   { href: "cartera/morosos", label: "Morosos", description: "Saldos vencidos por antigüedad", icon: UserX, permiso: "ver" },
   { href: "cartera/configuracion", label: "Configuración", description: "Cuota, descuento e intereses", icon: Settings2, permiso: "configurar" },
+];
+
+// Portal del residente: todo lo suyo en un solo grupo
+const RESIDENTE_NAV: NavItem[] = [
+  { href: "inicio", label: "Inicio", description: "Resumen de su cuenta y avisos", icon: LayoutDashboard },
+  { href: "mi-cuenta", label: "Mi cuenta", description: "Cuotas, pagos y paz y salvo", icon: PiggyBank },
+  { href: "mi-portal/pqrs", label: "PQRS", description: "Peticiones, quejas y reclamos", icon: MessageSquareWarning },
+  { href: "mi-portal/circulares", label: "Circulares", description: "Comunicados de la administración", icon: Megaphone },
+  { href: "mi-portal/reservas", label: "Reservar", description: "Salón social, BBQ y más", icon: CalendarPlus },
+  { href: "mi-unidad", label: "Mi unidad", description: "Sus datos, familia y vehículos", icon: Home },
+];
+
+// Atención al residente (personal)
+const PORTAL_NAV: (NavItem & { permiso: Parameters<typeof puedePortal>[1] })[] = [
+  { href: "portal/pqrs", label: "PQRS", description: "Bandeja y plazos de respuesta", icon: MessageSquareWarning, permiso: "verPqrs" },
+  { href: "portal/circulares", label: "Circulares", description: "Comunicados a residentes", icon: Megaphone, permiso: "verPqrs" },
+  { href: "portal/reservas", label: "Reservas", description: "Solicitudes y reglas de zonas", icon: CalendarPlus, permiso: "verReservas" },
 ];
 
 const RECAUDOS_NAV: (NavItem & { permiso: Parameters<typeof puede>[1] })[] = [
@@ -142,6 +161,14 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const activos = ACTIVOS_NAV.filter((i) => puedeActivos(tenant.role, i.permiso));
   const unidades = UNIDADES_NAV.filter((i) => puedeUnidades(tenant.role, i.permiso));
   const cartera = CARTERA_NAV.filter((i) => puedeCartera(tenant.role, i.permiso));
+  const residente = tenant.role === "RESIDENTE";
+  const portal = PORTAL_NAV.filter((i) => puedePortal(tenant.role, i.permiso));
+  // Contadores del portal: PQRS vencidas o sin atender y reservas por decidir
+  const { data: pendientesPortal } = useSWR<PendientesPersonal>(
+    portal.length ? `${basePortal(tenant.tenant_id)}/pendientes` : null,
+    fetcher,
+    { refreshInterval: 60_000 },
+  );
   // Contador: novedades reportadas que nadie ha atendido todavía
   const { data: sinAtender } = useSWR<Novedad[]>(
     puedeActivos(tenant.role, "ver") ? `${baseActivos(tenant.tenant_id)}/novedades?estado=REPORTADA` : null,
@@ -202,6 +229,26 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               title="Reportadas y sin atender"
             >
               {sinAtender?.length}
+            </span>
+          )}
+          {item.href === "portal/pqrs" && (pendientesPortal?.pqrs_abiertas ?? 0) > 0 && (
+            <span
+              className={cn(
+                "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+                pendientesPortal?.pqrs_vencidas ? "bg-destructive text-white" : "bg-warning-soft text-warning",
+              )}
+              aria-label={`${pendientesPortal?.pqrs_abiertas} PQRS abiertas, ${pendientesPortal?.pqrs_vencidas} vencidas`}
+              title={pendientesPortal?.pqrs_vencidas ? `${pendientesPortal.pqrs_vencidas} vencidas` : "Abiertas"}
+            >
+              {pendientesPortal?.pqrs_abiertas}
+            </span>
+          )}
+          {item.href === "portal/reservas" && (pendientesPortal?.reservas_por_decidir ?? 0) > 0 && (
+            <span
+              className="flex h-5 min-w-5 items-center justify-center rounded-full bg-warning-soft px-1.5 text-[11px] font-semibold text-warning"
+              aria-label={`${pendientesPortal?.reservas_por_decidir} reservas por aprobar`}
+            >
+              {pendientesPortal?.reservas_por_decidir}
             </span>
           )}
           {item.href === "recaudos/alertas" && (alertasRecaudo?.length ?? 0) > 0 && (
@@ -269,7 +316,19 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Navegación */}
       <nav className="mt-5 flex-1 space-y-6 overflow-y-auto px-3" aria-label="Principal">
+        {residente && (
+          <div>
+            <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">Mi portal</p>
+            <ul className="space-y-1">{RESIDENTE_NAV.map(renderItem)}</ul>
+          </div>
+        )}
         <ul className="space-y-1">{MAIN_NAV.map(renderItem)}</ul>
+        {portal.length > 0 && (
+          <div>
+            <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">Atención al residente</p>
+            <ul className="space-y-1">{portal.map(renderItem)}</ul>
+          </div>
+        )}
         {unidades.length > 0 && (
           <div>
             <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">Copropiedad</p>

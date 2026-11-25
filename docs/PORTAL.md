@@ -2,7 +2,7 @@
 
 El residente deja de ser un usuario pasivo (solo documentos y chat) y gana trámites propios: radicar y seguir **PQRS**, recibir **circulares** con acuse de lectura y **reservar zonas sociales** sin llamar a la administración. Junto con su estado de cuenta y su paz y salvo (módulo de cartera), es la razón para que los residentes usen la plataforma.
 
-Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, correos y demo). Ver §5.
+Estado: **módulo completo (fases 1 a 3)**. Ver §5.
 
 ---
 
@@ -54,3 +54,12 @@ Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, correos y demo). Ver
 - **Correos** (`app/workers/tasks/portal.py`), encolados después del commit: PQRS radicada (al personal), PQRS respondida (a quien radicó, o al contacto dejado por recepción), circular publicada (a los destinatarios, una sola vez aunque la tarea se reintente), reserva solicitada (al personal) y decidida (al residente).
 - **Demo** (`python -m app.scripts.demo portal`): reglas de 3 zonas, 14 PQRS en todos los estados (radicadas por Carlos y por recepción a nombre de otros residentes; una vencida, una convertida en novedad), 6 circulares publicadas y un borrador, y 2 reservas de Carlos (una esperando aprobación). Instantánea actualizada.
 - **Pruebas:** 3 de API (322 en total, todas en verde).
+
+### Fase 3: pantallas (hecha)
+
+- **El residente entra a su Inicio** al iniciar sesión: saldo con la administración (y paz y salvo si está al día), circulares sin leer, accesos rápidos, sus PQRS en curso y sus próximas reservas.
+- **Menú «Mi portal»** para el residente: Inicio, Mi cuenta, PQRS, Circulares, Reservar y Mi unidad. **«Atención al residente»** para el personal: PQRS (contador de abiertas, en rojo si hay vencidas), Circulares y Reservas (contador de solicitudes por aprobar).
+- **PQRS**: bandeja con indicadores (abiertas, vencidas, tiempo de respuesta, satisfacción) y vistas (abiertas, vencidas, sin asignar, asignadas a mí); radicar a nombre de alguien; detalle con la conversación, notas internas, respuesta oficial, responsable, prioridad, cierre y conversión en novedad de mantenimiento. El residente radica con adjuntos, escribe, califica con estrellas, reabre o desiste.
+- **Circulares**: editor con vista previa del formato, destinatarios por torre, importante y envío por correo; publicar y archivar; lecturas por circular. El residente las abre (quedan leídas) y ve cuáles le faltan.
+- **Reservas**: el residente elige la zona, ve un calendario con los días ocupados (sin saber de quién) y las reglas, reserva y cancela. El personal aprueba o rechaza con motivo y ajusta las reglas de cada zona.
+- **Verificación**: recorrido E2E con Playwright de punta a punta (el residente radica, lee y reserva; la administración responde, publica y aprueba; el residente califica), sin errores de consola ni respuestas 5xx; 322 pruebas de backend y chequeo de tipos en verde.
