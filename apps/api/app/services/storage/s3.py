@@ -30,6 +30,11 @@ class S3Storage:
                 signature_version="s3v4",
                 s3={"addressing_style": "path"},
                 retries={"max_attempts": 3, "mode": "standard"},
+                # boto3 ≥ 1.36 calcula sumas de verificación (CRC) en cada petición por defecto;
+                # Cloudflare R2 rechaza algunas. Solo cuando la operación lo exige (recomendación
+                # de Cloudflare); también funciona con SeaweedFS y S3.
+                request_checksum_calculation="when_required",
+                response_checksum_validation="when_required",
             ),
         }
         self._internal = boto3.client("s3", endpoint_url=settings.s3_endpoint_url, **common)
