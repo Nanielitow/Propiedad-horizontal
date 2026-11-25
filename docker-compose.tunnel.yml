@@ -4,27 +4,80 @@
 #  npm run demo:up     -> levanta todo y publica la app en internet
 #  npm run demo:down   -> deja de publicarla (los datos se conservan)
 #
-#  Se combina con docker-compose.yml (mismos datos que el entorno local):
+#  Se combina con docker-compose.yml:
 #    https://app.propiedadhorizontal.app       -> web-demo:3000  (la app)
 #    https://archivos.propiedadhorizontal.app  -> seaweedfs:8333 (PDF, URLs firmadas)
 #  Las dos rutas se configuran en Cloudflare: Zero Trust -> Networks -> Tunnels.
-#  Requiere CLOUDFLARE_TUNNEL_TOKEN en .env (nunca en Git).
+#  Requiere CLOUDFLARE_TUNNEL_TOKEN y las variables NEON_* en .env (nunca en Git).
+#
+#  La demo NO comparte nada mutable con el desarrollo local (docs/NEON.md):
+#    - base de datos: Neon (api-demo, worker-demo, beat-demo); desarrollo y pruebas
+#      siguen en el PostgreSQL de Docker;
+#    - cola: otras bases de Redis (un worker de desarrollo nunca toma tareas de la demo);
+#    - archivos: bucket propio, porque la limpieza nocturna borra los archivos que su
+#      base no conoce y, compartiendo bucket, borraría los del desarrollo.
 # =============================================================================
 
 x-demo-env: &demo-env
-  DEMO_MODE: "true"   # límites por visitante y aviso de demo
+  DEMO_MODE: "true"   # límites por visitante, aviso de demo y reinicio nocturno
   APP_URL: https://app.propiedadhorizontal.app
   CORS_ORIGINS: http://localhost:3000,https://app.propiedadhorizontal.app
+  DATABASE_URL: ${NEON_DATABASE_URL:?Falta NEON_DATABASE_URL en .env}
+  SYNC_DATABASE_URL: ${NEON_SYNC_DATABASE_URL:?Falta NEON_SYNC_DATABASE_URL en .env}
+  MIGRATIONS_DATABASE_URL: ${NEON_MIGRATIONS_DATABASE_URL:?Falta NEON_MIGRATIONS_DATABASE_URL en .env}
+  REDIS_URL: redis://redis:6379/3
+  CELERY_BROKER_URL: redis://redis:6379/4
+  CELERY_RESULT_BACKEND: redis://redis:6379/5
+  S3_BUCKET: ph-demo
   # Las URLs firmadas de los PDF deben apuntar a una dirección pública
   S3_PUBLIC_ENDPOINT_URL: https://archivos.propiedadhorizontal.app
 
+x-demo-deps: &demo-deps
+  redis:
+    condition: service_healthy
+  s3-init-demo:
+    condition: service_completed_successfully
+
 services:
-  api:
+  # Bucket de la demo: se crea una sola vez con una copia de los archivos actuales
+  s3-init-demo:
+    image: amazon/aws-cli:2.27.0
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${S3_REGION}
+      ORIGEN: ${S3_BUCKET}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket ph-demo 2>/dev/null
+        || (aws --endpoint-url http://seaweedfs:8333 s3 mb s3://ph-demo
+        && aws --endpoint-url http://seaweedfs:8333 s3 sync "s3://$${ORIGEN}" s3://ph-demo --only-show-errors)
+    restart: "no"
+
+  api-demo:
+    extends: { file: docker-compose.yml, service: worker }
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
     environment: *demo-env
-  worker:
+    depends_on: *demo-deps
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 10
+
+  worker-demo:
+    extends: { file: docker-compose.yml, service: worker }
     environment: *demo-env
-  beat:
+    depends_on: *demo-deps
+
+  beat-demo:
+    extends: { file: docker-compose.yml, service: beat }
     environment: *demo-env
+    depends_on: *demo-deps
 
   seaweedfs:
     command:
@@ -45,7 +98,7 @@ services:
         NEXT_PUBLIC_DEMO_MODE: "true"
     image: ph-saas/web:demo
     environment:
-      API_INTERNAL_URL: http://api:8000
+      API_INTERNAL_URL: http://api-demo:8000
       # Importar desde Google Drive (opcional; sin estas variables el botón no aparece)
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
@@ -53,7 +106,7 @@ services:
     ports:
       - "127.0.0.1:3001:3000"   # prueba local: http://localhost:3001
     depends_on:
-      api:
+      api-demo:
         condition: service_healthy
     restart: unless-stopped
 

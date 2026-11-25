@@ -30,10 +30,29 @@ el quórum completo por la función y solo sus votos por consulta directa).
 3. **Migrar** (desde la raíz del repo, con Docker encendido): `sh deploy/neon/migrar.sh`. Verifica el dueño,
    crea `app_user`, copia esquema + datos + instantánea de la demo, da permisos y compara filas tabla por
    tabla. Se niega a sobrescribir una base con datos; para repetir: `FORZAR=1 sh deploy/neon/migrar.sh`.
-4. **Apuntar la aplicación a Neon** (siguiente paso del plan de producción): `DATABASE_URL` con
-   `postgresql+asyncpg://app_user:<NEON_APP_PASSWORD>@<host>/neondb?ssl=require` (asyncpg usa `ssl`, no
-   `sslmode`), `SYNC_DATABASE_URL` con `postgresql+psycopg://app_user:…?sslmode=require` y
-   `MIGRATIONS_DATABASE_URL` con el dueño (`postgresql+psycopg://neondb_owner:…?sslmode=require`).
+4. **Cadenas de la aplicación** (ya generadas en `.env` a partir de las dos anteriores):
+   `NEON_DATABASE_URL` (`postgresql+asyncpg://app_user:…?ssl=require`: asyncpg usa `ssl`, no `sslmode`),
+   `NEON_SYNC_DATABASE_URL` (`postgresql+psycopg://app_user:…?sslmode=require`) y
+   `NEON_MIGRATIONS_DATABASE_URL` (el dueño, para migraciones y el reinicio nocturno de la demo).
+
+Hecho el 2026-11-25: proyecto en **PostgreSQL 18** (Neon lo creó así; la copia desde 17 funcionó). Ojo: el
+`pg_dump` 17 del Docker local no puede respaldar un servidor 18; para respaldos usar el restablecimiento a
+un punto en el tiempo de Neon, y alinear el Docker local a 18 antes de producción.
+
+## Demo pública (`npm run demo:up`)
+
+`docker-compose.tunnel.yml` levanta `api-demo`, `worker-demo` y `beat-demo` contra Neon; `web-demo` habla con
+`api-demo`. No comparten nada mutable con el desarrollo local: otras bases de Redis (3, 4 y 5) para que un
+worker de desarrollo nunca tome tareas de la demo, y bucket propio `ph-demo` (creado una vez con copia de los
+archivos), porque la limpieza nocturna borra los archivos que su base no conoce. Los servicios `api`, `worker` y
+`beat` de siempre quedan en modo desarrollo contra el PostgreSQL de Docker.
+
+Verificado: `api-demo` conecta a Neon como `app_user`; login, asambleas y cartera responden en
+`https://app.propiedadhorizontal.app`; los PDF se descargan con URL firmada desde el bucket `ph-demo`.
+
+Plan gratis de Neon: la base pesa 26 MB (límite 0,5 GB). La demo deja que la base se suspenda (el `/health`
+no consulta la base y las tareas programadas son diarias), así que consume pocas horas de cómputo; revisar el
+uso en el panel de Neon. Para producción real, pasar al plan Launch.
 
 ## Costo esperado
 
