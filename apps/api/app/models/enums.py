@@ -121,6 +121,7 @@ class EstadoReserva(StrEnum):
     CONFIRMADA = "CONFIRMADA"
     CANCELADA = "CANCELADA"
     REALIZADA = "REALIZADA"
+    RECHAZADA = "RECHAZADA"  # la administración no aprobó la solicitud (migración 0009)
 
 
 class EstadoEntrega(StrEnum):
@@ -344,6 +345,66 @@ class TipoAjuste(StrEnum):
     DESCUENTO_PRONTO_PAGO = "DESCUENTO_PRONTO_PAGO"
     CONDONACION = "CONDONACION"  # aprobada por el consejo o la asamblea
     CORRECCION = "CORRECCION"  # error de facturación
+
+
+# --- Portal del residente (migración 0009) ---------------------------------------
+
+
+class TipoPqrs(StrEnum):
+    PETICION = "PETICION"
+    QUEJA = "QUEJA"
+    RECLAMO = "RECLAMO"
+    SUGERENCIA = "SUGERENCIA"
+    FELICITACION = "FELICITACION"
+
+
+class CategoriaPqrs(StrEnum):
+    ADMINISTRACION = "ADMINISTRACION"
+    CONVIVENCIA = "CONVIVENCIA"
+    MANTENIMIENTO = "MANTENIMIENTO"
+    SEGURIDAD = "SEGURIDAD"
+    ASEO = "ASEO"
+    PARQUEADEROS = "PARQUEADEROS"
+    ZONAS_COMUNES = "ZONAS_COMUNES"
+    CARTERA = "CARTERA"
+    OTRO = "OTRO"
+
+
+class EstadoPqrs(StrEnum):
+    RADICADA = "RADICADA"
+    EN_TRAMITE = "EN_TRAMITE"
+    RESPONDIDA = "RESPONDIDA"
+    CERRADA = "CERRADA"
+    DESISTIDA = "DESISTIDA"
+
+
+class CanalPqrs(StrEnum):
+    PORTAL = "PORTAL"
+    PRESENCIAL = "PRESENCIAL"
+    CORREO = "CORREO"
+    TELEFONO = "TELEFONO"
+
+
+class PrioridadPqrs(StrEnum):
+    BAJA = "BAJA"
+    MEDIA = "MEDIA"
+    ALTA = "ALTA"
+
+
+class CategoriaCircular(StrEnum):
+    INFORMATIVA = "INFORMATIVA"
+    CONVOCATORIA = "CONVOCATORIA"  # asambleas
+    SERVICIOS = "SERVICIOS"  # cortes de agua, luz, gas
+    MANTENIMIENTO = "MANTENIMIENTO"
+    SEGURIDAD = "SEGURIDAD"
+    CARTERA = "CARTERA"
+    CONVIVENCIA = "CONVIVENCIA"
+
+
+class EstadoCircular(StrEnum):
+    BORRADOR = "BORRADOR"
+    PUBLICADA = "PUBLICADA"
+    ARCHIVADA = "ARCHIVADA"
 
 
 def pg_enum(enum_cls: type[StrEnum], name: str) -> ENUM:

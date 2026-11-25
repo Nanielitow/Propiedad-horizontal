@@ -92,9 +92,22 @@ TABLES = [
     "ajustes_cartera",
     "paz_y_salvos",
     "auditoria_cartera",
+    # Portal del residente (0009)
+    "pqrs",
+    "pqrs_mensajes",
+    "circulares",
+    "circular_lecturas",
+    "auditoria_portal",
 ]
 # Tablas con id IDENTITY cuya secuencia debe continuar tras restaurar
-_IDENTITY_TABLES = ["audit_logs", "auditoria_recaudos", "auditoria_activos", "auditoria_unidades", "auditoria_cartera"]
+_IDENTITY_TABLES = [
+    "audit_logs",
+    "auditoria_recaudos",
+    "auditoria_activos",
+    "auditoria_unidades",
+    "auditoria_cartera",
+    "auditoria_portal",
+]
 _KEY = re.compile(r"^tenants/[0-9a-f-]{36}/documents/(?P<doc>[0-9a-f-]{36})/")
 _SOPORTE = re.compile(r"^tenants/[0-9a-f-]{36}/recaudos/soportes/")
 

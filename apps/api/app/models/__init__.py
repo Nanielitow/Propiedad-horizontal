@@ -38,6 +38,7 @@ from app.models.document import (
 )
 from app.models.identity import Membership, Tenant, User
 from app.models.minutes import ActionItem, MinutesSummary
+from app.models.portal import AuditoriaPortal, Circular, CircularLectura, Pqrs, PqrsMensaje
 from app.models.quote import QuoteComparison, QuoteComparisonDocument
 from app.models.recaudo import (
     AlertaRecaudo,
@@ -64,6 +65,11 @@ from app.models.unidad import (
 )
 
 __all__ = [
+    "AuditoriaPortal",
+    "Circular",
+    "CircularLectura",
+    "Pqrs",
+    "PqrsMensaje",
     "AjusteCartera",
     "AplicacionPago",
     "AuditoriaCartera",

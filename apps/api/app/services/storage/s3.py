@@ -54,6 +54,11 @@ class S3Storage:
         """Fotos y archivos de evidencia del módulo de activos."""
         return f"tenants/{tenant_id}/activos/evidencias/{uuid.uuid4()}.{extension}"
 
+    @staticmethod
+    def portal_adjunto_key(tenant_id: uuid.UUID, extension: str) -> str:
+        """Adjuntos de PQRS (fotos o PDF) que suben residentes y personal."""
+        return f"tenants/{tenant_id}/portal/adjuntos/{uuid.uuid4()}.{extension}"
+
     # -- URLs firmadas ------------------------------------------------------------
     def presign_put(self, key: str, content_type: str) -> str:
         # ContentType queda dentro de la firma: el navegador debe enviar

@@ -62,6 +62,18 @@ class ZonaSocial(UUIDPk, Base):
     tarifa_aseo: Mapped[Decimal | None] = mapped_column(Money)
     activo: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(**_DB)
+    # Reglas para reservar desde el portal del residente (migración 0009)
+    descripcion: Mapped[str | None]
+    capacidad: Mapped[int | None]
+    reglas: Mapped[str | None]
+    hora_apertura: Mapped[time] = mapped_column(**_DB)
+    hora_cierre: Mapped[time] = mapped_column(**_DB)
+    anticipacion_min_dias: Mapped[int] = mapped_column(**_DB)
+    anticipacion_max_dias: Mapped[int] = mapped_column(**_DB)
+    max_reservas_mes_unidad: Mapped[int] = mapped_column(**_DB)
+    requiere_paz_y_salvo: Mapped[bool] = mapped_column(**_DB)
+    requiere_aprobacion: Mapped[bool] = mapped_column(**_DB)
+    reservable_residentes: Mapped[bool] = mapped_column(**_DB)
 
 
 class Reserva(UUIDPk, Base):
@@ -81,6 +93,13 @@ class Reserva(UUIDPk, Base):
     observaciones: Mapped[str | None]
     creado_por_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(**_DB)
+    # Portal del residente (migración 0009)
+    numero_asistentes: Mapped[int | None]
+    solicitada_en_portal: Mapped[bool] = mapped_column(default=False)
+    decidida_por_id: Mapped[uuid.UUID | None]
+    decidida_at: Mapped[datetime | None]
+    motivo_decision: Mapped[str | None]
+    updated_at: Mapped[datetime] = mapped_column(server_default=FetchedValue(), server_onupdate=FetchedValue())
 
 
 class Recaudo(UUIDPk, Base):
