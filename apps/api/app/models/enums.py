@@ -407,6 +407,54 @@ class EstadoCircular(StrEnum):
     ARCHIVADA = "ARCHIVADA"
 
 
+# --- Asambleas (migración 0010) ---------------------------------------------------
+
+
+class TipoAsamblea(StrEnum):
+    ORDINARIA = "ORDINARIA"
+    EXTRAORDINARIA = "EXTRAORDINARIA"
+
+
+class ModalidadAsamblea(StrEnum):
+    PRESENCIAL = "PRESENCIAL"
+    VIRTUAL = "VIRTUAL"
+    MIXTA = "MIXTA"
+
+
+class ConvocatoriaAsamblea(StrEnum):
+    PRIMERA = "PRIMERA"
+    SEGUNDA = "SEGUNDA"  # art. 41 Ley 675: decide con cualquier número plural
+
+
+class EstadoAsamblea(StrEnum):
+    PROGRAMADA = "PROGRAMADA"
+    EN_CURSO = "EN_CURSO"
+    CERRADA = "CERRADA"
+    CANCELADA = "CANCELADA"
+
+
+class TipoAsistente(StrEnum):
+    PROPIETARIO = "PROPIETARIO"
+    APODERADO = "APODERADO"
+
+
+class TipoPunto(StrEnum):
+    INFORMATIVO = "INFORMATIVO"
+    VOTACION = "VOTACION"
+
+
+class MayoriaPunto(StrEnum):
+    SIMPLE = "SIMPLE"  # mitad más uno de los coeficientes presentes (art. 45)
+    CALIFICADA_70 = "CALIFICADA_70"  # 70 % de los coeficientes del conjunto (art. 46)
+    ELECCION = "ELECCION"  # gana la opción con más coeficiente
+
+
+class EstadoPunto(StrEnum):
+    PENDIENTE = "PENDIENTE"
+    EN_VOTACION = "EN_VOTACION"
+    CERRADO = "CERRADO"
+
+
 def pg_enum(enum_cls: type[StrEnum], name: str) -> ENUM:
     # values_callable: SQLAlchemy guarda por defecto el NOMBRE del miembro (USER);
     # el ENUM de Postgres usa el VALOR ('user').

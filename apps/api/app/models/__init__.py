@@ -13,6 +13,7 @@ from app.models.activo import (
     RecomendacionTecnica,
     Reprogramacion,
 )
+from app.models.asamblea import Asamblea, AsistenciaAsamblea, PadronAsamblea, PuntoAsamblea, VotoAsamblea
 from app.models.base import Base
 from app.models.cartera import (
     AjusteCartera,
@@ -65,6 +66,11 @@ from app.models.unidad import (
 )
 
 __all__ = [
+    "Asamblea",
+    "AsistenciaAsamblea",
+    "PadronAsamblea",
+    "PuntoAsamblea",
+    "VotoAsamblea",
     "AuditoriaPortal",
     "Circular",
     "CircularLectura",

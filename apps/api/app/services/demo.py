@@ -98,6 +98,12 @@ TABLES = [
     "circulares",
     "circular_lecturas",
     "auditoria_portal",
+    # Asambleas (0010)
+    "asambleas",
+    "asamblea_padron",
+    "asamblea_asistencias",
+    "asamblea_puntos",
+    "asamblea_votos",
 ]
 # Tablas con id IDENTITY cuya secuencia debe continuar tras restaurar
 _IDENTITY_TABLES = [
