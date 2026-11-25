@@ -6,11 +6,12 @@
   python -m app.scripts.demo unidades           # censo: ~120 unidades, propietarios, arrendatarios y vehículos
   python -m app.scripts.demo cartera            # cartera: 12 meses de facturación, pagos y morosos
   python -m app.scripts.demo portal             # portal: PQRS, circulares y reservas de residentes
+  python -m app.scripts.demo asambleas          # asambleas: la ordinaria 2026 cerrada y la 2027 convocada
   python -m app.scripts.demo snapshot           # guarda el estado actual como "demo limpia"
   python -m app.scripts.demo restore            # vuelve a la instantánea (lo hace beat cada noche)
   python -m app.scripts.demo configure-bucket   # CORS del bucket para el dominio de la app
 
-Orden en un servidor nuevo:  migraciones -> seed -> load -> recaudos -> activos -> unidades -> cartera -> portal -> (revisar en la web) -> snapshot
+Orden en un servidor nuevo:  migraciones -> seed -> load -> recaudos -> activos -> unidades -> cartera -> portal -> asambleas -> (revisar en la web) -> snapshot
 """
 
 import hashlib
@@ -202,6 +203,10 @@ def main() -> None:
         from app.scripts.demo_portal import main as portal
 
         portal()
+    elif command == "asambleas":
+        from app.scripts.demo_asambleas import main as asambleas
+
+        asambleas()
     elif command == "snapshot":
         counts = save_snapshot()
         print("Instantánea guardada:", ", ".join(f"{t}={n}" for t, n in counts.items() if n))

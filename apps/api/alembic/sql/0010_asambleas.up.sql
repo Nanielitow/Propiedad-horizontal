@@ -297,3 +297,7 @@ CREATE POLICY rbac_crear ON asamblea_votos AS RESTRICTIVE FOR INSERT WITH CHECK 
       AND EXISTS (SELECT 1 FROM asamblea_padron p
                    WHERE p.asamblea_id = asamblea_votos.asamblea_id AND p.unidad_id = asamblea_votos.unidad_id
                      AND app_user_id() = ANY (p.votante_user_ids))));
+
+-- El acta generada por una asamblea se guarda como documento (entra al buscador y al resumidor de actas)
+ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_source_check;
+ALTER TABLE documents ADD CONSTRAINT documents_source_check CHECK (source IN ('UPLOAD', 'GOOGLE_DRIVE', 'ASAMBLEA'));

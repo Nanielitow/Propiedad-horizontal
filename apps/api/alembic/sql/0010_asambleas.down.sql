@@ -1,4 +1,7 @@
 -- Reversa de 0010.
+ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_source_check;
+UPDATE documents SET source = 'UPLOAD' WHERE source = 'ASAMBLEA';
+ALTER TABLE documents ADD CONSTRAINT documents_source_check CHECK (source IN ('UPLOAD', 'GOOGLE_DRIVE'));
 DROP TABLE IF EXISTS demo_snapshot.asamblea_votos, demo_snapshot.asamblea_puntos, demo_snapshot.asamblea_asistencias,
   demo_snapshot.asamblea_padron, demo_snapshot.asambleas;
 DROP TABLE IF EXISTS asamblea_votos, asamblea_puntos, asamblea_asistencias, asamblea_padron, asambleas CASCADE;

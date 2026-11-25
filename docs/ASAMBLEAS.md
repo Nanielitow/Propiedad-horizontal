@@ -2,7 +2,7 @@
 
 La asamblea general es el máximo órgano de la copropiedad (Ley 675 de 2001). Este módulo la acompaña de principio a fin: programar y **convocar** (con el orden del día como circular), **instalar** con un padrón fijo de unidades y coeficientes, registrar **asistencia y poderes**, mostrar el **quórum en vivo**, **votar** cada punto ponderando por coeficiente (en la sala o desde el portal), calcular el **resultado según la mayoría que exige la ley** y producir el **acta**.
 
-Estado: **fase 1 hecha** (base de datos, reglas y servicios). Ver §5.
+Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, acta y demo). Ver §5.
 
 ---
 
@@ -49,3 +49,11 @@ No se decide sin quórum: la base y el servicio impiden abrir una votación sin 
 - **Migración 0010** con triggers: flujo de estados, padrón que solo se arma al instalar, asistencia y votos solo con la asamblea en curso, votación solo con el punto abierto y la unidad presente, el coeficiente del voto lo pone la base, punto cerrado y asamblea cerrada inmutables, nada se borra. RLS por rol, incluido el voto del residente solo por las unidades donde figura en el padrón.
 - **Código:** `app/models/asamblea.py`, `app/schemas/asambleas.py`, `app/services/asambleas/` (`dominio.py` con quórum y mayorías, `servicio.py` con los casos de uso).
 - **Pruebas:** 6 unitarias (quórum en primera y segunda convocatoria, mayoría simple con empate, calificada sobre el total, elección con empate, convocatoria) y 4 de integración (332 en total, todas en verde).
+
+### Fase 2: API, acta y demo (hecha)
+
+- **API** (`app/api/v1/asambleas.py`): programar y editar, orden del día, convocar (circular + correo), cancelar, instalar, asistencia en sala y desde el portal, retiro, abrir/votar/cerrar cada punto (en sala o desde el portal), cerrar la asamblea. El detalle devuelve el quórum en vivo, el resultado parcial del punto en votación y el padrón (completo para el personal, solo sus unidades para el residente).
+- **Acta** (`acta.py`): PDF con instalación, quórum, orden del día, resultado de cada votación (unidades y % del conjunto por opción) y su explicación legal, observaciones, lista de asistencia y firmas. **Guardarla en Documentos** la convierte en un documento de la categoría Actas visible para los copropietarios, que pasa por la ingesta: queda en el buscador con IA y en el resumidor de actas (acuerdos y tareas).
+- **Demo** (`python -m app.scripts.demo asambleas`): la ordinaria de marzo de 2026 cerrada (41 de 50 unidades, 81,90 % de los coeficientes, 5 apoderados y Carlos Pérez desde el portal; estados financieros y presupuesto aprobados, cuota extraordinaria aprobada con el 75,62 % del conjunto, Plancha 1 elegida) y la ordinaria de 2027 programada y enlazada a su convocatoria. Instantánea actualizada.
+- **Detalle técnico:** el JSONB no conserva el orden de las claves, así que los resultados se devuelven y se imprimen en el orden de las opciones del punto.
+- **Pruebas:** 1 de API de punta a punta (333 en total, todas en verde).

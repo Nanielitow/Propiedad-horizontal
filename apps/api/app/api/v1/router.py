@@ -4,6 +4,7 @@ from app.api.v1 import (
     activos,
     activos_operacion,
     activos_panel,
+    asambleas,
     auth,
     cartera,
     deadlines,
@@ -42,3 +43,5 @@ api_router.include_router(unidades.otros_router)
 api_router.include_router(cartera.router)
 # Portal del residente: PQRS, circulares y reservas
 api_router.include_router(portal.router)
+# Asambleas de copropietarios
+api_router.include_router(asambleas.router)
