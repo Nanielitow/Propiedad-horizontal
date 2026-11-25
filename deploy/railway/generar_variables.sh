@@ -66,6 +66,7 @@ copiar() { v=$(val "$1"); [ -n "$v" ] && printf '%s="%s"\n' "$1" "$v"; return 0;
 } > deploy/railway/python.env
 {
   echo 'API_INTERNAL_URL="http://${{api.RAILWAY_PRIVATE_DOMAIN}}:8000"'
+  echo "PORT=\"3000\""  # el dominio público de Railway apunta al 3000
   echo "NEXT_PUBLIC_DEMO_MODE=\"true\""
   for k in GOOGLE_CLIENT_ID GOOGLE_API_KEY GOOGLE_PROJECT_NUMBER; do copiar "$k"; done
 } > deploy/railway/web.env
