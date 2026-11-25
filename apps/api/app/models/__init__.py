@@ -14,6 +14,18 @@ from app.models.activo import (
     Reprogramacion,
 )
 from app.models.base import Base
+from app.models.cartera import (
+    AjusteCartera,
+    AplicacionPago,
+    AuditoriaCartera,
+    CargoCartera,
+    CarteraConfig,
+    ConceptoCartera,
+    PagoCartera,
+    PazYSalvo,
+    PeriodoCartera,
+    SaldoCargo,
+)
 from app.models.chat import Conversation, Message
 from app.models.deadline import Deadline, DeadlineNotification
 from app.models.document import (
@@ -52,6 +64,16 @@ from app.models.unidad import (
 )
 
 __all__ = [
+    "AjusteCartera",
+    "AplicacionPago",
+    "AuditoriaCartera",
+    "CargoCartera",
+    "CarteraConfig",
+    "ConceptoCartera",
+    "PagoCartera",
+    "PazYSalvo",
+    "PeriodoCartera",
+    "SaldoCargo",
     "Activo",
     "ActividadProgramada",
     "ActivoDocumento",

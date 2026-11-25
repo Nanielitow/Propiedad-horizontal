@@ -309,6 +309,43 @@ class TipoVehiculo(StrEnum):
     OTRO = "OTRO"
 
 
+# --- Cartera de cuotas de administración (migración 0008) ------------------------
+
+
+class MetodoCuota(StrEnum):
+    COEFICIENTE = "COEFICIENTE"  # presupuesto mensual × coeficiente
+    TARIFA_POR_TIPO = "TARIFA_POR_TIPO"  # valor fijo según el tipo de unidad
+
+
+class TipoConceptoCartera(StrEnum):
+    ORDINARIA = "ORDINARIA"
+    EXTRAORDINARIA = "EXTRAORDINARIA"
+    INTERES = "INTERES"
+    MULTA = "MULTA"
+    OTRO = "OTRO"
+
+
+class EstadoPeriodo(StrEnum):
+    EMITIDO = "EMITIDO"
+    ANULADO = "ANULADO"
+
+
+class EstadoCargo(StrEnum):
+    VIGENTE = "VIGENTE"
+    ANULADO = "ANULADO"
+
+
+class EstadoPagoCartera(StrEnum):
+    APLICADO = "APLICADO"
+    ANULADO = "ANULADO"
+
+
+class TipoAjuste(StrEnum):
+    DESCUENTO_PRONTO_PAGO = "DESCUENTO_PRONTO_PAGO"
+    CONDONACION = "CONDONACION"  # aprobada por el consejo o la asamblea
+    CORRECCION = "CORRECCION"  # error de facturación
+
+
 def pg_enum(enum_cls: type[StrEnum], name: str) -> ENUM:
     # values_callable: SQLAlchemy guarda por defecto el NOMBRE del miembro (USER);
     # el ENUM de Postgres usa el VALOR ('user').
