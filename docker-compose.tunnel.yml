@@ -14,8 +14,7 @@
 #    - base de datos: Neon (api-demo, worker-demo, beat-demo); desarrollo y pruebas
 #      siguen en el PostgreSQL de Docker;
 #    - cola: otras bases de Redis (un worker de desarrollo nunca toma tareas de la demo);
-#    - archivos: bucket propio, porque la limpieza nocturna borra los archivos que su
-#      base no conoce y, compartiendo bucket, borraría los del desarrollo.
+#    - archivos: Cloudflare R2 (bucket ph-documentos); el desarrollo sigue en SeaweedFS.
 # =============================================================================
 
 x-demo-env: &demo-env
@@ -28,36 +27,19 @@ x-demo-env: &demo-env
   REDIS_URL: redis://redis:6379/3
   CELERY_BROKER_URL: redis://redis:6379/4
   CELERY_RESULT_BACKEND: redis://redis:6379/5
-  S3_BUCKET: ph-demo
-  # Las URLs firmadas de los PDF deben apuntar a una dirección pública
-  S3_PUBLIC_ENDPOINT_URL: https://archivos.propiedadhorizontal.app
+  # Archivos en Cloudflare R2 (docs/R2.md): el navegador sube y descarga directo con URLs firmadas
+  S3_ENDPOINT_URL: ${R2_ENDPOINT:?Falta R2_ENDPOINT en .env}
+  S3_PUBLIC_ENDPOINT_URL: ${R2_ENDPOINT}
+  S3_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?Falta R2_ACCESS_KEY_ID en .env}
+  S3_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?Falta R2_SECRET_ACCESS_KEY en .env}
+  S3_BUCKET: ${R2_BUCKET:?Falta R2_BUCKET en .env}
+  S3_REGION: auto
 
 x-demo-deps: &demo-deps
   redis:
     condition: service_healthy
-  s3-init-demo:
-    condition: service_completed_successfully
 
 services:
-  # Bucket de la demo: se crea una sola vez con una copia de los archivos actuales
-  s3-init-demo:
-    image: amazon/aws-cli:2.27.0
-    depends_on:
-      seaweedfs:
-        condition: service_healthy
-    environment:
-      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
-      AWS_DEFAULT_REGION: ${S3_REGION}
-      ORIGEN: ${S3_BUCKET}
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - >
-        aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket ph-demo 2>/dev/null
-        || (aws --endpoint-url http://seaweedfs:8333 s3 mb s3://ph-demo
-        && aws --endpoint-url http://seaweedfs:8333 s3 sync "s3://$${ORIGEN}" s3://ph-demo --only-show-errors)
-    restart: "no"
-
   api-demo:
     extends: { file: docker-compose.yml, service: worker }
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
