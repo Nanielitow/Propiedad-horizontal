@@ -2,7 +2,7 @@
 
 La cuota ordinaria es el ingreso principal de una copropiedad y lo primero que un administrador espera de un software de propiedad horizontal. Este módulo factura la cuota de cada mes, causa los intereses de mora, registra los pagos con la imputación que exige la ley, lleva el saldo de cada unidad, reporta los morosos y expide el paz y salvo.
 
-Estado: **fase 1 hecha** (base de datos, reglas y servicios). Ver §6.
+Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, documentos y demo). Ver §6.
 
 ---
 
@@ -58,3 +58,11 @@ Estado: **fase 1 hecha** (base de datos, reglas y servicios). Ver §6.
 - `alembic/sql/0008_cartera.up.sql`: 9 tablas, vista de saldos, triggers de «solo anular», validación de aplicaciones y ajustes con candado por cargo, auditoría y RLS por rol.
 - `app/services/cartera/`: `dominio.py` (reglas puras), `comun.py` (configuración, saldos, responsable), `facturacion.py`, `pagos.py`, `cargos.py`, `paz_y_salvo.py`.
 - Pruebas: 14 unitarias y 13 de integración (297 en total, todas en verde).
+
+### Fase 2: API, documentos y demo (hecha)
+
+- **API** (`app/api/v1/cartera.py`): resumen, configuración, conceptos, periodos (vista previa, emisión, anulación, cargos del periodo), cargos manuales, ajustes, pagos (búsqueda, registro con detalle de la imputación, anulación), estado de cuenta, `mi-cartera` del residente, morosos, paz y salvo (expedir, PDF y verificación por código).
+- **Consultas** (`consultas.py`): resumen con la cartera por antigüedad, el porcentaje de recaudo del mes y la serie de 12 meses facturado vs. recaudado; estado de cuenta con movimientos y saldo acumulado; morosos con edades, días de mora y último pago.
+- **Documentos** (`documentos.py`): estado de cuenta y morosos en Excel y PDF con el motor compartido; paz y salvo y recibo de caja como documentos de una página.
+- **Demo** (`python -m app.scripts.demo cartera`): 12 meses de facturación con perfiles de pago (puntuales con descuento, tardíos, morosos crónicos, deudas de 3, 6 y 9 meses y un anticipo), cuota extraordinaria en 3 cuotas, una condonación, un pago anulado y el paz y salvo de Carlos Pérez (1-502). Resultado: 818 cargos, 564 pagos y 8 unidades en mora. Instantánea actualizada.
+- **Pruebas:** 3 de API (300 en total, todas en verde).

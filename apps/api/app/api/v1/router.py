@@ -5,6 +5,7 @@ from app.api.v1 import (
     activos_operacion,
     activos_panel,
     auth,
+    cartera,
     deadlines,
     documents,
     minutes,
@@ -36,3 +37,5 @@ api_router.include_router(activos.router)
 api_router.include_router(unidades.unidades_router)
 api_router.include_router(unidades.personas_router)
 api_router.include_router(unidades.otros_router)
+# Cartera de cuotas de administración
+api_router.include_router(cartera.router)

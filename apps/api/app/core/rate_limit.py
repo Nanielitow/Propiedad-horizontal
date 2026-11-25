@@ -122,3 +122,9 @@ UNIDADES_WRITES_PER_MINUTE = Limit("unidades-escritura", 120, 60, "Demasiadas op
 DEMO_UNIDADES_PER_IP_DAY = Limit(
     "demo-unidades-ip", 150, 86_400, "La demo pública permite 150 cambios en el censo al día por visitante."
 )
+
+# Módulo de cartera de cuotas
+CARTERA_WRITES_PER_MINUTE = Limit("cartera-escritura", 120, 60, "Demasiadas operaciones seguidas.")
+DEMO_CARTERA_PER_IP_DAY = Limit(
+    "demo-cartera-ip", 150, 86_400, "La demo pública permite 150 operaciones de cartera al día por visitante."
+)
