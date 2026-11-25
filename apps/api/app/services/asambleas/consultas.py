@@ -93,15 +93,6 @@ async def detalle(db: AsyncSession, actor: Actor, asamblea_id: uuid.UUID) -> Asa
     }
     etiqueta = {p.unidad_id: p.etiqueta for p in padron}
     mias = {p.unidad_id for p in padron if actor.user_id in (p.votante_user_ids or [])}
-    conteos = dict(
-        (
-            await db.execute(
-                select(VotoAsamblea.punto_id, func.count())
-                .where(VotoAsamblea.asamblea_id == a.id)
-                .group_by(VotoAsamblea.punto_id)
-            )
-        ).all()
-    )
     mis_votos: dict[uuid.UUID, dict[str, str]] = defaultdict(dict)
     if mias:
         for pid, uid, opcion in (
@@ -113,6 +104,13 @@ async def detalle(db: AsyncSession, actor: Actor, asamblea_id: uuid.UUID) -> Asa
         ).all():
             mis_votos[pid][etiqueta.get(uid, "")] = opcion
 
+    abierto = next((p for p in puntos if p.estado == EstadoPunto.EN_VOTACION), None)
+    personal = actor.role in PERSONAL
+    votaron = (
+        list(await db.scalars(select(VotoAsamblea.unidad_id).where(VotoAsamblea.punto_id == abierto.id)))
+        if abierto and personal
+        else []
+    )
     q = await s.quorum(db, a) if a.estado != EstadoAsamblea.PROGRAMADA and a.coeficiente_total else None
     puntos_out = []
     for p in puntos:
@@ -140,12 +138,11 @@ async def detalle(db: AsyncSession, actor: Actor, asamblea_id: uuid.UUID) -> Asa
                 resultado=res,
                 aprobado=p.aprobado,
                 conclusion=p.conclusion,
-                votos=conteos.get(p.id, 0),
+                votos=sum(res.unidades_por_opcion.values()) if res else 0,  # agregado: válido para todo rol
                 mis_votos=mis_votos.get(p.id, {}),
             )
         )
 
-    personal = actor.role in PERSONAL
     visibles = padron if personal else [p for p in padron if p.unidad_id in mias]
     padron_out = []
     for p in sorted(visibles, key=lambda x: orden_unidad(_UnidadFicticia(x.etiqueta))):
@@ -182,6 +179,7 @@ async def detalle(db: AsyncSession, actor: Actor, asamblea_id: uuid.UUID) -> Asa
         puede_asistir_portal=bool(mias)
         and a.estado == EstadoAsamblea.EN_CURSO
         and a.modalidad != ModalidadAsamblea.PRESENCIAL,
+        votaron=votaron,
     )
 
 

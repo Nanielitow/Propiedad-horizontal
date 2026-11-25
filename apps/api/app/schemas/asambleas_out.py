@@ -103,3 +103,4 @@ class AsambleaDetalle(AsambleaResumen):
     padron: list[PadronOut]  # personal: completo; residente: solo sus unidades
     soy_votante: bool  # el usuario figura como propietario con cuenta en el padrón
     puede_asistir_portal: bool
+    votaron: list[uuid.UUID]  # personal: unidades que ya votaron el punto abierto

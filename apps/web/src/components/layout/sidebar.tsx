@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Gavel,
   AlertTriangle,
   Boxes,
   Building,
@@ -58,6 +59,7 @@ import { baseActivos, type Novedad, puedeActivos } from "@/lib/activos";
 import { type Alerta, base, puede } from "@/lib/recaudos";
 import { puedeUnidades } from "@/lib/unidades";
 import { puedeCartera } from "@/lib/cartera";
+import { puedeAsambleas } from "@/lib/asambleas";
 import { basePortal, type PendientesPersonal, puedePortal } from "@/lib/portal";
 import { cn } from "@/lib/utils";
 
@@ -103,6 +105,8 @@ const UNIDADES_NAV: (NavItem & { permiso: Parameters<typeof puedeUnidades>[1] })
   { href: "unidades/directorio", label: "Directorio", description: "Propietarios y residentes", icon: Contact, permiso: "directorio" },
 ];
 
+const ASAMBLEAS_ITEM: NavItem = { href: "asambleas", label: "Asambleas", description: "Quórum, votaciones y actas", icon: Gavel };
+
 // Cartera de cuotas de administración (el residente ve «Mi cuenta»)
 const CARTERA_NAV: (NavItem & { permiso: Parameters<typeof puedeCartera>[1] })[] = [
   { href: "cartera", label: "Cartera", description: "Facturado, recaudado y mora", icon: LayoutDashboard, permiso: "ver", exact: true },
@@ -119,6 +123,7 @@ const RESIDENTE_NAV: NavItem[] = [
   { href: "mi-portal/pqrs", label: "PQRS", description: "Peticiones, quejas y reclamos", icon: MessageSquareWarning },
   { href: "mi-portal/circulares", label: "Circulares", description: "Comunicados de la administración", icon: Megaphone },
   { href: "mi-portal/reservas", label: "Reservar", description: "Salón social, BBQ y más", icon: CalendarPlus },
+  { href: "asambleas", label: "Asambleas", description: "Convocatorias, votaciones y actas", icon: Gavel },
   { href: "mi-unidad", label: "Mi unidad", description: "Sus datos, familia y vehículos", icon: Home },
 ];
 
@@ -159,7 +164,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const alerts = alertCount(deadlines?.deadlines);
   const recaudos = RECAUDOS_NAV.filter((i) => puede(tenant.role, i.permiso));
   const activos = ACTIVOS_NAV.filter((i) => puedeActivos(tenant.role, i.permiso));
-  const unidades = UNIDADES_NAV.filter((i) => puedeUnidades(tenant.role, i.permiso));
+  const unidades: NavItem[] = [
+    ...UNIDADES_NAV.filter((i) => puedeUnidades(tenant.role, i.permiso)),
+    ...(tenant.role !== "RESIDENTE" && puedeAsambleas(tenant.role, "ver") ? [ASAMBLEAS_ITEM] : []),
+  ];
   const cartera = CARTERA_NAV.filter((i) => puedeCartera(tenant.role, i.permiso));
   const residente = tenant.role === "RESIDENTE";
   const portal = PORTAL_NAV.filter((i) => puedePortal(tenant.role, i.permiso));

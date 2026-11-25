@@ -143,6 +143,10 @@ async def test_asamblea_completa(api: Cliente) -> None:
     await api.post("AUXILIAR", f"/asambleas/puntos/{punto}/votos", {"unidad_id": api.__dict__["102"], "opcion": "Sí"})
     en_vivo = (await api.get("ADMIN", f"/asambleas/{a['id']}")).json()["puntos_lista"][1]["resultado"]
     assert en_vivo["por_opcion"]["Sí"] == "75.0000" and en_vivo["aprobado"] is True  # 75 % ≥ 70 % del total
+    # La residente solo puede leer sus votos y asistencias (RLS), pero ve el mismo quórum y resultado
+    vista_ana = (await api.get("ANA", f"/asambleas/{a['id']}")).json()
+    assert vista_ana["quorum"]["porcentaje"] == "75.00"
+    assert vista_ana["puntos_lista"][1]["resultado"] == en_vivo and vista_ana["puntos_lista"][1]["votos"] == 2
     r = await api.post("ADMIN", f"/asambleas/puntos/{punto}/cerrar")
     assert r.json()["puntos_lista"][1]["estado"] == "CERRADO" and r.json()["puntos_lista"][1]["aprobado"] is True
     await api.post("ADMIN", f"/asambleas/puntos/{d['puntos_lista'][0]['id']}/cerrar")

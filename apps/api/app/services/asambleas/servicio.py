@@ -5,7 +5,7 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import any_, func, literal, select
+from sqlalchemy import any_, func, literal, select, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -309,17 +309,10 @@ async def abrir(db: AsyncSession, actor: Actor, asamblea_id: uuid.UUID, data: Ab
 
 
 async def quorum(db: AsyncSession, a: Asamblea) -> d.Quorum:
+    # Función SECURITY DEFINER (migración 0011): el residente no puede leer las asistencias
+    # ajenas, pero el quórum es de todos
     presente, unidades = (
-        await db.execute(
-            select(func.coalesce(func.sum(PadronAsamblea.coeficiente), 0), func.count())
-            .select_from(AsistenciaAsamblea)
-            .join(
-                PadronAsamblea,
-                (PadronAsamblea.asamblea_id == AsistenciaAsamblea.asamblea_id)
-                & (PadronAsamblea.unidad_id == AsistenciaAsamblea.unidad_id),
-            )
-            .where(AsistenciaAsamblea.asamblea_id == a.id, AsistenciaAsamblea.retiro_at.is_(None))
-        )
+        await db.execute(text("SELECT coeficiente, unidades FROM asamblea_presentes(:a)"), {"a": a.id})
     ).one()
     total_unidades = (
         await db.scalar(select(func.count()).select_from(PadronAsamblea).where(PadronAsamblea.asamblea_id == a.id)) or 0
@@ -537,7 +530,7 @@ async def calcular_resultado(db: AsyncSession, a: Asamblea, p: PuntoAsamblea) ->
     votos = [
         (o, Decimal(c))
         for o, c in (
-            await db.execute(select(VotoAsamblea.opcion, VotoAsamblea.coeficiente).where(VotoAsamblea.punto_id == p.id))
+            await db.execute(text("SELECT opcion, coeficiente FROM asamblea_votos_punto(:p)"), {"p": p.id})
         ).all()
     ]
     q = await quorum(db, a)

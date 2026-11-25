@@ -2,7 +2,7 @@
 
 La asamblea general es el máximo órgano de la copropiedad (Ley 675 de 2001). Este módulo la acompaña de principio a fin: programar y **convocar** (con el orden del día como circular), **instalar** con un padrón fijo de unidades y coeficientes, registrar **asistencia y poderes**, mostrar el **quórum en vivo**, **votar** cada punto ponderando por coeficiente (en la sala o desde el portal), calcular el **resultado según la mayoría que exige la ley** y producir el **acta**.
 
-Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, acta y demo). Ver §5.
+Estado: **módulo completo** (base de datos, reglas, API, acta, demo y pantallas). Ver §5.
 
 ---
 
@@ -33,6 +33,8 @@ No se decide sin quórum: la base y el servicio impiden abrir una votación sin 
 
 `asambleas` · `asamblea_padron` (foto inmutable) · `asamblea_asistencias` (con retiro) · `asamblea_puntos` (con resultado y conclusión) · `asamblea_votos` (un voto por unidad y punto, inmutable).
 
+Migración 0011: `asamblea_presentes()` y `asamblea_votos_punto()` (SECURITY DEFINER) devuelven solo agregados, sin datos personales. Así el residente, que por RLS solo lee sus propias asistencias y votos, ve el mismo quórum y el mismo resultado parcial que la administración. En la base administrada, el rol dueño necesita BYPASSRLS (ver la trampa de producción común a todos los módulos).
+
 ## 4. Roles
 
 | Acción | ADMIN | AUXILIAR | CONSEJO / CONTABILIDAD | RESIDENTE |
@@ -57,3 +59,10 @@ No se decide sin quórum: la base y el servicio impiden abrir una votación sin 
 - **Demo** (`python -m app.scripts.demo asambleas`): la ordinaria de marzo de 2026 cerrada (41 de 50 unidades, 81,90 % de los coeficientes, 5 apoderados y Carlos Pérez desde el portal; estados financieros y presupuesto aprobados, cuota extraordinaria aprobada con el 75,62 % del conjunto, Plancha 1 elegida) y la ordinaria de 2027 programada y enlazada a su convocatoria. Instantánea actualizada.
 - **Detalle técnico:** el JSONB no conserva el orden de las claves, así que los resultados se devuelven y se imprimen en el orden de las opciones del punto.
 - **Pruebas:** 1 de API de punta a punta (333 en total, todas en verde).
+
+### Fase 3: pantallas (hecha)
+
+- **Asambleas** (`/asambleas`, menú «Copropiedad» para el personal y «Mi portal» para el residente): listado con estado, convocatoria y quórum; **Programar asamblea** con un orden del día típico ya cargado y editable (tipo de punto, mayoría, candidatos de una elección).
+- **Sala** (`/asambleas/{id}`): se actualiza sola cada 4 segundos mientras está en curso. Muestra el **quórum en vivo** con una barra y la marca del 50 %, el **orden del día** con las acciones de cada punto (abrir y cerrar la votación, marcar un punto informativo como tratado con su conclusión), los **resultados por opción** con la línea del 70 % en las de mayoría calificada, el registro de **votos en la sala** (unidades presentes a las que les falta votar, con un botón por opción) y el **padrón** con filtro presentes/ausentes, mora informativa, registro de asistencia de propietario o apoderado y retiro. Una vez cerrada: **Acta en PDF** y **Guardar acta en Documentos**.
+- **Residente:** ve la convocatoria y cómo participar, registra su asistencia (virtual o mixta), vota por todas sus unidades presentes con un botón por opción (aviso de que el voto no se cambia) y ve el resultado con su voto.
+- **E2E** (Playwright, `scratchpad/e2e/asambleas.mjs`): admin, recepción y residente en el celular, de la instalación al acta guardada, sin errores.
