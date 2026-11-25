@@ -30,3 +30,6 @@ apps/web/public/pdf.worker.min.mjs
 
 # Secretos de producción (solo existen en el servidor)
 .env.production
+
+# Variables generadas para Railway (tienen secretos)
+deploy/railway/*.env
