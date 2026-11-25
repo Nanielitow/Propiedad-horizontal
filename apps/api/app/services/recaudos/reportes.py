@@ -39,7 +39,7 @@ from app.models.enums import EstadoConsignacion, EstadoRecaudo, MedioPago, UserR
 from app.services.recaudos.dominio import TZ, Actor, R, ValidacionError, exigir, pesos
 
 E = EstadoRecaudo
-TipoColumna = Literal["texto", "dinero", "entero", "fecha", "fechahora", "porcentaje"]
+TipoColumna = Literal["texto", "dinero", "entero", "fecha", "fechahora", "porcentaje", "coeficiente"]
 TipoReporte = Literal["general", "parqueadero", "zonas", "aseo", "caja", "auditoria"]
 
 PERMISOS: dict[str, frozenset[UserRole]] = {

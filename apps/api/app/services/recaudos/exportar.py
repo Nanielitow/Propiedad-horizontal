@@ -36,6 +36,8 @@ def texto_celda(valor: Any, col: Columna) -> str:
         return pesos(Decimal(str(valor)))
     if col.tipo == "porcentaje":
         return f"{Decimal(str(valor)):.1f} %".replace(".", ",")
+    if col.tipo == "coeficiente":  # coeficiente de copropiedad: 4 decimales
+        return f"{Decimal(str(valor)):.4f}".replace(".", ",")
     if col.tipo == "entero" and isinstance(valor, int):
         return f"{valor:,}".replace(",", ".")
     if isinstance(valor, datetime):
@@ -118,7 +120,8 @@ def _hoja_tabla(wb: Workbook, t: Tabla, r: Reporte, usados: set[str]) -> None:
         c.font = Font(bold=True, color="FFFFFF")
         c.fill = PatternFill("solid", fgColor=AZUL)
         c.alignment = Alignment(
-            horizontal="right" if col.tipo in ("dinero", "entero", "porcentaje") else "left", vertical="center"
+            horizontal="right" if col.tipo in ("dinero", "entero", "porcentaje", "coeficiente") else "left",
+            vertical="center",
         )
     for i, fila in enumerate(t.filas, start=fila0 + 1):
         for j, (valor, col) in enumerate(zip(fila, t.columnas, strict=True), start=1):
@@ -128,6 +131,8 @@ def _hoja_tabla(wb: Workbook, t: Tabla, r: Reporte, usados: set[str]) -> None:
                 c.number_format = FORMATO_DINERO
             elif col.tipo == "porcentaje":
                 c.number_format = "0.0%"
+            elif col.tipo == "coeficiente":
+                c.number_format = "0.0000"
             elif col.tipo == "fechahora":
                 c.number_format = "dd/mm/yyyy hh:mm"
             elif col.tipo == "fecha":
@@ -143,6 +148,8 @@ def _hoja_tabla(wb: Workbook, t: Tabla, r: Reporte, usados: set[str]) -> None:
                 c.number_format = FORMATO_DINERO
             elif col.tipo == "porcentaje":
                 c.number_format = "0.0%"
+            elif col.tipo == "coeficiente":
+                c.number_format = "0.0000"
     if t.nota:
         ws.cell(row=ultima + 2, column=1, value=t.nota).font = Font(italic=True, color="667085")
     ws.freeze_panes = ws.cell(row=fila0 + 1, column=1)
@@ -205,7 +212,7 @@ def _html(r: Reporte) -> str:
         *[f"<p class='kv'>{escape(k)}: <b>{escape(v)}</b></p>" for k, v in r.resumen],
     ]
     for t in r.tablas:
-        numericas = {i for i, c in enumerate(t.columnas) if c.tipo in ("dinero", "entero", "porcentaje")}
+        numericas = {i for i, c in enumerate(t.columnas) if c.tipo in ("dinero", "entero", "porcentaje", "coeficiente")}
 
         def celda(i: int, contenido: str, tag: str = "td", numericas: set[int] = numericas) -> str:
             clase = " class='num'" if i in numericas else ""

@@ -116,3 +116,9 @@ ACTIVOS_WRITES_PER_MINUTE = Limit("activos-escritura", 60, 60, "Demasiadas opera
 DEMO_ACTIVOS_PER_IP_DAY = Limit(
     "demo-activos-ip", 150, 86_400, "La demo pública permite 150 operaciones de mantenimiento al día por visitante."
 )
+
+# Módulo de unidades, copropietarios y residentes
+UNIDADES_WRITES_PER_MINUTE = Limit("unidades-escritura", 120, 60, "Demasiadas operaciones seguidas.")
+DEMO_UNIDADES_PER_IP_DAY = Limit(
+    "demo-unidades-ip", 150, 86_400, "La demo pública permite 150 cambios en el censo al día por visitante."
+)

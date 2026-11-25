@@ -2,7 +2,7 @@
 
 Diseño del tercer módulo: el **censo de la copropiedad**. Registra las unidades privadas (apartamentos, casas, locales, parqueaderos y depósitos), sus **coeficientes de copropiedad**, quién es **propietario**, quién **vive** en cada una, sus **vehículos**, y permite **importarlo todo desde Excel**.
 
-Estado: **fase 1 hecha** (base de datos y dominio). Ver §7.
+Estado: **fases 1 y 2 hechas** (base de datos, dominio, API, importación, exportación y demo). Ver §7.
 
 ---
 
@@ -195,3 +195,13 @@ Fuera de alcance (posibles módulos siguientes): **invitaciones de usuarios** (c
 - **Pruebas:** 49 unitarias y 16 de integración (261 en total, todas en verde).
 
 **Nota para producción:** las funciones `SECURITY DEFINER` (`app_unidades_propias`, `sincronizar_unidad_membership` y las de los otros módulos) asumen que el dueño del esquema ignora la RLS. En Docker lo hace porque es superusuario. En una base administrada, el rol dueño necesita `BYPASSRLS`.
+
+### Fase 2: API, importación, exportación y demo (hecha)
+
+- **API** (`app/api/v1/unidades.py`, 25 rutas): listado con filtros y búsqueda (unidad, nombre sin tildes, documento, teléfono o placa), resumen, ficha, gestión de unidades, vínculos, personas y vehículos, búsqueda por placa para recepción y `GET /mi-unidad` para el residente.
+- **Campos según el rol** (`consultas.py`): llegan en `null` los que el rol no puede ver. Recepción no ve documento, correo ni coeficientes; el Consejo ve coeficientes pero no el directorio; el residente ve sus propios datos completos.
+- **Importador** (`importar.py`): plantilla con listas desplegables, encabezados tolerantes ("Apto", "Cédula", "Celular"...), hojas con otros nombres ("Propietarios"), vista previa con errores por hoja y fila, confirmación verificada por hash y aplicada en una sola transacción con los mismos casos de uso de la pantalla. Reimportar no duplica nada.
+- **Exportación del censo** en Excel y PDF con el motor de reportes de Recaudos (nuevo tipo de columna "coeficiente" con 4 decimales). La versión del Consejo no lleva datos de contacto.
+- **Reglas añadidas:** un anexo sin coeficiente propio no cuenta como faltante, y la ocupación se recalcula sola al cambiar los vínculos.
+- **Demo:** `python -m app.scripts.demo unidades` genera 122 unidades (48 apartamentos, 2 locales, 48 parqueaderos y 24 depósitos), 132 personas, historial de ventas y arriendos y 36 vehículos. Carlos Pérez (residente) es propietario del 1-502. Instantánea actualizada.
+- **Pruebas:** 9 de API e importación (270 en total, todas en verde).

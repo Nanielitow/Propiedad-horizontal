@@ -12,7 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Membership, Persona, UnidadPersona, Unit, Vehiculo
-from app.models.enums import RelacionUnidad
+from app.models.enums import RelacionUnidad, TipoUnidad
 from app.schemas.unidades import (
     CerrarVinculoIn,
     PersonaIn,
@@ -276,6 +276,19 @@ async def _vigentes(db: AsyncSession, unidad_id: uuid.UUID) -> list[UnidadPerson
     )
 
 
+async def _actualizar_ocupacion(db: AsyncSession, unidad_id: uuid.UUID) -> None:
+    """La ocupación se deriva de los vínculos vigentes cada vez que cambian. El administrador
+    puede corregirla a mano; el próximo cambio de vínculos la vuelve a calcular."""
+    u = await db.get(Unit, unidad_id)
+    if u is None or u.tipo in (TipoUnidad.PARQUEADERO, TipoUnidad.DEPOSITO):
+        return
+    vigentes = await _vigentes(db, unidad_id)
+    sugerida = d.ocupacion_sugerida(d.VinculoResumen(v.relacion, v.reside) for v in vigentes)
+    if u.ocupacion != sugerida:
+        u.ocupacion = sugerida
+        await db.flush()
+
+
 async def _liberar(db: AsyncSession, vigentes: list[UnidadPersona], campo: str, excepto: uuid.UUID | None) -> None:
     """Contacto principal y responsable de pago son únicos por unidad: el nuevo reemplaza al anterior."""
     cambio = False
@@ -342,6 +355,7 @@ async def vincular(db: AsyncSession, actor: Actor, unidad_id: uuid.UUID, data: V
     )
     db.add(v)
     await db.flush()
+    await _actualizar_ocupacion(db, u.id)
     return v
 
 
@@ -377,6 +391,8 @@ async def editar_vinculo(db: AsyncSession, actor: Actor, vinculo_id: uuid.UUID, 
     for campo, valor in cambios.items():
         setattr(v, campo, valor)
     await db.flush()
+    if "reside" in cambios:
+        await _actualizar_ocupacion(db, v.unidad_id)
     return v
 
 
@@ -398,6 +414,7 @@ async def cerrar_vinculo(db: AsyncSession, actor: Actor, vinculo_id: uuid.UUID, 
     await db.flush()
     await fijar_motivo(db, None)
     await db.refresh(v)  # el trigger apaga contacto y responsable de pago
+    await _actualizar_ocupacion(db, v.unidad_id)
     return v
 
 
@@ -481,5 +498,12 @@ async def retirar_vehiculo(db: AsyncSession, actor: Actor, vehiculo_id: uuid.UUI
 
 async def estado_coeficientes(db: AsyncSession, actor: Actor) -> d.EstadoCoeficientes:
     exigir(actor, d.PUEDE_VER_DATOS_PREDIALES, "consultar coeficientes")
-    filas = await db.scalars(select(Unit.coefficient).where(Unit.tenant_id == actor.tenant_id, Unit.activa.is_(True)))
+    # Un anexo sin coeficiente propio está incluido en el de su unidad principal: no falta
+    filas = await db.scalars(
+        select(Unit.coefficient).where(
+            Unit.tenant_id == actor.tenant_id,
+            Unit.activa.is_(True),
+            ~(Unit.unidad_principal_id.is_not(None) & Unit.coefficient.is_(None)),
+        )
+    )
     return d.estado_coeficientes(filas)

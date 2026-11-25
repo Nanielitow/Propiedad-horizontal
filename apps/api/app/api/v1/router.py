@@ -13,6 +13,7 @@ from app.api.v1 import (
     recaudos_caja,
     recaudos_panel,
     search,
+    unidades,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -31,3 +32,7 @@ api_router.include_router(recaudos.router)
 api_router.include_router(activos_operacion.router)
 api_router.include_router(activos_panel.router)
 api_router.include_router(activos.router)
+# Unidades, copropietarios y residentes
+api_router.include_router(unidades.unidades_router)
+api_router.include_router(unidades.personas_router)
+api_router.include_router(unidades.otros_router)

@@ -3,11 +3,12 @@
   python -m app.scripts.demo load               # sube y procesa los documentos de ejemplo
   python -m app.scripts.demo recaudos           # genera ~6 semanas de movimientos del módulo de recaudos
   python -m app.scripts.demo activos            # genera un año de historial del módulo de mantenimiento
+  python -m app.scripts.demo unidades           # censo: ~120 unidades, propietarios, arrendatarios y vehículos
   python -m app.scripts.demo snapshot           # guarda el estado actual como "demo limpia"
   python -m app.scripts.demo restore            # vuelve a la instantánea (lo hace beat cada noche)
   python -m app.scripts.demo configure-bucket   # CORS del bucket para el dominio de la app
 
-Orden en un servidor nuevo:  migraciones -> seed -> load -> recaudos -> activos -> (revisar en la web) -> snapshot
+Orden en un servidor nuevo:  migraciones -> seed -> load -> recaudos -> activos -> unidades -> (revisar en la web) -> snapshot
 """
 
 import hashlib
@@ -187,6 +188,10 @@ def main() -> None:
         from app.scripts.demo_activos import main as activos
 
         activos()
+    elif command == "unidades":
+        from app.scripts.demo_unidades import main as unidades
+
+        unidades()
     elif command == "snapshot":
         counts = save_snapshot()
         print("Instantánea guardada:", ", ".join(f"{t}={n}" for t, n in counts.items() if n))
