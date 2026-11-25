@@ -155,3 +155,29 @@ def maintenance_alerts(*, tenant_name: str, items: list[tuple[str, str]], url: s
   <p style="font-size:12px;color:#8a929e">Recibe este correo por su rol en {escape(tenant_name)} en PH Gestión.</p>
 </div>"""
     return subject, "\n".join(lines), html
+
+
+def aviso_portal(
+    *, tenant_name: str, seccion: str, titulo: str, parrafos: list[str], url: str, boton: str, cita: str | None = None
+) -> tuple[str, str, str]:
+    """Aviso del portal (PQRS, circular, reserva): un título, algunos párrafos, una cita opcional y un botón."""
+    subject = f"{titulo} · {tenant_name}"
+    lines = [f"{seccion} · {tenant_name}", "", titulo, "", *parrafos]
+    if cita:
+        lines += ["", cita]
+    lines += ["", f"{boton}: {url}"]
+    bloque_cita = (
+        f'<blockquote style="margin:14px 0;padding:10px 14px;border-left:3px solid #1f3a5f;background:#f2f4f7;'
+        f'font-size:14px;white-space:pre-wrap">{escape(cita)}</blockquote>'
+        if cita
+        else ""
+    )
+    html = f"""<div style="font-family:Arial,sans-serif;color:#1b2430;max-width:560px">
+  <p style="color:#5b6573;margin:0 0 4px">{escape(seccion)} · {escape(tenant_name)}</p>
+  <h2 style="margin:0 0 12px;color:#1f3a5f">{escape(titulo)}</h2>
+  {"".join(f'<p style="margin:0 0 10px;font-size:14px">{escape(p)}</p>' for p in parrafos)}
+  {bloque_cita}
+  <p style="margin:22px 0"><a href="{escape(url)}" style="background:#1f3a5f;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">{escape(boton)}</a></p>
+  <p style="font-size:12px;color:#8a929e">Mensaje automático de PH Gestión. No responda este correo: use la plataforma.</p>
+</div>"""
+    return subject, "\n".join(lines), html

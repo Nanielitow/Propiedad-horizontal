@@ -128,3 +128,9 @@ CARTERA_WRITES_PER_MINUTE = Limit("cartera-escritura", 120, 60, "Demasiadas oper
 DEMO_CARTERA_PER_IP_DAY = Limit(
     "demo-cartera-ip", 150, 86_400, "La demo pública permite 150 operaciones de cartera al día por visitante."
 )
+
+# Portal del residente (PQRS, reservas, circulares)
+PORTAL_WRITES_PER_MINUTE = Limit("portal-escritura", 30, 60, "Demasiadas operaciones seguidas.")
+DEMO_PORTAL_PER_IP_DAY = Limit(
+    "demo-portal-ip", 80, 86_400, "La demo pública permite 80 operaciones del portal al día por visitante."
+)

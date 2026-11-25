@@ -9,6 +9,7 @@ from app.api.v1 import (
     deadlines,
     documents,
     minutes,
+    portal,
     quotes,
     recaudos,
     recaudos_caja,
@@ -39,3 +40,5 @@ api_router.include_router(unidades.personas_router)
 api_router.include_router(unidades.otros_router)
 # Cartera de cuotas de administración
 api_router.include_router(cartera.router)
+# Portal del residente: PQRS, circulares y reservas
+api_router.include_router(portal.router)

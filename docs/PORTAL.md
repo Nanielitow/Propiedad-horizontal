@@ -2,7 +2,7 @@
 
 El residente deja de ser un usuario pasivo (solo documentos y chat) y gana trámites propios: radicar y seguir **PQRS**, recibir **circulares** con acuse de lectura y **reservar zonas sociales** sin llamar a la administración. Junto con su estado de cuenta y su paz y salvo (módulo de cartera), es la razón para que los residentes usen la plataforma.
 
-Estado: **fase 1 hecha** (base de datos, reglas y servicios). Ver §5.
+Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, correos y demo). Ver §5.
 
 ---
 
@@ -46,3 +46,11 @@ Estado: **fase 1 hecha** (base de datos, reglas y servicios). Ver §5.
 - **Migración 0009**: `pqrs`, `pqrs_mensajes`, `circulares`, `circular_lecturas`, `auditoria_portal`; ampliación de `zonas_sociales` (reglas) y `reservas` (portal, decisión); estado `RECHAZADA`; triggers de flujo, inmutabilidad y auditoría; RLS por rol, incluido el residente sobre zonas y reservas.
 - **Código:** `app/models/portal.py`, `app/schemas/portal.py`, `app/services/portal/` (`dominio.py`, `pqrs.py`, `circulares.py`, `reservas.py`, `adjuntos.py`).
 - **Pruebas:** 13 unitarias (festivos de 2026 contra el calendario oficial, días hábiles, reglas de reserva, estados) y 6 de integración (319 en total, todas en verde).
+
+### Fase 2: API, correos y demo (hecha)
+
+- **API** (`app/api/v1/portal.py`): inicio del residente y pendientes del personal; PQRS (bandeja con filtros, resumen con tiempo de respuesta y satisfacción, radicar, detalle con la conversación, mensajes, responder, gestionar, calificar, reabrir, desistir, convertir en novedad); adjuntos con URL firmada; circulares (listar según la torre, crear, editar borrador, publicar, archivar, marcar leída con estadísticas para el personal); zonas con sus reglas y disponibilidad; reservas (listar, solicitar, cancelar, decidir).
+- **Privacidad en la conversación:** al residente las respuestas le llegan firmadas por «Administración», no con el nombre de quien escribió.
+- **Correos** (`app/workers/tasks/portal.py`), encolados después del commit: PQRS radicada (al personal), PQRS respondida (a quien radicó, o al contacto dejado por recepción), circular publicada (a los destinatarios, una sola vez aunque la tarea se reintente), reserva solicitada (al personal) y decidida (al residente).
+- **Demo** (`python -m app.scripts.demo portal`): reglas de 3 zonas, 14 PQRS en todos los estados (radicadas por Carlos y por recepción a nombre de otros residentes; una vencida, una convertida en novedad), 6 circulares publicadas y un borrador, y 2 reservas de Carlos (una esperando aprobación). Instantánea actualizada.
+- **Pruebas:** 3 de API (322 en total, todas en verde).
