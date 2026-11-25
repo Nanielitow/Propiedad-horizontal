@@ -123,7 +123,7 @@ def _vehiculo_out(v: Vehiculo, u: Unit, p: Persona | None) -> VehiculoOut:
     )
 
 
-def _orden_unidad(u: Unit) -> tuple[str, int, int, str]:
+def orden_unidad(u: Unit) -> tuple[str, int, int, str]:
     """'2-301' antes que '2-1001' (orden natural) y los números con letras ('PQ-01') al final de la torre."""
     digitos = "".join(c for c in u.number if c.isdigit())
     return (u.tower.zfill(4), 0 if u.number[:1].isdigit() else 1, int(digitos) if digitos else 0, u.number)
@@ -166,7 +166,7 @@ def _resumen(
         coefficient=u.coefficient if prediales else None,
         area_m2=u.area_m2 if prediales else None,
         unidad_principal=_ref(principal) if principal else None,
-        anexos=[_ref(a) for a in sorted(anexos.get(u.id, []), key=_orden_unidad)],
+        anexos=[_ref(a) for a in sorted(anexos.get(u.id, []), key=orden_unidad)],
         propietarios=[_persona_ref(p) for v, p in ordenados if v.relacion == RelacionUnidad.PROPIETARIO],
         contacto=_persona_ref(contacto) if contacto else None,
         responsable_pago=_persona_ref(pago) if pago else None,
@@ -243,7 +243,7 @@ async def listar_unidades(
                 )
             ),
         )
-    filtradas = sorted(await db.scalars(q), key=_orden_unidad)
+    filtradas = sorted(await db.scalars(q), key=orden_unidad)
     total = len(filtradas)
     pagina = filtradas[(page - 1) * page_size : page * page_size]
     ids = [u.id for u in pagina]
@@ -484,7 +484,7 @@ async def directorio(
         .join(Unit, Unit.id == UnidadPersona.unidad_id)
         .where(UnidadPersona.persona_id.in_(ids), UnidadPersona.fecha_fin.is_(None))
     )
-    for v, u in sorted(filas.all(), key=lambda vu: _orden_unidad(vu[1])):
+    for v, u in sorted(filas.all(), key=lambda vu: orden_unidad(vu[1])):
         if all(r.id != u.id for r in unidades[v.persona_id]):
             unidades[v.persona_id].append(_ref(u))
         if v.relacion not in relaciones[v.persona_id]:

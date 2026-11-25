@@ -41,6 +41,7 @@ from app.services.unidades.dominio import PUEDE_GESTIONAR
 MAX_BYTES = 5 * 1024 * 1024
 MAX_FILAS = 5000
 AZUL = "1F3A5F"
+FILA_EJEMPLO = "ejemplo"  # filas de muestra de la plantilla: se ignoran
 
 # --- Columnas (encabezado visible, clave interna, alias aceptados) -----------------
 
@@ -298,6 +299,7 @@ def plantilla() -> bytes:
         ("Importar el censo de la copropiedad", True),
         ("", False),
         ("1. Llene las hojas Unidades, Personas y Vehículos. Puede dejar vacías las que no necesite.", False),
+        ("   Las filas de ejemplo (Torre = «Ejemplo») se ignoran al importar: puede dejarlas o borrarlas.", False),
         ("2. Cada unidad se identifica por Torre + Número. Si el conjunto no tiene torres, deje Torre vacía.", False),
         ("3. Una celda vacía significa «no cambiar»: puede reimportar el archivo para completar datos.", False),
         ("4. Los parqueaderos y depósitos privados se registran como unidades con «Anexo de» = la unidad", False),
@@ -326,22 +328,22 @@ def plantilla() -> bytes:
         "Unidades": (
             COLUMNAS_UNIDADES,
             [
-                ["1", "101", "Apartamento", 1.2345, 62.5, "50C-1234567", None, None],
-                ["1", "PQ-01", "Parqueadero", None, 12, None, "1-101", "Cubierto"],
+                ["Ejemplo", "101", "Apartamento", 1.2345, 62.5, "50C-1234567", None, None],
+                ["Ejemplo", "PQ-01", "Parqueadero", None, 12, None, "Ejemplo-101", "Cubierto"],
             ],
             {3: list(_TITULOS_TIPO_UNIDAD)},
         ),
         "Personas": (
             COLUMNAS_PERSONAS,
             [
-                ["1", "101", "Propietario", "Ana María Gómez", "CC", "1020304050", "3001234567", "ana@correo.com", "Sí", "Sí", None, "Sí"],
-                ["1", "101", "Residente", "Tomás Gómez", "TI", "1098765432", None, None, "Sí", "No", None, "No"],
+                ["Ejemplo", "101", "Propietario", "Ana María Gómez", "CC", "1020304050", "3001234567", "ana@correo.com", "Sí", "Sí", None, "Sí"],
+                ["Ejemplo", "101", "Residente", "Tomás Gómez", "TI", "1098765432", None, None, "Sí", "No", None, "No"],
             ],
             {3: ["Propietario", "Arrendatario", "Residente", "Autorizado"], 5: [t.value for t in TipoDocumentoIdentidad], 9: ["Sí", "No"], 10: ["Sí", "No"], 12: ["Sí", "No"]},
         ),
         "Vehículos": (
             COLUMNAS_VEHICULOS,
-            [["1", "101", "ABC123", "Carro", "Mazda 3", "Gris"]],
+            [["Ejemplo", "101", "ABC123", "Carro", "Mazda 3", "Gris"]],
             {4: ["Carro", "Moto", "Bicicleta", "Otro"]},
         ),
     }  # fmt: skip
@@ -440,7 +442,7 @@ def _leer_hojas(contenido: bytes, plan: Plan) -> dict[str, list[tuple[int, dict[
                 plan.error(ws.title, n, f"El archivo supera el máximo de {MAX_FILAS} filas por hoja")
                 break
             datos = {mapa[i]: v for i, v in enumerate(fila) if i in mapa and _texto(v) is not None}
-            if datos:
+            if datos and _clave(datos.get("torre", "")) != FILA_EJEMPLO:
                 registros.append((n, datos))
         resultado[clave] = registros
         plan.filas_leidas += len(registros)

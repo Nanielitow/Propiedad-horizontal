@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, CheckCircle2, Loader2, PartyPopper, Receipt, Sparkles, Wallet } from "lucide-react";
+import { Car, CheckCircle2, Home, Loader2, PartyPopper, Receipt, Sparkles, UserRound, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { api, fetcher } from "@/lib/api";
+import { baseTenant, baseUnidades, type PlacaConsulta, puedeUnidades, RELACION, type UnidadDetalle } from "@/lib/unidades";
 import {
   aDatetimeLocal,
   base,
@@ -90,6 +91,27 @@ export function RegistrarView() {
 
   const [enviando, setEnviando] = useState(false);
   const [ultimo, setUltimo] = useState<RecaudoDetalle | null>(null);
+
+  // Integración con el censo: unidad preseleccionada (?unidad=), pagador sugerido y placa reconocida
+  const censo = puedeUnidades(tenant.role, "vehiculos");
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("unidad");
+    if (id) setUnidadId(id);
+  }, []);
+  const { data: fichaUnidad } = useSWR<UnidadDetalle>(censo && unidadId ? `${baseUnidades(tenant.tenant_id)}/${unidadId}` : null, fetcher);
+  const placaNormal = placa.replace(/[\s.-]/g, "").toUpperCase();
+  const placaValida = /^[A-Z0-9]{5,7}$/.test(placaNormal);
+  const { data: placaInfo } = useSWR<PlacaConsulta>(
+    censo && concepto?.requiere_vehiculo && placaValida ? `${baseTenant(tenant.tenant_id)}/vehiculos/placa/${placaNormal}` : null,
+    fetcher,
+  );
+  const sugeridos = (fichaUnidad?.vinculos ?? []).filter((v) => v.relacion !== "AUTORIZADO" || v.es_contacto_principal);
+  // Al elegir la unidad, si el nombre está vacío (o es el genérico «Visitante»), se usa el contacto principal
+  useEffect(() => {
+    if (!fichaUnidad) return;
+    const contacto = fichaUnidad.vinculos.find((v) => v.es_contacto_principal) ?? fichaUnidad.vinculos[0];
+    if (contacto) setPagador((p) => (!p.trim() || p === "Visitante" ? contacto.persona.nombre_completo : p));
+  }, [fichaUnidad]);
 
   function elegir(c: Concepto) {
     setConceptoId(c.id);
@@ -307,6 +329,23 @@ export function RegistrarView() {
                         autoFocus
                         maxLength={8}
                       />
+                      {placaInfo && (
+                        placaInfo.registrada && placaInfo.vehiculo ? (
+                          <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-success">
+                            <span className="inline-flex items-center gap-1">
+                              <Home className="size-3.5 shrink-0" /> Vehículo de residente · {placaInfo.vehiculo.unidad.etiqueta}
+                              {placaInfo.vehiculo.persona && ` (${placaInfo.vehiculo.persona.nombre})`}
+                            </span>
+                            {unidadId !== placaInfo.vehiculo.unidad.id && (
+                              <button type="button" className="font-medium text-primary hover:underline" onClick={() => setUnidadId(placaInfo.vehiculo!.unidad.id)}>
+                                Asociar a la unidad
+                              </button>
+                            )}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No está registrada: visitante.</p>
+                        )
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="ingreso">Ingreso</Label>
@@ -408,6 +447,21 @@ export function RegistrarView() {
                         </option>
                       ))}
                     </select>
+                    {sugeridos.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {sugeridos.slice(0, 4).map((v) => (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => setPagador(v.persona.nombre_completo)}
+                            title={`${RELACION[v.relacion].label}: usar como pagador`}
+                            className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs hover:bg-accent"
+                          >
+                            <UserRound className="size-3" /> {v.persona.nombre_completo.split(" ").slice(0, 2).join(" ")}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

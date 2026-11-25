@@ -27,6 +27,7 @@ from app.services.recaudos.dominio import (
     ValidacionError,
     exigir,
 )
+from app.services.unidades.consultas import orden_unidad
 
 PUEDE_VER_CATALOGOS = frozenset({R.ADMIN, R.AUXILIAR, R.CONTABILIDAD})
 
@@ -205,5 +206,8 @@ async def listar_personal(db: AsyncSession, actor: Actor, rol: UserRole | None =
 
 
 async def listar_unidades(db: AsyncSession, actor: Actor) -> list[Unit]:
+    """Unidades a las que se puede asociar un recaudo: activas y principales (sin parqueaderos
+    ni depósitos anexos), en orden natural ('2-301' antes que '2-1001')."""
     exigir(actor, PUEDE_VER_CATALOGOS, "consultar las unidades")
-    return list(await db.scalars(select(Unit).order_by(Unit.tower, Unit.number)))
+    filas = await db.scalars(select(Unit).where(Unit.activa.is_(True), Unit.unidad_principal_id.is_(None)))
+    return sorted(filas, key=orden_unidad)

@@ -2,7 +2,7 @@
 
 Diseño del tercer módulo: el **censo de la copropiedad**. Registra las unidades privadas (apartamentos, casas, locales, parqueaderos y depósitos), sus **coeficientes de copropiedad**, quién es **propietario**, quién **vive** en cada una, sus **vehículos**, y permite **importarlo todo desde Excel**.
 
-Estado: **fases 1 y 2 hechas** (base de datos, dominio, API, importación, exportación y demo). Ver §7.
+Estado: **módulo completo (fases 1 a 3)**. Ver §7.
 
 ---
 
@@ -205,3 +205,14 @@ Fuera de alcance (posibles módulos siguientes): **invitaciones de usuarios** (c
 - **Reglas añadidas:** un anexo sin coeficiente propio no cuenta como faltante, y la ocupación se recalcula sola al cambiar los vínculos.
 - **Demo:** `python -m app.scripts.demo unidades` genera 122 unidades (48 apartamentos, 2 locales, 48 parqueaderos y 24 depósitos), 132 personas, historial de ventas y arriendos y 36 vehículos. Carlos Pérez (residente) es propietario del 1-502. Instantánea actualizada.
 - **Pruebas:** 9 de API e importación (270 en total, todas en verde).
+
+### Fase 3: pantallas e integración con Recaudos (hecha)
+
+- **Menú «Copropiedad»**: Unidades y Directorio para el personal, y «Mi unidad» para el residente.
+- **Unidades** (`components/unidades/unidades-view.tsx`): indicadores (unidades, coeficientes, sin propietario, personas y vehículos), etiquetas de ocupación que filtran, búsqueda por unidad, nombre, cédula, celular o placa, y filtros por torre y tipo. Los anexos se ocultan por defecto. Incluye exportación del censo e importación.
+- **Ficha de la unidad**: personas con sus marcas (vive allí, contacto, paga) y acciones (hacer contacto o responsable de pago, retirar con motivos sugeridos), datos, vehículos, historial, últimos recaudos y auditoría. Avisa cuando la ocupación registrada no coincide con la sugerida.
+- **Directorio** con panel lateral de la persona (datos, unidades, vehículos, historial y edición).
+- **Importar**: asistente de 3 pasos (plantilla, vista previa con errores y cambios antes → después, confirmación). Las filas de ejemplo de la plantilla (Torre «Ejemplo») se ignoran, así que subirla sin modificar no cambia nada.
+- **Mi unidad** (residente, pensada para celular): su unidad y anexos, quiénes figuran, sus datos y sus vehículos.
+- **Integración con Recaudos**: desde la ficha se registra un recaudo con la unidad ya elegida y el pagador sugerido (contacto principal, con atajos a las demás personas). En el parqueadero, la placa indica «Vehículo de residente · 1-502 (Carlos Pérez)» o «visitante» y permite asociar la unidad. El selector de unidades de Recaudos muestra solo unidades activas y principales, en orden natural.
+- **Verificación**: recorrido E2E con Playwright (administración, recepción y residente en celular) sin errores de consola ni respuestas 5xx; 270 pruebas de backend y chequeo de tipos del frontend en verde.

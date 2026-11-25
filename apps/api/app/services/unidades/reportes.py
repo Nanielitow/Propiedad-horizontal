@@ -15,7 +15,7 @@ from app.services.activos.reportes import ReporteActivos
 from app.services.comun import TZ, Actor, exigir, hoy_bogota
 from app.services.recaudos.reportes import Columna, Tabla
 from app.services.unidades import dominio as d
-from app.services.unidades.consultas import _orden_unidad
+from app.services.unidades.consultas import orden_unidad
 
 TIPOS = {
     TipoUnidad.APARTAMENTO: "Apartamento",
@@ -45,7 +45,7 @@ async def censo(db: AsyncSession, actor: Actor) -> ReporteActivos:
     contacto = actor.role in d.PUEDE_VER_DIRECTORIO
     sensibles = actor.role in d.PUEDE_VER_DATOS_SENSIBLES
     tenant = await db.get(Tenant, actor.tenant_id)
-    unidades = sorted(await db.scalars(select(Unit).where(Unit.activa.is_(True))), key=_orden_unidad)
+    unidades = sorted(await db.scalars(select(Unit).where(Unit.activa.is_(True))), key=orden_unidad)
     por_id = {u.id: u for u in unidades}
     vinculos = (
         await db.execute(
@@ -105,7 +105,7 @@ async def censo(db: AsyncSession, actor: Actor) -> ReporteActivos:
             cp += [Columna("Documento"), Columna("Correo"), Columna("Autoriza datos")]
         filas_p = []
         for v, p in sorted(
-            vinculos, key=lambda vp: (vp[1].nombre_completo.lower(), _orden_unidad(por_id[vp[0].unidad_id]))
+            vinculos, key=lambda vp: (vp[1].nombre_completo.lower(), orden_unidad(por_id[vp[0].unidad_id]))
         ):
             if v.unidad_id not in por_id:
                 continue

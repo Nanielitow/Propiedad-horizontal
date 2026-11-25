@@ -3,7 +3,10 @@
 import {
   AlertTriangle,
   Boxes,
+  Building,
   Building2,
+  Contact,
+  Home,
   CalendarDays,
   ClipboardCheck,
   HardHat,
@@ -46,6 +49,7 @@ import { alertCount } from "@/lib/deadlines";
 import { ROLE_LABEL } from "@/lib/labels";
 import { baseActivos, type Novedad, puedeActivos } from "@/lib/activos";
 import { type Alerta, base, puede } from "@/lib/recaudos";
+import { puedeUnidades } from "@/lib/unidades";
 import { cn } from "@/lib/utils";
 
 import { useTenant } from "./tenant-context";
@@ -84,6 +88,13 @@ const ACTIVOS_NAV: (NavItem & { permiso: Parameters<typeof puedeActivos>[1] })[]
   { href: "activos/reportes", label: "Reportes", description: "Excel, PDF y presupuesto", icon: FileBarChart, permiso: "reportes" },
 ];
 
+// Censo de la copropiedad: unidades y directorio (el residente ve «Mi unidad»)
+const UNIDADES_NAV: (NavItem & { permiso: Parameters<typeof puedeUnidades>[1] })[] = [
+  { href: "mi-unidad", label: "Mi unidad", description: "Sus datos, familia y vehículos", icon: Home, permiso: "miUnidad" },
+  { href: "unidades", label: "Unidades", description: "Censo, coeficientes y ocupación", icon: Building, permiso: "verUnidades", exact: true },
+  { href: "unidades/directorio", label: "Directorio", description: "Propietarios y residentes", icon: Contact, permiso: "directorio" },
+];
+
 const RECAUDOS_NAV: (NavItem & { permiso: Parameters<typeof puede>[1] })[] = [
   { href: "recaudos", label: "Resumen", description: "Ingresos del mes", icon: LayoutDashboard, permiso: "resumen", exact: true },
   { href: "recaudos/nuevo", label: "Registrar", description: "Cobro rápido en recepción", icon: CirclePlus, permiso: "registrar" },
@@ -114,6 +125,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const alerts = alertCount(deadlines?.deadlines);
   const recaudos = RECAUDOS_NAV.filter((i) => puede(tenant.role, i.permiso));
   const activos = ACTIVOS_NAV.filter((i) => puedeActivos(tenant.role, i.permiso));
+  const unidades = UNIDADES_NAV.filter((i) => puedeUnidades(tenant.role, i.permiso));
   // Contador: novedades reportadas que nadie ha atendido todavía
   const { data: sinAtender } = useSWR<Novedad[]>(
     puedeActivos(tenant.role, "ver") ? `${baseActivos(tenant.tenant_id)}/novedades?estado=REPORTADA` : null,
@@ -135,7 +147,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const renderItem = (item: NavItem) => {
     const href = `/${tenant.tenant_slug}/${item.href}`;
-    const active = item.exact ? pathname === href : pathname.startsWith(href);
+    // La ficha de una unidad (/unidades/{id}) y la importación también marcan «Unidades»; el directorio no
+    const active = item.exact
+      ? pathname === href || (item.href === "unidades" && pathname.startsWith(`${href}/`) && !pathname.startsWith(`${href}/directorio`))
+      : pathname.startsWith(href);
     return (
       <li key={item.href}>
         <Link
@@ -238,6 +253,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* Navegación */}
       <nav className="mt-5 flex-1 space-y-6 overflow-y-auto px-3" aria-label="Principal">
         <ul className="space-y-1">{MAIN_NAV.map(renderItem)}</ul>
+        {unidades.length > 0 && (
+          <div>
+            <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">Copropiedad</p>
+            <ul className="space-y-1">{unidades.map(renderItem)}</ul>
+          </div>
+        )}
         {isAdmin && (
           <div>
             <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">

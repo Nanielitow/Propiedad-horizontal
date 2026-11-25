@@ -223,9 +223,9 @@ async def test_plantilla(api: Cliente) -> None:
     r = await api.get("ADMIN", "/unidades/importar/plantilla")
     assert r.status_code == 200
     assert load_workbook(io.BytesIO(r.content)).sheetnames == ["Instrucciones", "Unidades", "Personas", "Vehículos"]
-    # La plantilla tal cual (con sus filas de ejemplo) se puede importar
+    # Subir la plantilla tal cual no toca nada: las filas de ejemplo (Torre «Ejemplo») se ignoran
     previa = (await api.subir("ADMIN", "/unidades/importar/previa", r.content)).json()
-    assert previa["errores"] == [] and previa["totales"]["unidades_nuevas"] == 2
+    assert previa["errores"] == [] and previa["hay_cambios"] is False and previa["filas_leidas"] == 0
 
 
 async def test_importar_previa_confirmar_e_idempotencia(api: Cliente) -> None:
