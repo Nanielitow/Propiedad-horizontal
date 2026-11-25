@@ -5,7 +5,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM base AS deps
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci
+# Sin caché de BuildKit: Railway exige un id por servicio en --mount=type=cache
+RUN npm ci && npm cache clean --force
 
 # ---------------------------------------------------------------------------
 # dev: el código llega por bind mount; node_modules queda dentro del contenedor

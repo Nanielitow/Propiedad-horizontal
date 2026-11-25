@@ -27,8 +27,9 @@ COPY pyproject.toml uv.lock* ./
 # El venv vive en /opt/venv para que el bind mount de /app no lo oculte.
 # ---------------------------------------------------------------------------
 FROM base AS dev
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-install-project
+# Sin cachés de BuildKit (--mount=type=cache): Railway exige un id por servicio y este
+# Dockerfile lo comparten api, worker y beat. UV_NO_CACHE evita dejar el caché en la imagen.
+RUN UV_NO_CACHE=1 uv sync --no-install-project
 # Pre-descarga el tokenizador (tiktoken lo baja de internet en el primer uso)
 RUN python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
 COPY . .
@@ -39,8 +40,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload
 # prod
 # ---------------------------------------------------------------------------
 FROM base AS prod
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-dev --no-install-project
+RUN UV_NO_CACHE=1 uv sync --no-dev --no-install-project
 RUN python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
 COPY . .
 RUN useradd --create-home --uid 10001 app && chown -R app /app
