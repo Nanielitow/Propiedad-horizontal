@@ -2,7 +2,7 @@
 
 La cuota ordinaria es el ingreso principal de una copropiedad y lo primero que un administrador espera de un software de propiedad horizontal. Este módulo factura la cuota de cada mes, causa los intereses de mora, registra los pagos con la imputación que exige la ley, lleva el saldo de cada unidad, reporta los morosos y expide el paz y salvo.
 
-Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, documentos y demo). Ver §6.
+Estado: **módulo completo (fases 1 a 3)**. Ver §6.
 
 ---
 
@@ -66,3 +66,15 @@ Estado: **fases 1 y 2 hechas** (base de datos, reglas, API, documentos y demo). 
 - **Documentos** (`documentos.py`): estado de cuenta y morosos en Excel y PDF con el motor compartido; paz y salvo y recibo de caja como documentos de una página.
 - **Demo** (`python -m app.scripts.demo cartera`): 12 meses de facturación con perfiles de pago (puntuales con descuento, tardíos, morosos crónicos, deudas de 3, 6 y 9 meses y un anticipo), cuota extraordinaria en 3 cuotas, una condonación, un pago anulado y el paz y salvo de Carlos Pérez (1-502). Resultado: 818 cargos, 564 pagos y 8 unidades en mora. Instantánea actualizada.
 - **Pruebas:** 3 de API (300 en total, todas en verde).
+
+### Fase 3: pantallas (hecha)
+
+- **Menú «Cartera»**: Cartera (panel), Facturación, Pagos, Morosos y Configuración para el personal; «Mi cuenta» para el residente.
+- **Panel**: cartera vencida, % de recaudo del mes, unidades en mora y saldos a favor; gráfico de 12 meses facturado vs. recaudado (barras agrupadas con tooltip y vista de tabla) y cartera por antigüedad; avance de recaudo de cada periodo.
+- **Facturación**: vista previa del mes (propone el primer mes sin facturar), detalle por periodo con el saldo de cada cuota, anulación con motivo y cuotas extraordinarias repartidas por coeficiente en varias cuotas.
+- **Registrar pago**: al confirmar muestra cómo se imputó (intereses, cuotas, descuento, saldo a favor) y el recibo en PDF. El formulario no se reinicia al refrescarse el saldo, para no invitar a registrar el pago dos veces.
+- **Estado de cuenta** (personal y residente): saldo vencido o al día, edades, pendientes, movimientos con saldo acumulado, recibos, anulación de pagos (administrador), PDF y Excel, y paz y salvo.
+- **Morosos** con filtro de antigüedad (más de 30, 60 o 90 días) y exportación.
+- **Configuración**: método de la cuota, presupuesto o tarifas por tipo, redondeo, vencimiento, descuento por pronto pago, tasa de mora con el tope legal y la nota de la cuenta de cobro.
+- **Integración**: la ficha de cada unidad enlaza a su estado de cuenta; «Mi unidad» enlaza a «Mi cuenta».
+- **Verificación**: recorrido E2E con Playwright (administración, contabilidad y residente en celular) sin errores de consola ni respuestas 5xx; 300 pruebas de backend y chequeo de tipos en verde.

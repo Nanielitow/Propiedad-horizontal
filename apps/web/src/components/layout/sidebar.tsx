@@ -4,6 +4,10 @@ import {
   AlertTriangle,
   Boxes,
   Building,
+  CalendarRange,
+  HandCoins,
+  PiggyBank,
+  UserX,
   Building2,
   Contact,
   Home,
@@ -50,6 +54,7 @@ import { ROLE_LABEL } from "@/lib/labels";
 import { baseActivos, type Novedad, puedeActivos } from "@/lib/activos";
 import { type Alerta, base, puede } from "@/lib/recaudos";
 import { puedeUnidades } from "@/lib/unidades";
+import { puedeCartera } from "@/lib/cartera";
 import { cn } from "@/lib/utils";
 
 import { useTenant } from "./tenant-context";
@@ -95,6 +100,16 @@ const UNIDADES_NAV: (NavItem & { permiso: Parameters<typeof puedeUnidades>[1] })
   { href: "unidades/directorio", label: "Directorio", description: "Propietarios y residentes", icon: Contact, permiso: "directorio" },
 ];
 
+// Cartera de cuotas de administración (el residente ve «Mi cuenta»)
+const CARTERA_NAV: (NavItem & { permiso: Parameters<typeof puedeCartera>[1] })[] = [
+  { href: "mi-cuenta", label: "Mi cuenta", description: "Cuotas, pagos y paz y salvo", icon: PiggyBank, permiso: "miCartera" },
+  { href: "cartera", label: "Cartera", description: "Facturado, recaudado y mora", icon: LayoutDashboard, permiso: "ver", exact: true },
+  { href: "cartera/periodos", label: "Facturación", description: "Cuotas de cada mes", icon: CalendarRange, permiso: "ver" },
+  { href: "cartera/pagos", label: "Pagos", description: "Recibos de caja", icon: HandCoins, permiso: "ver" },
+  { href: "cartera/morosos", label: "Morosos", description: "Saldos vencidos por antigüedad", icon: UserX, permiso: "ver" },
+  { href: "cartera/configuracion", label: "Configuración", description: "Cuota, descuento e intereses", icon: Settings2, permiso: "configurar" },
+];
+
 const RECAUDOS_NAV: (NavItem & { permiso: Parameters<typeof puede>[1] })[] = [
   { href: "recaudos", label: "Resumen", description: "Ingresos del mes", icon: LayoutDashboard, permiso: "resumen", exact: true },
   { href: "recaudos/nuevo", label: "Registrar", description: "Cobro rápido en recepción", icon: CirclePlus, permiso: "registrar" },
@@ -126,6 +141,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const recaudos = RECAUDOS_NAV.filter((i) => puede(tenant.role, i.permiso));
   const activos = ACTIVOS_NAV.filter((i) => puedeActivos(tenant.role, i.permiso));
   const unidades = UNIDADES_NAV.filter((i) => puedeUnidades(tenant.role, i.permiso));
+  const cartera = CARTERA_NAV.filter((i) => puedeCartera(tenant.role, i.permiso));
   // Contador: novedades reportadas que nadie ha atendido todavía
   const { data: sinAtender } = useSWR<Novedad[]>(
     puedeActivos(tenant.role, "ver") ? `${baseActivos(tenant.tenant_id)}/novedades?estado=REPORTADA` : null,
@@ -149,7 +165,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     const href = `/${tenant.tenant_slug}/${item.href}`;
     // La ficha de una unidad (/unidades/{id}) y la importación también marcan «Unidades»; el directorio no
     const active = item.exact
-      ? pathname === href || (item.href === "unidades" && pathname.startsWith(`${href}/`) && !pathname.startsWith(`${href}/directorio`))
+      ? pathname === href || (item.href === "unidades" && pathname.startsWith(`${href}/`) && !pathname.startsWith(`${href}/directorio`)) ||
+        (item.href === "cartera" && pathname.startsWith(`${href}/unidades/`))
       : pathname.startsWith(href);
     return (
       <li key={item.href}>
@@ -265,6 +282,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               Herramientas de administración
             </p>
             <ul className="space-y-1">{ADMIN_NAV.map(renderItem)}</ul>
+          </div>
+        )}
+        {cartera.length > 0 && (
+          <div>
+            <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wide text-sidebar-muted uppercase">Cartera</p>
+            <ul className="space-y-1">{cartera.map(renderItem)}</ul>
           </div>
         )}
         {activos.length > 0 && (

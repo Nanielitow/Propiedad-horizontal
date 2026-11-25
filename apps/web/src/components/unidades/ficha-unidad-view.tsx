@@ -16,6 +16,7 @@ import {
   UserMinus,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -31,6 +32,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, ApiError, fetcher } from "@/lib/api";
+import { puedeCartera } from "@/lib/cartera";
 import { type EstadoRecaudo, fechaCorta, pesos } from "@/lib/recaudos";
 import {
   ACCION_AUDITORIA,
@@ -117,6 +119,13 @@ export function FichaUnidadView({ unidadId }: { unidadId: string }) {
                 <ArrowLeft className="size-4" />
               </Link>
             </Button>
+            {puedeCartera(tenant.role, "ver") && !u.unidad_principal && (
+              <Button variant="outline" asChild className="hidden sm:inline-flex">
+                <Link href={`/${tenant.tenant_slug}/cartera/unidades/${u.id}`}>
+                  <Wallet className="size-4" /> Estado de cuenta
+                </Link>
+              </Button>
+            )}
             {gestionar && u.activa && (
               <>
                 <Button variant="outline" onClick={() => setEditar(true)} className="hidden sm:inline-flex">

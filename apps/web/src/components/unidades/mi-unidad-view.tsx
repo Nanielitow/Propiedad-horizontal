@@ -57,6 +57,9 @@ export function MiUnidadView() {
                     </p>
                   </div>
                   <OcupacionBadge ocupacion={u.ocupacion} />
+                  <Link href={`/${tenant.tenant_slug}/mi-cuenta`} className="inline-flex items-center text-sm font-medium text-primary hover:underline">
+                    Mi cuenta <ChevronRight className="size-4" />
+                  </Link>
                   <Link href={`/${tenant.tenant_slug}/unidades/${u.id}`} className="inline-flex items-center text-sm font-medium text-primary hover:underline">
                     Ver detalle <ChevronRight className="size-4" />
                   </Link>

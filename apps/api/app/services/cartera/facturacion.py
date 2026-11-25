@@ -159,6 +159,7 @@ async def emitir(db: AsyncSession, actor: Actor, data: EmitirPeriodoIn) -> Perio
     ordinaria = await comun.concepto(db, actor, codigo="ADMINISTRACION")
     intereses = await comun.concepto(db, actor, codigo="INTERESES_MORA")
     nombre = d.nombre_periodo(pf.anio, pf.mes)
+    tasa_txt = f"{cfg.tasa_mora_mensual.normalize():f}".replace(".", ",")  # 1.8000 -> "1,8"
     await fijar_motivo(db, None)
     periodo = PeriodoCartera(
         id=uuid.uuid4(),
@@ -210,7 +211,7 @@ async def emitir(db: AsyncSession, actor: Actor, data: EmitirPeriodoIn) -> Perio
                 CargoCartera(
                     id=uuid.uuid4(),
                     concepto_id=intereses.id,
-                    descripcion=f"Intereses de mora {nombre} ({cfg.tasa_mora_mensual} % sobre {pesos(ln.capital_vencido)})",
+                    descripcion=f"Intereses de mora {nombre} ({tasa_txt} % sobre {pesos(ln.capital_vencido)})",
                     valor=ln.interes,
                     genera_interes=False,
                     **comunes,
