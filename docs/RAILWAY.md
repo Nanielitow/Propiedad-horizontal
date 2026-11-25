@@ -55,3 +55,18 @@ cambiaron.
 
 Sin `SMTP_HOST` la aplicación no envía correos (los avisos quedan en la app). Para activarlos: una cuenta de un
 proveedor SMTP (p. ej. Resend, con el dominio verificado en Cloudflare) y las variables `SMTP_*` en `api` y `worker`.
+
+## Estado (2026-11-25)
+
+En producción. `https://app.propiedadhorizontal.app` lo sirve Railway (US East): web, api, worker, beat y Redis;
+base en Neon US East 1 (plan Launch) y archivos en R2. Verificado con la demo del PC apagada: salud de la web
+(PostgreSQL y Redis OK), login, descarga firmada desde R2, PUT directo del navegador e ingesta del worker (READY).
+
+Lecciones del primer despliegue:
+- Los servicios deben crearse **desde el repositorio** (ícono de GitHub); uno vacío (`>_`) nunca construye.
+- Railway rechaza `--mount=type=cache` sin id por servicio: los Dockerfiles no usan cachés de BuildKit.
+- Si no se configura *Config-as-code* en un servicio, arranca con el `CMD` del Dockerfile (el worker corría la API).
+- `web` necesita `PORT=3000`, el puerto al que apunta el dominio público.
+- El registro DNS `app` en Cloudflare va con la nube **gris** para que Railway verifique y emita el certificado.
+
+Pendiente: borrar el proyecto de Neon en São Paulo y el túnel de Cloudflare (ya sin rutas); correo (SMTP).
