@@ -203,11 +203,10 @@ async def generar() -> None:
 
 
 def _ajustar_fechas(asamblea_id: uuid.UUID, inicio: datetime) -> None:
-    from app.services.demo import _owner_engine
+    from app.services.demo import _owner_engine, sin_triggers
 
     t0 = inicio.astimezone(UTC) + timedelta(minutes=20)
-    with _owner_engine().begin() as conn:
-        conn.execute(text("SET LOCAL session_replication_role = replica"))
+    with _owner_engine().begin() as conn, sin_triggers(conn):
         conn.execute(
             text(
                 "UPDATE asambleas SET created_at = :c, abierta_at = :a, cerrada_at = :z, updated_at = :z WHERE id = :id"

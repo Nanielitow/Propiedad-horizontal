@@ -253,10 +253,9 @@ class Demo:
         )  # fmt: skip
 
     def ajustar_fechas(self) -> None:
-        from app.services.demo import _owner_engine
+        from app.services.demo import _owner_engine, sin_triggers
 
-        with _owner_engine().begin() as conn:
-            conn.execute(text("SET LOCAL session_replication_role = replica"))
+        with _owner_engine().begin() as conn, sin_triggers(conn):
             for pid, dias in self.fechas.items():
                 creada = datetime.combine(self.hoy - timedelta(days=dias), time(9, 30), TZ)
                 limite = sumar_dias_habiles(creada.date(), 15)

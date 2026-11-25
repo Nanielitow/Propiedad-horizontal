@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import pytest
-from sqlalchemy import select, text
+from sqlalchemy import make_url, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.db.rls import set_rls_context
@@ -59,6 +59,11 @@ async def mundo() -> AsyncIterator[Mundo]:
     url = os.environ.get("DATABASE_URL")
     if not url:
         pytest.skip("DATABASE_URL no configurada")
+    # Seguro: las pruebas escriben (aunque deshacen todo al final). Nunca contra una base remota
+    # (Neon/producción) salvo que se pida explícitamente.
+    host = make_url(url).host or ""
+    if host not in {"postgres", "localhost", "127.0.0.1"} and os.environ.get("ALLOW_REMOTE_TEST_DB") != "1":
+        pytest.exit(f"DATABASE_URL apunta a una base remota ({host}): las pruebas solo corren contra la local", 2)
     engine = create_async_engine(url)
     async with engine.connect() as conn:
         tx = await conn.begin()

@@ -17,6 +17,8 @@ TRUNCATE sobre todas las tablas y no debe estar limitada por RLS.
 
 import logging
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Connection
@@ -138,6 +140,23 @@ def _ident(name: str) -> str:
     return name
 
 
+@contextmanager
+def sin_triggers(conn: Connection) -> Iterator[None]:
+    """Apaga los triggers PROPIOS (consecutivos, estado inicial, auditoría, inmutabilidad) de las
+    tablas de la demo mientras dura el bloque, dentro de la transacción de `conn`.
+
+    Usa ALTER TABLE ... DISABLE TRIGGER USER, que basta con ser DUEÑO de la tabla: funciona en
+    una base administrada (Neon), donde no somos superusuario y `session_replication_role` no se
+    puede cambiar. Las llaves foráneas siguen validándose, así que se inserta en el orden de TABLES.
+    Si algo falla, el rollback deja los triggers como estaban.
+    """
+    for table in map(_ident, TABLES):
+        conn.execute(text(f"ALTER TABLE public.{table} DISABLE TRIGGER USER"))
+    yield
+    for table in map(_ident, TABLES):
+        conn.execute(text(f"ALTER TABLE public.{table} ENABLE TRIGGER USER"))
+
+
 def _columns(conn: Connection, schema: str, table: str) -> list[str]:
     # Se excluyen las columnas generadas (p. ej. content_tsv): Postgres las calcula
     rows = conn.execute(
@@ -177,22 +196,21 @@ def restore_snapshot() -> dict[str, int]:
                 text("SELECT table_name FROM information_schema.tables WHERE table_schema = :s"), {"s": SNAPSHOT_SCHEMA}
             )
         )
-        # Los triggers (consecutivos, estado inicial, auditoría, inmutabilidad) no deben
-        # actuar al restaurar una foto ya consistente. Requiere superusuario (el dueño lo es).
-        conn.execute(text("SET LOCAL session_replication_role = replica"))
-        conn.execute(text("TRUNCATE " + ", ".join(f"public.{t}" for t in TABLES) + " RESTART IDENTITY CASCADE"))
-        for table in map(_ident, TABLES):
-            if table not in in_snapshot:  # instantánea anterior a una migración: la tabla queda vacía
-                counts[table] = 0
-                continue
-            cols = ", ".join(_columns(conn, SNAPSHOT_SCHEMA, table))
-            result = conn.execute(
-                text(
-                    f"INSERT INTO public.{table} ({cols}) OVERRIDING SYSTEM VALUE "  # noqa: S608
-                    f"SELECT {cols} FROM {SNAPSHOT_SCHEMA}.{table}"
+        # Los triggers no deben actuar al restaurar una foto ya consistente
+        with sin_triggers(conn):
+            conn.execute(text("TRUNCATE " + ", ".join(f"public.{t}" for t in TABLES) + " RESTART IDENTITY CASCADE"))
+            for table in map(_ident, TABLES):
+                if table not in in_snapshot:  # instantánea anterior a una migración: la tabla queda vacía
+                    counts[table] = 0
+                    continue
+                cols = ", ".join(_columns(conn, SNAPSHOT_SCHEMA, table))
+                result = conn.execute(
+                    text(
+                        f"INSERT INTO public.{table} ({cols}) OVERRIDING SYSTEM VALUE "  # noqa: S608
+                        f"SELECT {cols} FROM {SNAPSHOT_SCHEMA}.{table}"
+                    )
                 )
-            )
-            counts[table] = result.rowcount
+                counts[table] = result.rowcount
         # Las secuencias de ids de auditoría deben continuar después del máximo restaurado
         for table in map(_ident, _IDENTITY_TABLES):
             conn.execute(

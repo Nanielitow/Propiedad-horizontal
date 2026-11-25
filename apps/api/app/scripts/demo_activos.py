@@ -1323,10 +1323,9 @@ def ajustar_fechas(
     tenant_id: uuid.UUID, inicio: date, tiempos: dict[uuid.UUID, tuple[datetime, datetime | None, datetime | None]]
 ) -> None:
     """Lleva a su fecha simulada lo que la base fijó con now() (solo demo, sin triggers)."""
-    from app.services.demo import _owner_engine
+    from app.services.demo import _owner_engine, sin_triggers
 
-    with _owner_engine().begin() as conn:
-        conn.execute(text("SET LOCAL session_replication_role = replica"))
+    with _owner_engine().begin() as conn, sin_triggers(conn):
         t = {"t": tenant_id, "inicio": _momento(inicio - timedelta(days=10), 9)}
         conn.execute(
             text(
