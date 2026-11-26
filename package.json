@@ -22,9 +22,6 @@
     "web:dev": "npm --prefix apps/web run dev",
     "lint": "docker compose exec api ruff check app tests alembic && docker compose exec api ruff format --check app tests alembic",
     "test:web": "npm --prefix apps/web run typecheck",
-    "demo:up": "docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build",
-    "demo:down": "docker compose -f docker-compose.yml -f docker-compose.tunnel.yml stop cloudflared web-demo",
-    "demo:logs": "docker compose -f docker-compose.yml -f docker-compose.tunnel.yml logs -f cloudflared web-demo",
     "mail": "echo Bandeja de correo de desarrollo: http://localhost:8025"
   }
 }
