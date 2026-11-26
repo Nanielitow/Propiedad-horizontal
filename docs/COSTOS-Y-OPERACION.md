@@ -10,15 +10,27 @@ tableros de cada proveedor después del primer mes con el cliente.
 
 ## 1. Resumen
 
+**Pesos colombianos:** conversión con la TRM de referencia de **$3.300 por dólar** (TRM certificada del 18 nov 2026:
+$3.309,55). Todos los proveedores cobran en dólares a su tarjeta, así que el valor en pesos cambia con la TRM.
+
 | Servicio | Para qué | Plan | Costo mensual estimado |
 |---|---|---|---|
-| Railway | Web, API, worker, tareas programadas, Redis | Pro | **US$20** (incluye US$20 de consumo) |
-| Neon | Base de datos PostgreSQL | Launch | **US$5–20** (según horas de uso) |
-| Cloudflare R2 | Archivos (PDF, soportes, fotos) | Pago por uso | **US$0** hasta 10 GB |
-| Resend | Correos de la app | Gratis → Pro | **US$0** hoy · **US$20** con residentes reales |
-| Google Gemini | Buscador con IA, lectura de documentos | Pago por uso | **US$1–10** (según uso) |
-| Dominio `propiedadhorizontal.app` | Dirección web | Anual | **~US$1,20** (US$14,20 al año) |
-| **Total** | | | **~US$30–50 al mes** para los primeros conjuntos |
+| Railway | Web, API, worker, tareas programadas, Redis | Pro | **US$20 ≈ $66.000** (incluye US$20 de consumo) |
+| Neon | Base de datos PostgreSQL | Launch | **US$5–20 ≈ $16.500–66.000** (según horas de uso) |
+| Cloudflare R2 | Archivos (PDF, soportes, fotos) | Pago por uso | **$0** hasta 10 GB |
+| Resend | Correos de la app | Gratis → Pro | **$0** hoy · **US$20 ≈ $66.000** con residentes reales |
+| Google Gemini | Buscador con IA, lectura de documentos | Pago por uso | **US$1–10 ≈ $3.300–33.000** (según uso) |
+| Dominio `propiedadhorizontal.app` | Dirección web | Anual | **≈ $4.000 al mes** (US$14,20 ≈ $46.900 al año) |
+| **Total sin impuestos** | | | **US$30–50 ≈ $99.000–165.000 al mes** |
+| **Total con IVA (19 %)** | | | **≈ $118.000–196.000 al mes** |
+
+**Impuestos y comisiones al pagar con tarjeta:**
+- **IVA del 19 % sobre servicios digitales del exterior** (Ley 1819 de 2016). Muchas plataformas extranjeras lo cobran
+  o el banco lo retiene en la compra. Revise su extracto: si aparece, súmelo al costo. Si factura como empresa o
+  persona responsable de IVA, consulte a su contador si puede descontarlo.
+- **Comisión del banco por compras en moneda extranjera**, normalmente un pequeño porcentaje más el diferencial de
+  cambio. Varía según la tarjeta.
+- Para presupuestar con margen, calcule **~$130.000–210.000 al mes** para los primeros conjuntos.
 
 El costo es casi **fijo**: no depende del número de copropiedades sino del uso total. Pasar de 1 a 10 conjuntos
 apenas mueve la factura; lo que la mueve es la IA (preguntas y documentos analizados) y los correos.
@@ -29,30 +41,31 @@ apenas mueve la factura; lo que la mueve es la IA (preguntas y documentos analiz
 
 ### Railway (servidores)
 
-- **Plan Pro: US$20 al mes por espacio de trabajo**, con **US$20 de consumo incluido**. Si el consumo del mes no
-  pasa de US$20, solo paga los US$20.
-- Tarifas de consumo: **US$10 por GB de RAM al mes**, **US$20 por vCPU al mes**, salida a internet US$0,05/GB. Se
-  cobra por segundo.
+- **Plan Pro: US$20 (≈ $66.000) al mes por espacio de trabajo**, con **US$20 de consumo incluido**. Si el consumo del
+  mes no pasa de US$20, solo paga los US$20.
+- Tarifas de consumo: **US$10 (≈ $33.000) por GB de RAM al mes**, **US$20 (≈ $66.000) por vCPU al mes**, salida a
+  internet US$0,05/GB. Se cobra por segundo.
 - Servicios: `web` (Next.js), `api` (FastAPI, 2 procesos), `worker` (Celery: OCR, IA, correos), `beat` (tareas
   programadas) y `Redis`.
 - Estimación: unos 1,3–1,6 GB de RAM en total y CPU casi en reposo ⇒ **~US$15–20 de consumo**, dentro del
   crédito. **Verifíquelo** en Railway → *Usage* al cerrar el primer mes.
 - **Qué lo sube:** procesar muchos PDF escaneados a la vez (el OCR usa CPU y memoria), más tráfico, o agregar
   réplicas.
-- **Recomendado:** Railway → *Settings → Usage* → fije un **límite de gasto** (p. ej. US$40) con alerta al 80 %.
+- **Recomendado:** Railway → *Settings → Usage* → fije un **límite de gasto** (p. ej. US$40 ≈ $132.000) con alerta
+  al 80 %.
 
 ### Neon (base de datos)
 
 - **Plan Launch, pago por uso, sin mínimo mensual:**
-  - Cómputo: **US$0,106 por CU-hora** (1 CU ≈ 4 GB de RAM).
-  - Almacenamiento: **US$0,35 por GB al mes**. Hoy la base pesa ~26 MB ⇒ centavos.
+  - Cómputo: **US$0,106 (≈ $350) por CU-hora** (1 CU ≈ 4 GB de RAM).
+  - Almacenamiento: **US$0,35 (≈ $1.155) por GB al mes**. Hoy la base pesa ~26 MB ⇒ unos $30.
   - Transferencia: 500 GB incluidos.
   - **Historial para restaurar: hasta 7 días** (ver «Respaldos»).
 - **Se apaga sola** tras 5 minutos sin consultas (cómputo apagado = US$0) y despierta con la siguiente. La primera
   consulta después de una pausa tarda ~0,5–1 s más.
 - Estimación con el tamaño mínimo (0,25 CU):
-  - encendida unas 8 h al día: **~US$6/mes**;
-  - encendida 24/7: **~US$19/mes**.
+  - encendida unas 8 h al día: **~US$6 ≈ $19.800 al mes**;
+  - encendida 24/7: **~US$19 ≈ $62.700 al mes**.
 
   Con más usuarios estará encendida más tiempo: ese es el techo realista para los primeros conjuntos.
 - **Recomendado:** Neon → *Billing* → alerta de gasto.
@@ -60,13 +73,13 @@ apenas mueve la factura; lo que la mueve es la IA (preguntas y documentos analiz
 ### Cloudflare R2 (archivos)
 
 - **Gratis cada mes:** 10 GB guardados, 1 millón de escrituras y 10 millones de lecturas. Descargas sin costo.
-- Después: US$0,015 por GB al mes. Un conjunto con años de actas, contratos y soportes rara vez pasa de 1–2 GB.
-- Hoy: 1,2 MB. **Costo esperado: US$0 por mucho tiempo.**
+- Después: US$0,015 (≈ $50) por GB al mes. Un conjunto con años de actas, contratos y soportes rara vez pasa de 1–2 GB.
+- Hoy: 1,2 MB. **Costo esperado: $0 por mucho tiempo.**
 
 ### Resend (correo)
 
 - **Gratis: 3.000 correos al mes, pero máximo 100 al día.** No permite comprar extra en el plan gratis.
-- **Pro: US$20 al mes por 50.000 correos.** Excedente: US$0,90 por cada 1.000.
+- **Pro: US$20 (≈ $66.000) al mes por 50.000 correos.** Excedente: US$0,90 (≈ $3.000) por cada 1.000.
 - **Ojo con el tope diario.** Una circular «con correo» a un conjunto de 120 unidades ya pasa de 100. Lo mismo al
   invitar de golpe a todos los residentes. Los correos que pasen del tope fallan: el worker reintenta durante
   unos minutos y luego se pierden (el aviso igual queda en la app).
@@ -80,9 +93,11 @@ Modelos configurados en `.env` (y en las variables de Railway):
 
 | Uso | Modelo | Precio por millón de tokens (entrada / salida) |
 |---|---|---|
-| Buscador con IA (chat) | `gemini-3.5-flash-lite` | US$0,30 / US$2,50 |
-| Leer documentos: vencimientos, cotizaciones, actas | `gemini-3.5-flash` → **redirige a `gemini-3.6-flash`** | US$0,75 / US$3,75 **hasta el 31 dic 2026** · **US$1,50 / US$7,50 desde el 1 ene 2027** |
-| Índice para buscar (embeddings) | `gemini-embedding-001` | US$0,15 (solo entrada) |
+| Buscador con IA (chat) | `gemini-3.5-flash-lite` | US$0,30 / US$2,50 (≈ $990 / $8.250) |
+| Leer documentos: vencimientos, cotizaciones, actas | `gemini-3.5-flash` → **redirige a `gemini-3.6-flash`** | US$0,75 / US$3,75 (≈ $2.475 / $12.375) **hasta el 31 dic 2026** · **US$1,50 / US$7,50 (≈ $4.950 / $24.750) desde el 1 ene 2027** |
+| Índice para buscar (embeddings) | `gemini-embedding-001` | US$0,15 (≈ $495), solo entrada |
+
+Un millón de tokens equivale a unas 750.000 palabras: unos 1.500 PDF de una página.
 
 El «razonamiento» del modelo se cobra como salida. El chat usa razonamiento mínimo para ahorrar.
 
@@ -90,13 +105,13 @@ El «razonamiento» del modelo se cobra como salida. El chat usa razonamiento m�
 
 | Acción | Costo |
 |---|---|
-| Una pregunta al buscador | ~US$0,003 |
-| 1.000 preguntas | ~US$3 |
-| Indexar un PDF de 50 páginas | ~US$0,005 |
-| Analizar un documento (vencimientos, cotización o acta) | ~US$0,02 hoy · ~US$0,05 desde enero |
+| Una pregunta al buscador | ~US$0,003 ≈ **$10** |
+| 1.000 preguntas | ~US$3 ≈ **$9.900** |
+| Indexar un PDF de 50 páginas | ~US$0,005 ≈ **$17** |
+| Analizar un documento (vencimientos, cotización o acta) | ~US$0,02 ≈ **$66** hoy · ~US$0,05 ≈ **$165** desde enero |
 
-Con uso normal de un conjunto (unas cuantas preguntas al día y algunos documentos al mes): **menos de US$1 al
-mes por conjunto.**
+Con uso normal de un conjunto (unas cuantas preguntas al día y algunos documentos al mes): **menos de US$1 ≈ $3.300
+al mes por conjunto.**
 
 **Límites que ya trae la app** (protegen la factura):
 - 300 preguntas al día por usuario.
@@ -113,12 +128,13 @@ mes por conjunto.**
   exige re-indexar los documentos: planéelo con tiempo.
 - Use la **capa paga** de Gemini, no la gratuita: en la gratuita Google puede usar los datos para entrenar sus
   modelos, y aquí hay documentos de terceros.
-- **Recomendado:** Google Cloud → *Billing → Budgets & alerts*, presupuesto mensual (p. ej. US$15) con alertas.
+- **Recomendado:** Google Cloud → *Billing → Budgets & alerts*, presupuesto mensual (p. ej. US$15 ≈ $49.500) con
+  alertas.
 
 ### Dominio
 
-- `propiedadhorizontal.app` en Cloudflare Registrar: **~US$14,20 al año**. Cloudflare cobra el precio del registro,
-  sin recargo.
+- `propiedadhorizontal.app` en Cloudflare Registrar: **~US$14,20 ≈ $46.900 al año**. Cloudflare cobra el precio del
+  registro, sin recargo.
 - **Active la renovación automática.** Si el dominio vence, la app y los correos dejan de funcionar.
 - Los dominios `.app` exigen HTTPS. Ya está así.
 
@@ -128,8 +144,8 @@ mes por conjunto.**
 
 | Si pasa esto… | Sube… | Qué hacer |
 |---|---|---|
-| Invitar a todos los residentes o enviar circulares por correo | Resend (tope de 100/día) | Pasar a Resend Pro (US$20) |
-| Muchos usuarios a lo largo del día | Neon (más horas encendida) | Normal; techo ~US$20 con 0,25 CU |
+| Invitar a todos los residentes o enviar circulares por correo | Resend (tope de 100/día) | Pasar a Resend Pro (US$20 ≈ $66.000) |
+| Muchos usuarios a lo largo del día | Neon (más horas encendida) | Normal; techo ~US$20 ≈ $66.000 con 0,25 CU |
 | Subir lotes grandes de PDF escaneados | Railway (CPU del OCR) y Gemini | Subir por partes; revisar *Usage* |
 | Muchas preguntas al buscador | Gemini | Ya hay límites por usuario y por día |
 | Crecer a decenas de conjuntos con uso diario | Railway, Neon, Gemini | Revisar tamaños; seguirá siendo bajo por conjunto |
@@ -140,10 +156,14 @@ mes por conjunto.**
 
 Tenga presentes estas cifras al definir cuánto cobrar (el precio de venta es decisión suya):
 
-- **Costo fijo de la plataforma:** ~US$30–50 al mes, tenga 1 o 10 conjuntos.
-- **Costo variable por conjunto:** ~US$1–3 al mes (IA y su parte de los correos).
-- Con el primer cliente casi todo el costo es fijo. Con 7 conjuntos el costo por conjunto baja a unos US$5–8.
+- **Costo fijo de la plataforma:** ~US$30–50 al mes ≈ **$99.000–165.000** (≈ $118.000–196.000 con IVA), tenga 1 o
+  10 conjuntos.
+- **Costo variable por conjunto:** ~US$1–3 ≈ **$3.300–9.900 al mes** (IA y su parte de los correos).
+- Con el primer cliente casi todo el costo es fijo. Con 7 conjuntos el costo por conjunto baja a unos US$5–8 ≈
+  **$16.500–26.400 al mes** (≈ $20.000–31.000 con IVA).
 - No incluye su tiempo de soporte ni las herramientas de desarrollo.
+- Si cobra en pesos y paga en dólares, una subida de la TRM le reduce el margen: deje un colchón o revise su tarifa
+  una vez al año.
 
 ---
 
@@ -248,7 +268,7 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 
 | Cuándo | Qué |
 |---|---|
-| Antes de invitar residentes | Pasar Resend a Pro (US$20/mes) |
+| Antes de invitar residentes | Pasar Resend a Pro (US$20 ≈ $66.000 al mes) |
 | Ya | Límites de gasto en Railway, Neon y Google Cloud; renovación automática del dominio |
 | Ya | Copia de `.env` en un gestor de contraseñas; monitor de disponibilidad |
 | Antes de usar la app con datos reales | Revisión de `/privacidad` por un abogado y contrato de encargo con cada copropiedad |
@@ -268,3 +288,5 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 - Cloudflare R2: <https://developers.cloudflare.com/r2/pricing/>
 - Resend: <https://resend.com/pricing>
 - Dominio `.app` en Cloudflare: <https://costgoat.com/compare/domains/app> (referencia de terceros)
+- TRM: Superintendencia Financiera de Colombia (certificada del 18 nov 2026: $3.309,55), reportada en
+  <https://www.portafolio.co/economia/finanzas/dolar-en-colombia-frena-su-racha-alcista-y-cae-este-miercoles-18-de-noviembre-este-es-su-precio-oficial-506559>
