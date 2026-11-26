@@ -161,3 +161,21 @@ class EnlaceInvitacion(BaseModel):
 
 class EliminarCopropiedadIn(_Base):
     confirmacion: Annotated[str, Field(min_length=1, max_length=200)]  # el nombre exacto de la copropiedad
+
+
+# --- Respaldos (dueño de la plataforma) -------------------------------------------------------------------
+class RespaldoOut(BaseModel):
+    clave: str
+    tipo: Literal["diario", "mensual"]
+    tamano_bytes: int
+    fecha: datetime
+
+
+class RespaldosOut(BaseModel):
+    respaldos: list[RespaldoOut]
+    ultimo: datetime | None
+    al_dia: bool  # hubo un respaldo en las últimas 36 horas
+
+
+class DescargaRespaldoIn(_Base):
+    clave: Annotated[str, Field(min_length=10, max_length=200)]

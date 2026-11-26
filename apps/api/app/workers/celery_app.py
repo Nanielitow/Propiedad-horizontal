@@ -2,8 +2,10 @@ from celery import Celery
 from celery.schedules import crontab
 
 from app.core.config import get_settings
+from app.core.observabilidad import iniciar_sentry
 
 settings = get_settings()
+iniciar_sentry("worker")  # alertas de errores de las tareas (sin SENTRY_DSN no hace nada)
 
 celery_app = Celery(
     "ph",
@@ -21,6 +23,7 @@ celery_app = Celery(
         "app.workers.tasks.activos",
         "app.workers.tasks.portal",
         "app.workers.tasks.cuentas",
+        "app.workers.tasks.respaldos",
     ],
 )
 
@@ -65,6 +68,11 @@ celery_app.conf.update(
         "activos-alertas": {
             "task": "activos.alertas",
             "schedule": crontab(hour=7, minute=10),
+        },
+        # Respaldo completo de la base en el almacenamiento (solo en producción; docs/RESPALDOS.md)
+        "respaldo-diario": {
+            "task": "respaldos.diario",
+            "schedule": crontab(hour=3, minute=0),
         },
     },
 )

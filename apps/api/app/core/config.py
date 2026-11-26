@@ -71,6 +71,8 @@ class Settings(BaseSettings):
     # Con DEMO_MODE en producción solo se escribe a estas direcciones (separadas por coma): los
     # visitantes comparten cuentas y podrían registrar correos de terceros. Vacío = ningún correo.
     smtp_demo_recipients: str = ""
+    # Alertas de errores (Sentry). Vacío = desactivado.
+    sentry_dsn: str = ""
     # URL pública del frontend, para los enlaces de los correos
     app_url: str = "http://localhost:3000"
 

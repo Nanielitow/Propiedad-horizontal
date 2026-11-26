@@ -207,9 +207,10 @@ Tenga presentes estas cifras al definir cuánto cobrar (el precio de venta es de
 
 - **Neon guarda historial de 7 días.** Puede restaurar la base a cualquier momento de la última semana (Neon →
   *Branches → Restore*).
-- **Recomendado:** además, un respaldo mensual descargado (`pg_dump`) guardado fuera de Neon. Debe hacerse con un
-  cliente de PostgreSQL 18, la versión de Neon. El Docker local usa la 17, que no sirve para respaldar Neon:
-  alinéelo cuando haga falta.
+- **Respaldo automático cada noche** (3:00 a. m.) en R2: 30 días de copias diarias y 12 meses de mensuales, con aviso
+  por correo si falla. Se ve, se fuerza y se descarga en `/plataforma`. Detalle y cómo restaurar: `docs/RESPALDOS.md`.
+- **Recomendado:** una vez al trimestre, restaurar el último respaldo en una rama de prueba de Neon para confirmar
+  que sirve.
 - R2 no tiene historial de versiones activado: un archivo borrado desde la app se pierde. Las copias de cada
   documento quedan en la base (texto e índice), pero no el PDF.
 
@@ -218,6 +219,8 @@ Tenga presentes estas cifras al definir cuánto cobrar (el precio de venta es de
 - Salud de la app: `https://app.propiedadhorizontal.app/api/health` debe responder `{"web":"ok","postgres":"ok","redis":"ok"}`.
 - **Recomendado:** un monitor gratuito (UptimeRobot o Better Stack) que consulte esa dirección cada 5 minutos y le
   avise por correo o WhatsApp si cae.
+- **Alertas de errores (Sentry):** con `SENTRY_DSN` en `api`, `worker` y `beat`, cada error de la API o de una tarea
+  llega por correo, agrupado y sin datos personales (ni contraseñas, cookies, tokens ni formularios).
 - Registros: Railway → servicio → *Deployments → Deploy Logs*. Los de la API no muestran claves ni enlaces de
   activación.
 
@@ -273,7 +276,8 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 | Ya | Copia de `.env` en un gestor de contraseñas; monitor de disponibilidad |
 | Antes de usar la app con datos reales | Revisión de `/privacidad` por un abogado y contrato de encargo con cada copropiedad |
 | Antes del 1 ene 2027 | Decidir el modelo de extracción (`EXTRACTION_MODEL`): su precio se duplica ese día |
-| Cada mes | Revisar *Usage* de Railway, Neon y Gemini; respaldo con `pg_dump` |
+| Cada mes | Revisar *Usage* de Railway, Neon y Gemini; confirmar en `/plataforma` que los respaldos están al día |
+| Cada trimestre | Restaurar un respaldo en una rama de prueba de Neon |
 | Cada trimestre | Revisar precios de los proveedores |
 | Antes de mayo 2028 | Migrar `gemini-embedding-001` → `gemini-embedding-2` (re-indexar documentos) |
 

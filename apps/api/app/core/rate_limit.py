@@ -142,3 +142,4 @@ RECOVER_PER_ACCOUNT = Limit("recover-account", 3, 3_600, "Ya enviamos varios enl
 LINKS_PER_IP = Limit("links-ip", 60, 3_600, "Demasiados intentos con enlaces.")
 PASSWORD_CHANGE_PER_USER = Limit("password-user", 10, 3_600, "Demasiados intentos de cambio de contraseña.")
 INVITES_PER_USER = Limit("invites-user", 100, 3_600, "Alcanzó el límite de invitaciones por hora.")
+BACKUPS_PER_USER = Limit("backups-user", 6, 3_600, "Ya pidió varios respaldos en la última hora.")

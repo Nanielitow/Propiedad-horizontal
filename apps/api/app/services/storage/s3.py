@@ -7,6 +7,7 @@ Firmar no hace ninguna llamada de red, así que el cliente público nunca conect
 """
 
 import uuid
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote
@@ -122,6 +123,13 @@ class S3Storage:
         for page in self._internal.get_paginator("list_objects_v2").paginate(Bucket=self.bucket, Prefix=prefix):
             keys.extend(obj["Key"] for obj in page.get("Contents", []))
         return keys
+
+    def list_objects(self, prefix: str) -> list[tuple[str, int, datetime]]:
+        """(clave, tamaño en bytes, fecha de modificación) de cada objeto bajo el prefijo."""
+        salida: list[tuple[str, int, datetime]] = []
+        for page in self._internal.get_paginator("list_objects_v2").paginate(Bucket=self.bucket, Prefix=prefix):
+            salida.extend((o["Key"], int(o["Size"]), o["LastModified"]) for o in page.get("Contents", []))
+        return salida
 
     def delete_many(self, keys: list[str]) -> None:
         for i in range(0, len(keys), 1000):  # límite de DeleteObjects por llamada

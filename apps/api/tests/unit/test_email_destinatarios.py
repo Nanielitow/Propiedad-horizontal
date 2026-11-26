@@ -49,3 +49,22 @@ def test_conjunto_demo_sin_modo_demo_global(monkeypatch: pytest.MonkeyPatch) -> 
     _settings(monkeypatch, smtp_demo_recipients="dueño@empresa.co")
     assert email.destinatarios_permitidos(TODOS) == ["ana@gmail.com", "Dueño@Empresa.co"]
     assert email.destinatarios_permitidos(TODOS, demo=True) == ["Dueño@Empresa.co"]
+
+
+def test_sentry_no_envia_datos_sensibles() -> None:
+    from app.core.observabilidad import depurar_evento
+
+    evento = {
+        "request": {
+            "url": "https://app.test/api/v1/auth/enlace?token=SECRETO123&otro=1",
+            "query_string": "token=SECRETO123&X-Amz-Signature=FIRMA",
+            "headers": {"Authorization": "Bearer abc", "Cookie": "ph_token=x", "User-Agent": "Chrome"},
+            "cookies": {"ph_token": "x"},
+            "data": {"password": "Clave-Secreta"},
+        },
+        "user": {"email": "alguien@correo.co"},
+    }
+    limpio = str(depurar_evento(evento))
+    for secreto in ("SECRETO123", "FIRMA", "Bearer abc", "ph_token=x", "Clave-Secreta", "alguien@correo.co"):
+        assert secreto not in limpio, secreto
+    assert "Chrome" in limpio and "otro=1" in limpio

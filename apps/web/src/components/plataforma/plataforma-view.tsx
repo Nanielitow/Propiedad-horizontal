@@ -28,6 +28,7 @@ import type { Copropiedad, CopropiedadCreada, EnlaceInvitacion } from "@/lib/cue
 import type { Me } from "@/lib/types";
 
 import { EnlacesDialog } from "./enlaces-dialog";
+import { RespaldosSeccion } from "./respaldos";
 
 const URL = "/plataforma/copropiedades";
 
@@ -165,6 +166,7 @@ export function PlataformaView({ me }: { me: Me }) {
           Como dueño de la plataforma usted crea las copropiedades y su primer administrador, pero no ve sus datos: para
           entrar a una, su administrador debe invitarlo desde «Usuarios y accesos».
         </p>
+        <RespaldosSeccion />
       </main>
 
       <NuevaDialog

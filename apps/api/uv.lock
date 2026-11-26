@@ -1317,6 +1317,7 @@ dependencies = [
     { name = "pymupdf" },
     { name = "redis" },
     { name = "segno" },
+    { name = "sentry-sdk", extra = ["celery", "fastapi"] },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
     { name = "tiktoken" },
@@ -1350,6 +1351,7 @@ requires-dist = [
     { name = "pymupdf", specifier = ">=1.25" },
     { name = "redis", specifier = ">=5.2" },
     { name = "segno", specifier = ">=1.6.1" },
+    { name = "sentry-sdk", extras = ["celery", "fastapi"], specifier = ">=2.20" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
     { name = "structlog", specifier = ">=24.4" },
     { name = "tiktoken", specifier = ">=0.8" },
@@ -1998,6 +2000,14 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d2/95/121b20d75e738d249a0e26e6476a2acb178673e8228002748fc0cd85ce55/sentry_sdk-2.75.0.tar.gz", hash = "sha256:c38ac2d4b2435c11da821e173bb9d9088c98f41ae92f559ce0e424170a8e1a29", size = 1092308 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/ee/fbfe67386d64a7218013c8346b88b89d72f279b4ddb434ed5e94bea3d389/sentry_sdk-2.75.0-py3-none-any.whl", hash = "sha256:9a10e97de2cbd42ad7e4a6e02a0d5af19de9811eb02445077d41ba14c08e170c", size = 555165 },
+]
+
+[package.optional-dependencies]
+celery = [
+    { name = "celery" },
+]
+fastapi = [
+    { name = "fastapi" },
 ]
 
 [[package]]

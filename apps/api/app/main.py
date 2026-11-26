@@ -9,6 +9,7 @@ from sqlalchemy import text
 from app.api.errores import registrar_manejadores
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.observabilidad import iniciar_sentry
 from app.db.session import engine
 
 settings = get_settings()
@@ -23,6 +24,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 _is_prod = settings.environment == "production"
+iniciar_sentry("api")
+
 app = FastAPI(
     title="PH-SaaS API",
     version="1.0.0",

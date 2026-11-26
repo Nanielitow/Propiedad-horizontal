@@ -61,7 +61,7 @@ copiar() { v=$(val "$1"); [ -n "$v" ] && printf '%s="%s"\n' "$1" "$v"; return 0;
   echo "JWT_SECRET=\"$(val PROD_JWT_SECRET)\""
   for k in JWT_ACCESS_TTL_MINUTES JWT_REFRESH_TTL_DAYS MAX_UPLOAD_MB LLM_PROVIDER EMBEDDING_PROVIDER \
            OPENAI_API_KEY GEMINI_API_KEY CHAT_MODEL EXTRACTION_MODEL CHAT_THINKING_LEVEL EMBEDDING_MODEL \
-           EMBEDDING_DIMENSIONS; do copiar "$k"; done
+           EMBEDDING_DIMENSIONS SENTRY_DSN; do copiar "$k"; done
   # Sin SMTP_HOST la aplicación no envía correos (solo avisos en la app). Ver docs/RAILWAY.md.
 } > deploy/railway/python.env
 {
