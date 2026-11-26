@@ -73,7 +73,8 @@ async def emitir(
         )
     )
     await db.flush()
-    return f"{get_settings().app_url}/{RUTA[tipo]}?token={token}"
+    # El token va tras "#": esa parte de la dirección nunca se envía a ningún servidor (no queda en registros HTTP)
+    return f"{get_settings().app_url}/{RUTA[tipo]}#token={token}"
 
 
 async def validar(db: AsyncSession, token: str, tipo: str | None = None) -> tuple[AccountToken, User]:

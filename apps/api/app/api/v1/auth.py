@@ -40,7 +40,7 @@ from app.schemas.auth import (
     TokenPair,
     UserOut,
 )
-from app.schemas.cuentas import ActivarIn, CambiarClaveIn, EnlaceOut, RecuperarIn, RestablecerIn
+from app.schemas.cuentas import ActivarIn, CambiarClaveIn, EnlaceIn, EnlaceOut, RecuperarIn, RestablecerIn
 from app.services.cuentas import enlaces
 from app.workers.celery_app import celery_app
 
@@ -186,11 +186,13 @@ async def _entrar(db: AsyncSession, request: Request, user: User) -> LoginRespon
     return LoginResponse(**tokens.model_dump(), user=_user_out(user), memberships=memberships)
 
 
-@router.get("/enlaces/{token}", response_model=EnlaceOut)
-async def ver_enlace(token: str, db: DbSession, request: Request) -> EnlaceOut:
-    """Datos para mostrar en la página del enlace (a quién pertenece, de qué copropiedad)."""
+@router.post("/enlace", response_model=EnlaceOut)
+async def ver_enlace(body: EnlaceIn, db: DbSession, request: Request) -> EnlaceOut:
+    """Datos para mostrar en la página del enlace (a quién pertenece, de qué copropiedad).
+
+    POST con el token en el cuerpo, no en la ruta: las rutas quedan en los registros de acceso del servidor."""
     await enforce(request, LINKS_PER_IP, client_ip(request))
-    enlace, user = await enlaces.validar(db, token)
+    enlace, user = await enlaces.validar(db, body.token)
     return EnlaceOut(
         tipo=enlace.kind,  # type: ignore[arg-type]
         email=user.email,

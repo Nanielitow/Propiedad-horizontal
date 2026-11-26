@@ -41,6 +41,10 @@ class EnlaceOut(BaseModel):
     politica_version: str
 
 
+class EnlaceIn(_Base):
+    token: Annotated[str, Field(min_length=20, max_length=200)]
+
+
 class ActivarIn(_Base):
     token: Annotated[str, Field(min_length=20, max_length=200)]
     password: Clave

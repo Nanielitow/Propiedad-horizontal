@@ -48,7 +48,7 @@ class Cliente:
     def ultimo_token(self) -> str:
         """Token del enlace del último correo encolado (como lo leería la persona en su bandeja)."""
         texto = self.correos[-1][2]
-        m = re.search(r"/(?:activar|restablecer)\?token=([A-Za-z0-9_-]+)", texto)
+        m = re.search(r"/(?:activar|restablecer)#token=([A-Za-z0-9_-]+)", texto)
         assert m, texto
         return m.group(1)
 
@@ -97,7 +97,7 @@ async def test_invitar_activar_y_entrar(api: Cliente) -> None:
     assert (await api.publico("POST", "/auth/login", {"email": email, "password": CLAVE})).status_code == 401
 
     token = api.ultimo_token()
-    info = (await api.publico("GET", f"/auth/enlaces/{token}")).json()
+    info = (await api.publico("POST", "/auth/enlace", {"token": token})).json()
     assert info["tipo"] == "INVITACION" and info["copropiedad"] == "Conjunto de prueba" and info["requiere_politica"]
 
     sin_politica = await api.publico(
@@ -290,7 +290,7 @@ async def test_panel_de_la_plataforma(api: Cliente) -> None:
     assert api.correos[-1][0] == admin_email and "Mirador del Río" in api.correos[-1][1]
     # El dueño recibe el mismo enlace del correo, para enviarlo él mismo si quiere
     del_correo = api.ultimo_token()
-    assert r.json()["enlace_invitacion"].endswith(f"/activar?token={del_correo}")
+    assert r.json()["enlace_invitacion"].endswith(f"/activar#token={del_correo}")
 
     # «Enlace»: genera uno nuevo y anula el del correo
     enl = await api.publico("POST", f"/plataforma/copropiedades/{c['id']}/enlaces", token=token)
@@ -298,7 +298,7 @@ async def test_panel_de_la_plataforma(api: Cliente) -> None:
     assert [(x["email"], x["nombre"]) for x in enl.json()] == [(admin_email, "Patricia Mora")]
     nuevo_token = enl.json()[0]["enlace"].split("token=")[1]
     assert nuevo_token != del_correo
-    assert (await api.publico("GET", f"/auth/enlaces/{del_correo}")).status_code == 400
+    assert (await api.publico("POST", "/auth/enlace", {"token": del_correo})).status_code == 400
     admin_token = api.auth("ADMIN")["Authorization"][7:]
     assert (
         await api.publico("POST", f"/plataforma/copropiedades/{c['id']}/enlaces", token=admin_token)
