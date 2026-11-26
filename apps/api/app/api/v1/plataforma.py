@@ -122,6 +122,10 @@ async def probar_alerta(dueno: PlatformAdmin, request: Request) -> dict[str, obj
     await enforce(request, BACKUPS_PER_USER, str(dueno.id))
     if not get_settings().sentry_dsn:
         return {"activas": False, "detail": "Las alertas no están activas: falta SENTRY_DSN en el servidor."}
-    sentry_sdk.capture_exception(AlertaDePrueba("Alerta de prueba enviada desde el panel de la plataforma"))
+    # Huella única por clic: cada prueba es un «error nuevo» y dispara la regla de alerta (si no, Sentry la agrupa con
+    # la anterior y no vuelve a avisar)
+    with sentry_sdk.new_scope() as scope:
+        scope.fingerprint = ["alerta-de-prueba", uuid.uuid4().hex]
+        sentry_sdk.capture_exception(AlertaDePrueba("Alerta de prueba enviada desde el panel de la plataforma"))
     await run_in_threadpool(sentry_sdk.flush, 5)
     return {"activas": True, "detail": "Alerta de prueba enviada: llegará a su correo de Sentry en unos minutos."}
