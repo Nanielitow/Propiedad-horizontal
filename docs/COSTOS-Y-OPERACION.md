@@ -284,7 +284,7 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 |---|---|
 | Antes de invitar residentes | Pasar Resend a Pro (US$20 ≈ $66.000 al mes) |
 | Hecho (26 nov) | Límites de gasto en Railway, Neon y Gemini (prepago) |
-| Ya | Renovación automática del dominio |
+| Hecho (26 nov) | Renovación automática del dominio en Cloudflare |
 | Ya | Copia de `.env` en un gestor de contraseñas; monitor de disponibilidad |
 | Antes de usar la app con datos reales | Revisión de `/privacidad` por un abogado y contrato de encargo con cada copropiedad |
 | Antes del 1 ene 2027 | Decidir el modelo de extracción (`EXTRACTION_MODEL`): su precio se duplica ese día |
