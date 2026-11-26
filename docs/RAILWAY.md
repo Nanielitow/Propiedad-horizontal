@@ -69,4 +69,12 @@ Lecciones del primer despliegue:
 - `web` necesita `PORT=3000`, el puerto al que apunta el dominio público.
 - El registro DNS `app` en Cloudflare va con la nube **gris** para que Railway verifique y emita el certificado.
 
-Pendiente: borrar el proyecto de Neon en São Paulo y el túnel de Cloudflare (ya sin rutas); correo (SMTP).
+Ya borrados el proyecto de Neon en São Paulo y el túnel de Cloudflare. Pendiente: correo (SMTP).
+
+## Dominio raíz
+
+`propiedadhorizontal.app` y `www.propiedadhorizontal.app` redirigen (301, conservando ruta y parámetros) a
+`https://app.propiedadhorizontal.app`. Lo hace Cloudflare, sin pasar por Railway:
+- DNS: registros `A` `@` y `www` → `192.0.2.1` (dirección reservada, nunca se usa) con la nube **naranja**.
+- *Rules → Redirect Rules* → «Raíz a la app»: si el hostname es el raíz o `www`, redirección dinámica a
+  `concat("https://app.propiedadhorizontal.app", http.request.uri.path)`, código 301, conservando la consulta.
