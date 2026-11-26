@@ -290,7 +290,7 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 | Hecho (26 nov) | Renovación automática del dominio en Cloudflare |
 | Hecho (26 nov) | Monitor de disponibilidad (UptimeRobot) |
 | Hecho (26 nov) | Copia de `.env` en Bitwarden (actualizarla al rotar cualquier clave) |
-| Antes de usar la app con datos reales | Revisión de `/privacidad` por un abogado y contrato de encargo con cada copropiedad |
+| Hecho (26 nov) | Revisión jurídica de la política y de los contratos. Falta: firmar el contrato de transmisión de datos y el de servicios con cada copropiedad |
 | Antes del 1 ene 2027 | Decidir el modelo de extracción (`EXTRACTION_MODEL`): su precio se duplica ese día |
 | Cada mes | Revisar *Usage* de Railway, Neon y Gemini; confirmar en `/plataforma` que los respaldos están al día |
 | Cada trimestre | Restaurar un respaldo en una rama de prueba de Neon |
