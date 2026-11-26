@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PH Gestión · Manual de usuario</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  :root { --navy: #1f3a5f; --navy-2: #16294a; --gris: #5b6573; --borde: #d9dee5; --suave: #f2f4f7; --ok: #2f6b4f; --ojo: #9a5b00; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b2430; font-size: 10.5pt; line-height: 1.5; margin: 0; }
+  h1, h2, h3, h4 { color: var(--navy); line-height: 1.25; break-after: avoid; }
+  h1.parte { font-size: 24pt; margin: 0 0 6mm; padding-top: 40mm; border-bottom: 3px solid var(--navy); padding-bottom: 4mm; break-before: page; }
+  h1.parte small { display: block; font-size: 11pt; color: var(--gris); font-weight: 500; margin-bottom: 2mm; letter-spacing: .08em; text-transform: uppercase; }
+  .intro-parte { font-size: 11.5pt; color: var(--gris); max-width: 150mm; }
+  h2 { font-size: 16pt; margin: 9mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1px solid var(--borde); break-before: page; }
+  h2.seguido { break-before: auto; }
+  h3 { font-size: 12.5pt; margin: 6mm 0 2mm; }
+  h4 { font-size: 11pt; margin: 4mm 0 1.5mm; color: #1b2430; }
+  p { margin: 0 0 2.5mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin-bottom: 1mm; }
+  b, strong { color: #111a26; }
+  .ui { font-weight: 600; color: var(--navy); background: #e8edf4; border-radius: 3px; padding: 0 1.2mm; white-space: nowrap; }
+  ol.pasos { counter-reset: paso; list-style: none; padding-left: 0; }
+  ol.pasos > li { counter-increment: paso; position: relative; padding-left: 9mm; margin-bottom: 2mm; }
+  ol.pasos > li::before { content: counter(paso); position: absolute; left: 0; top: .2mm; width: 6mm; height: 6mm; border-radius: 50%; background: var(--navy); color: #fff; font-size: 8.5pt; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  figure { margin: 3mm 0 5mm; break-inside: avoid; text-align: center; }
+  figure img { max-width: 100%; max-height: 118mm; border: 1px solid var(--borde); border-radius: 2mm; box-shadow: 0 1mm 3mm rgba(20,30,50,.08); }
+  figure.movil img { max-height: 125mm; }
+  figure.par { display: flex; gap: 4mm; justify-content: center; align-items: flex-start; }
+  figure.par > div { flex: 1; }
+  figcaption { counter-increment: figura; font-size: 8.8pt; color: var(--gris); margin-top: 1.5mm; }
+  figcaption::before { content: "Figura " counter(figura) ". "; font-weight: 600; color: var(--navy); }
+  body { counter-reset: figura; }
+  .nota, .ojo, .tip { border-radius: 2mm; padding: 2.5mm 3.5mm; margin: 3mm 0 4mm; break-inside: avoid; font-size: 10pt; }
+  .nota { background: #eef3f9; border-left: 1.2mm solid var(--navy); }
+  .tip { background: #eef6f1; border-left: 1.2mm solid var(--ok); }
+  .ojo { background: #fdf5e6; border-left: 1.2mm solid var(--ojo); }
+  .nota b:first-child, .tip b:first-child, .ojo b:first-child { display: block; margin-bottom: .5mm; }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9.5pt; break-inside: auto; }
+  th, td { border: 1px solid var(--borde); padding: 1.5mm 2mm; text-align: left; vertical-align: top; }
+  th { background: var(--suave); color: var(--navy); font-weight: 600; }
+  tr { break-inside: avoid; }
+  td.si { text-align: center; color: var(--ok); font-weight: 700; }
+  td.no { text-align: center; color: #b0b6bf; }
+  .flujo { display: flex; align-items: center; gap: 2mm; flex-wrap: wrap; margin: 2mm 0 4mm; font-size: 9.5pt; }
+  .flujo span { background: var(--suave); border: 1px solid var(--borde); border-radius: 1.5mm; padding: 1mm 2.5mm; font-weight: 600; color: var(--navy); }
+  .flujo i { color: var(--gris); font-style: normal; }
+  /* Portada */
+  .portada { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; background: var(--navy-2); color: #fff; margin: -18mm -16mm 0; padding: 30mm 22mm 22mm; }
+  .portada .marca { display: flex; align-items: center; gap: 4mm; font-size: 16pt; font-weight: 700; }
+  .portada .logo { width: 13mm; height: 13mm; border-radius: 3mm; background: #fff; color: var(--navy-2); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12pt; }
+  .portada h1 { color: #fff; font-size: 34pt; margin: 0; line-height: 1.1; }
+  .portada .sub { font-size: 14pt; color: #c9d4e3; margin-top: 5mm; max-width: 140mm; }
+  .portada .pie { font-size: 10pt; color: #9fb0c8; border-top: 1px solid #3a5278; padding-top: 4mm; }
+  /* Índice */
+  .indice { break-before: page; }
+  .indice h2 { break-before: auto; }
+  .indice ol { list-style: none; padding: 0; }
+  .indice li { display: flex; align-items: baseline; gap: 2mm; margin: 0 0 1.2mm; }
+  .indice li.parte { font-weight: 700; color: var(--navy); margin-top: 3.5mm; }
+  .indice li a { color: inherit; text-decoration: none; }
+  .indice li .puntos { flex: 1; border-bottom: 1px dotted #b8c0cc; transform: translateY(-1mm); }
+  .indice li .pag { min-width: 8mm; text-align: right; color: var(--gris); }
+  .indice li.sub { padding-left: 6mm; }
+  .rol-tabla td:first-child { font-weight: 600; white-space: nowrap; }
+  .dos-col { columns: 2; column-gap: 8mm; }
+  .glosario dt { font-weight: 700; color: var(--navy); margin-top: 2mm; }
+  .glosario dd { margin: 0 0 1mm; }
+</style>
+</head>
+<body>
+
+<!-- ============================== PORTADA ============================== -->
+<section class="portada">
+  <div class="marca"><div class="logo">PH</div> PH Gestión</div>
+  <div>
+    <h1>Manual de usuario</h1>
+    <p class="sub">Guía completa, paso a paso, para la administración, su equipo y los residentes de la copropiedad.</p>
+  </div>
+  <div class="pie">
+    Versión de noviembre de 2026 · https://app.propiedadhorizontal.app<br>
+    Administración de propiedad horizontal · Ley 675 de 2001
+  </div>
+</section>
+
+<!-- ============================== ÍNDICE ============================== -->
+<section class="indice" id="indice">
+  <h2 class="seguido">Contenido</h2>
+  <ol id="lista-indice"></ol>
+</section>
+
+<!-- ============================== CÓMO USAR ============================== -->
+<h2 id="como-usar" data-indice="Cómo usar este manual">Cómo usar este manual</h2>
+<p>Este manual explica <b>todo lo que se puede hacer en PH Gestión</b>, con capturas de pantalla y pasos numerados, para
+que pueda resolver cualquier tarea por su cuenta. No hace falta leerlo completo: busque en el índice la tarea que necesita.</p>
+
+<table class="rol-tabla">
+  <tr><th>Si usted es…</th><th>Empiece por</th></tr>
+  <tr><td>Administrador(a) que empieza</td><td>Parte I (primeros pasos) y Parte II (puesta en marcha del conjunto)</td></tr>
+  <tr><td>Administrador(a) en el día a día</td><td>Parte III: el módulo que vaya a usar</td></tr>
+  <tr><td>Recepción, contabilidad, consejo o mantenimiento</td><td>Sección 1 y su guía en la Parte IV</td></tr>
+  <tr><td>Propietario o residente</td><td>Sección 1 y la guía del residente (sección 22)</td></tr>
+  <tr><td>Alguien con un problema puntual</td><td>Preguntas frecuentes y solución de problemas (sección 23)</td></tr>
+</table>
+
+<div class="nota"><b>Sobre las capturas</b>Todas las imágenes muestran el <b>Conjunto Residencial Los Pinos</b>, una copropiedad de
+demostración con datos ficticios. Por eso aparece arriba la franja amarilla «Conjunto de demostración». En su copropiedad
+verá sus propios datos y no aparecerá esa franja.</div>
+
+<p><b>Convenciones:</b> los nombres de botones, pestañas y campos aparecen así: <span class="ui">Registrar pago</span>. Los
+recuadros azules son notas; los verdes, consejos; y los amarillos, advertencias que conviene no pasar por alto.</p>
+
+<!-- ======================================================================= -->
+<h1 class="parte" id="parte1" data-indice="Parte I · Primeros pasos" data-nivel="parte"><small>Parte I</small>Primeros pasos</h1>
+<p class="intro-parte">Qué es PH Gestión, cómo entrar por primera vez, cómo moverse por la aplicación y qué puede hacer cada rol.</p>
+
+<h2 id="s1" class="seguido" data-indice="1. Qué es PH Gestión">1. Qué es PH Gestión</h2>
+<p>PH Gestión es la plataforma web para administrar copropiedades (conjuntos, edificios y unidades residenciales o
+comerciales). Funciona en el navegador del computador y del celular, sin instalar nada, en
+<b>https://app.propiedadhorizontal.app</b>.</p>
+<table>
+  <tr><th>Módulo</th><th>Para qué sirve</th></tr>
+  <tr><td>Buscador con IA</td><td>Preguntar en lenguaje normal sobre los documentos de la copropiedad y recibir la respuesta con la página exacta de donde sale.</td></tr>
+  <tr><td>Documentos</td><td>Archivo digital: reglamento, actas, contratos, pólizas, certificados. Lee también documentos escaneados.</td></tr>
+  <tr><td>Vencimientos</td><td>Detecta en los documentos las fechas de pólizas, contratos y mantenimientos, y avisa antes de que venzan.</td></tr>
+  <tr><td>Cotizaciones</td><td>Compara propuestas de proveedores lado a lado (precio, garantía, plazo, qué incluye).</td></tr>
+  <tr><td>Actas</td><td>Extrae de cada acta los acuerdos, votaciones y compromisos, para hacerles seguimiento.</td></tr>
+  <tr><td>Unidades y directorio</td><td>Censo: unidades, coeficientes, propietarios, arrendatarios, residentes y vehículos.</td></tr>
+  <tr><td>Cartera</td><td>Cuotas de administración: facturación mensual, pagos, intereses de mora, morosos y paz y salvos.</td></tr>
+  <tr><td>Recaudos</td><td>Otros ingresos: parqueadero de visitantes, alquiler de zonas sociales, aseo; caja y conciliación bancaria.</td></tr>
+  <tr><td>Atención al residente</td><td>PQRS, circulares con acuse de lectura y reservas de zonas sociales.</td></tr>
+  <tr><td>Asambleas</td><td>Convocatoria, quórum por coeficiente en vivo, votaciones (también desde el celular) y acta automática.</td></tr>
+  <tr><td>Mantenimiento</td><td>Hojas de vida de los equipos, planes preventivos, fallas, contratistas, códigos QR y reportes.</td></tr>
+  <tr><td>Usuarios y accesos</td><td>Invitar al equipo y a los residentes, y asignar el rol de cada uno.</td></tr>
+</table>
+
+<h2 id="s2" data-indice="2. Entrar por primera vez: activar su cuenta">2. Entrar por primera vez: activar su cuenta</h2>
+<p>Nadie se registra por su cuenta: a cada persona la <b>invita</b> la administración de su copropiedad (o, al primer
+administrador, el equipo de PH Gestión). La invitación llega por correo, con el asunto «Active su cuenta…», desde
+<b>no-responder@propiedadhorizontal.app</b>. También pueden enviarle el mismo enlace por WhatsApp.</p>
+<ol class="pasos">
+  <li>Abra el correo y pulse <span class="ui">Definir mi contraseña</span> (o abra el enlace que le enviaron).</li>
+  <li>Verá su nombre y su correo. Escriba una contraseña de <b>al menos 10 caracteres</b> y repítala. Debajo verá con marcas verdes que cumple los requisitos.</li>
+  <li>Marque la casilla de autorización del tratamiento de sus datos personales (Ley 1581 de 2012). Puede leer la política completa en el enlace.</li>
+  <li>Pulse <span class="ui">Activar mi cuenta</span>. Entrará directamente a su copropiedad.</li>
+</ol>
+<figure><img src="jpg/e2e-k1-activar.jpg"><figcaption>Pantalla para definir la contraseña al activar la cuenta.</figcaption></figure>
+<div class="ojo"><b>El enlace vence en 7 días y sirve una sola vez</b>Si ya no funciona («El enlace ya no sirve»), pida uno nuevo
+con <span class="ui">Pedir un enlace nuevo</span> o desde «¿Olvidó su contraseña?»: si su cuenta nunca se activó, le
+llegará otra invitación. También puede pedirle a la administración que se la reenvíe.</div>
+<div class="tip"><b>¿No le llegó el correo?</b>Revise las carpetas de correo no deseado y «Promociones». Si administra o
+vive en varias copropiedades, use siempre el mismo correo: es una sola cuenta para todas.</div>
+
+<h2 id="s3" data-indice="3. Iniciar y cerrar sesión, recuperar y cambiar la contraseña">3. Iniciar y cerrar sesión, recuperar y cambiar la contraseña</h2>
+<h3>Iniciar sesión</h3>
+<ol class="pasos">
+  <li>Entre a <b>https://app.propiedadhorizontal.app</b>.</li>
+  <li>Escriba su <span class="ui">Correo electrónico</span> y su <span class="ui">Contraseña</span> (el ojo muestra lo que escribe).</li>
+  <li>Pulse <span class="ui">Ingresar</span>.</li>
+</ol>
+<figure><img src="jpg/publico-login.jpg"><figcaption>Pantalla de inicio de sesión.</figcaption></figure>
+<div class="nota"><b>Por seguridad</b>Después de 10 intentos fallidos en 15 minutos la cuenta se bloquea temporalmente
+(«Demasiados intentos…»). Espere unos minutos o recupere la contraseña. La sesión se mantiene abierta varios días en su
+equipo; si comparte el computador, ciérrela al terminar.</div>
+
+<h3>¿Olvidó su contraseña?</h3>
+<ol class="pasos">
+  <li>En la pantalla de inicio pulse <span class="ui">¿Olvidó su contraseña?</span>.</li>
+  <li>Escriba su correo y pulse <span class="ui">Enviar enlace</span>.</li>
+  <li>Abra el correo «Restablecer su contraseña» y pulse <span class="ui">Elegir una contraseña nueva</span>. El enlace <b>vence en 1 hora</b>.</li>
+  <li>Escriba la contraseña nueva dos veces y pulse <span class="ui">Guardar y entrar</span>. Se cerrarán las sesiones abiertas en otros equipos.</li>
+</ol>
+<figure class="par">
+  <div><img src="jpg/publico-recuperar.jpg"></div>
+  <div><img src="jpg/e2e-k8-recuperar.jpg"></div>
+</figure>
+<figure style="margin-top:-3mm"><figcaption>Solicitud del enlace (izquierda) y confirmación de envío (derecha).</figcaption></figure>
+<p>Por privacidad, la pantalla siempre dice que el enlace se envió, aunque el correo no esté registrado.</p>
+
+<h3>Cambiar la contraseña</h3>
+<ol class="pasos">
+  <li>Abajo a la izquierda, junto a su nombre, pulse el ícono de <span class="ui">Mi cuenta</span>.</li>
+  <li>Elija <span class="ui">Cambiar contraseña</span>.</li>
+  <li>Escriba la contraseña actual y la nueva (dos veces) y pulse <span class="ui">Guardar contraseña</span>. Seguirá dentro en este equipo; los demás se cierran.</li>
+</ol>
+<figure><img src="jpg/e2e-k9-cambiar-clave.jpg"><figcaption>Cambiar la contraseña desde el menú de cuenta.</figcaption></figure>
+
+<h3>Cerrar sesión</h3>
+<p>Pulse el ícono de <span class="ui">Mi cuenta</span> (abajo a la izquierda) y elija <span class="ui">Cerrar sesión</span>.</p>
+
+<h2 id="s4" data-indice="4. La pantalla principal y cómo moverse">4. La pantalla principal y cómo moverse</h2>
+<figure><img src="jpg/admin-cartera.jpg"><figcaption>Pantalla típica: menú lateral a la izquierda y contenido a la derecha.</figcaption></figure>
+<ul>
+  <li><b>Copropiedad (arriba a la izquierda):</b> muestra en qué conjunto está trabajando. Si su cuenta tiene acceso a
+  varias copropiedades, púlselo y elija otra: <b>una sola cuenta y una sola contraseña para todas</b>, con el rol que tenga en cada una.</li>
+  <li><b>Menú lateral:</b> agrupado por temas (Atención al residente, Copropiedad, Cartera, Mantenimiento, Recaudos…).
+  Cada persona ve solo las secciones de su rol.</li>
+  <li><b>Contadores rojos o amarillos:</b> junto a PQRS, Reservas, Vencimientos o Alertas indican cuántas cosas esperan su atención.</li>
+  <li><b>Encabezado de cada pantalla:</b> título, explicación corta y, a la derecha, las acciones principales (por ejemplo <span class="ui">Registrar pago</span>).</li>
+  <li><b>Su nombre (abajo):</b> rol actual y menú <span class="ui">Mi cuenta</span> (cambiar contraseña, cerrar sesión).</li>
+  <li><b>En el celular:</b> el menú se abre con el botón de tres rayas, arriba a la izquierda.</li>
+</ul>
+<div class="tip"><b>Nada se pierde en silencio</b>Las operaciones de dinero, cartera, unidades y mantenimiento quedan en una
+<b>auditoría</b> con quién, cuándo y por qué. Los errores no se borran: se <b>anulan</b> con un motivo, y la anulación queda visible.</div>
+
+<h2 id="s5" data-indice="5. Roles: qué puede hacer cada persona">5. Roles: qué puede hacer cada persona</h2>
+<p>El rol lo asigna la administración en <span class="ui">Usuarios y accesos</span>. Una misma persona puede tener roles
+distintos en copropiedades distintas.</p>
+<table>
+  <tr><th>Sección</th><th>Administrador</th><th>Recepción</th><th>Contabilidad</th><th>Consejo</th><th>Mantenimiento</th><th>Residente</th></tr>
+  <tr><td>Buscador y documentos</td><td class="si">Todo</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Solo públicos</td></tr>
+  <tr><td>Vencimientos, cotizaciones, actas</td><td class="si">Sí</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+  <tr><td>Unidades y directorio</td><td class="si">Gestiona</td><td class="si">Consulta</td><td class="si">Consulta</td><td class="si">Consulta</td><td class="no">—</td><td class="si">Su unidad</td></tr>
+  <tr><td>Usuarios y accesos</td><td class="si">Sí</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+  <tr><td>Cartera</td><td class="si">Todo</td><td class="no">—</td><td class="si">Pagos</td><td class="si">Consulta</td><td class="no">—</td><td class="si">Su cuenta</td></tr>
+  <tr><td>Recaudos</td><td class="si">Todo</td><td class="si">Registra y cierra caja</td><td class="si">Verifica y concilia</td><td class="si">Tableros y cortes</td><td class="no">—</td><td class="no">—</td></tr>
+  <tr><td>PQRS, circulares, reservas</td><td class="si">Todo</td><td class="si">Atiende</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="si">Las suyas</td></tr>
+  <tr><td>Asambleas</td><td class="si">Gestiona</td><td class="si">Sala</td><td class="si">Consulta</td><td class="si">Consulta</td><td class="no">—</td><td class="si">Asiste y vota</td></tr>
+  <tr><td>Mantenimiento</td><td class="si">Todo</td><td class="si">Reporta y consulta</td><td class="no">—</td><td class="si">Panel</td><td class="si">Su trabajo</td><td class="no">—</td></tr>
+</table>
+<p class="nota">Si a alguien le falta una sección que necesita, no es un error: su rol no la incluye. La administración
+puede cambiarle el rol en <span class="ui">Usuarios y accesos</span>.</p>
+
+<!-- ======================================================================= -->
+<h1 class="parte" id="parte2" data-indice="Parte II · Puesta en marcha del conjunto" data-nivel="parte"><small>Parte II</small>Puesta en marcha del conjunto</h1>
+<p class="intro-parte">Lista ordenada para dejar una copropiedad nueva lista para operar. Hágala una sola vez, en este orden: cada
+paso usa lo que deja el anterior.</p>
+
+<h2 id="s5b" class="seguido" data-indice="Lista de verificación de la puesta en marcha">Lista de verificación de la puesta en marcha</h2>
+<table>
+  <tr><th>#</th><th>Paso</th><th>Dónde</th><th>Ver</th></tr>
+  <tr><td>1</td><td>Cargar el censo: unidades, coeficientes, propietarios, residentes y vehículos</td><td>Unidades → Importar Excel</td><td>Sección 11</td></tr>
+  <tr><td>2</td><td>Revisar que los coeficientes sumen 100 %</td><td>Unidades</td><td>Sección 11</td></tr>
+  <tr><td>3</td><td>Configurar la cuota de administración, el vencimiento, el descuento y los intereses</td><td>Cartera → Configuración</td><td>Sección 13</td></tr>
+  <tr><td>4</td><td>Configurar los conceptos de recaudo (parqueadero, alquiler, aseo) y las zonas sociales</td><td>Recaudos → Configuración</td><td>Sección 14</td></tr>
+  <tr><td>5</td><td>Definir las reglas de reserva de cada zona social</td><td>Reservas → Reglas</td><td>Sección 15</td></tr>
+  <tr><td>6</td><td>Subir los documentos: reglamento, manual de convivencia, actas, contratos, pólizas</td><td>Documentos</td><td>Sección 7</td></tr>
+  <tr><td>7</td><td>Confirmar los vencimientos que la plataforma detecte en esos documentos</td><td>Vencimientos</td><td>Sección 8</td></tr>
+  <tr><td>8</td><td>Invitar al equipo: recepción, contabilidad, consejo, técnico</td><td>Usuarios y accesos</td><td>Sección 12</td></tr>
+  <tr><td>9</td><td>Registrar los equipos, contratistas y planes de mantenimiento</td><td>Mantenimiento</td><td>Sección 17</td></tr>
+  <tr><td>10</td><td>Facturar el primer mes</td><td>Cartera → Facturación</td><td>Sección 13</td></tr>
+  <tr><td>11</td><td>Dar acceso al portal a los residentes</td><td>Ficha de cada unidad</td><td>Sección 12</td></tr>
+</table>
+<div class="ojo"><b>Antes de invitar a todos los residentes</b>Avise a quien administra la plataforma: con muchas invitaciones o
+circulares por correo puede ser necesario ampliar el plan de correo para que ningún mensaje se quede sin enviar.</div>
+<div class="tip"><b>Si viene de otro sistema o de un Excel</b>No tiene que adaptar su archivo: el importador reconoce columnas
+como «Apto», «Cédula» o «Celular». Puede importar varias veces; lo que ya está no se duplica.</div>
+
+<!-- ======================================================================= -->
+<h1 class="parte" id="parte3" data-indice="Parte III · Los módulos, uno por uno" data-nivel="parte"><small>Parte III</small>Los módulos, uno por uno</h1>
+<p class="intro-parte">Cada sección explica para qué sirve el módulo, quién lo usa, qué muestra cada pantalla y cómo hacer cada tarea, paso a paso.</p>
+
+<!-- ---------- 6. Buscador ---------- -->
+<h2 id="s6" class="seguido" data-indice="6. Buscador con inteligencia artificial">6. Buscador con inteligencia artificial</h2>
+<p>Haga preguntas en lenguaje normal sobre los documentos de la copropiedad («¿Hasta cuándo está vigente la póliza?»,
+«¿Qué dice el manual sobre mascotas?»). La respuesta se basa <b>únicamente</b> en los documentos subidos, y cada dato
+lleva un número que indica el documento y la página de donde sale.</p>
+<figure><img src="jpg/admin-buscador.jpg"><figcaption>El buscador sugiere preguntas frecuentes para empezar.</figcaption></figure>
+<h3>Hacer una pregunta</h3>
+<ol class="pasos">
+  <li>Entre a <span class="ui">Buscador</span>.</li>
+  <li>Escriba la pregunta en la caja de abajo y pulse <b>Enter</b> (o el botón de flecha). Para escribir varias líneas use <b>Shift + Enter</b>.</li>
+  <li>Lea la respuesta. Los números pequeños (<b>1</b>, <b>2</b>…) remiten a las <b>Fuentes citadas</b>, debajo.</li>
+  <li>Pulse <span class="ui">Ver página</span> en una fuente para abrir el documento justo en esa página, con el texto resaltado.</li>
+  <li>Puede seguir preguntando sobre el mismo tema: el asistente recuerda la conversación. Para empezar otra, pulse <span class="ui">Nueva consulta</span>.</li>
+</ol>
+<figure><img src="jpg/flu-buscador-respuesta.jpg"><figcaption>Respuesta con fuentes citadas: documento, página y fragmento exacto.</figcaption></figure>
+<ul>
+  <li><span class="ui">Historial</span>: conversaciones anteriores.</li>
+  <li><span class="ui">Copiar respuesta</span>: para pegarla en un correo o en WhatsApp.</li>
+  <li><b>Ver fragmentos revisados sin citar</b>: lo que el asistente leyó pero no usó (útil si la respuesta parece incompleta).</li>
+</ul>
+<div class="tip"><b>Preguntas que funcionan mejor</b>Concretas y con palabras del documento: «¿Cuál es el horario de la
+piscina?» en lugar de «horarios». Si la respuesta dice que no encontró información, probablemente el documento no está
+subido o no lo menciona.</div>
+<div class="nota"><b>Qué ve cada quien</b>Los residentes solo obtienen respuestas de los documentos marcados como visibles para
+residentes. Los documentos «Solo administración» nunca aparecen en sus respuestas.</div>
+
+<!-- ---------- 7. Documentos ---------- -->
+<h2 id="s7" data-indice="7. Documentos">7. Documentos</h2>
+<p>El archivo digital de la copropiedad. Todo lo que suba aquí queda disponible en el buscador en unos segundos, también los
+documentos escaneados en papel: la plataforma reconoce su texto automáticamente.</p>
+<figure><img src="jpg/admin-documentos.jpg"><figcaption>Lista de documentos con su categoría, quién puede verlos y su estado.</figcaption></figure>
+<h3>Subir documentos</h3>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Subir documentos</span>.</li>
+  <li>Arrastre los PDF a la ventana o haga clic para elegirlos (hasta 50 MB cada uno).</li>
+  <li>Elija la <span class="ui">Categoría</span>: Actas, Contratos (incluye pólizas), Mantenimiento, Financiero, Convivencia, Comunicados o Cotizaciones.</li>
+  <li>Elija <b>¿Quién puede consultarlo?</b>: <b>Residentes y administración</b> (aparece en el buscador de los residentes) o <b>Solo administración</b> (información reservada). Convivencia y Comunicados vienen marcados para residentes; el resto, solo para la administración.</li>
+  <li>Pulse <span class="ui">Subir documento</span>. El estado pasa de «Procesando» a «Disponible».</li>
+</ol>
+<figure><img src="jpg/dlg-subir-documentos.jpg"><figcaption>Ventana para subir documentos.</figcaption></figure>
+<ul>
+  <li><span class="ui">Ver</span> abre el documento en el visor, al lado derecho.</li>
+  <li>El menú <b>⋯</b> de cada fila permite <span class="ui">Volver a procesar</span> el documento (o <span class="ui">Reintentar procesamiento</span> si quedó en error) y <span class="ui">Eliminar</span>. Para cambiar su categoría o su visibilidad, elimínelo y súbalo de nuevo con los datos correctos.</li>
+  <li>Filtre por nombre o por categoría con los controles de arriba.</li>
+</ul>
+<div class="ojo"><b>Antes de marcar un documento como visible para residentes</b>Revise que no tenga datos personales de
+terceros (cédulas, teléfonos, deudas). Ante la duda, déjelo en «Solo administración».</div>
+<div class="nota"><b>Documentos que activan otras funciones</b>En los documentos de Contratos (y pólizas), Mantenimiento y Actas se
+buscan fechas para los <b>Vencimientos</b>; las Cotizaciones se pueden comparar y las Actas se resumen automáticamente.</div>
+
+<!-- ---------- 8. Vencimientos ---------- -->
+<h2 id="s8" data-indice="8. Vencimientos">8. Vencimientos</h2>
+<p>La plataforma lee los documentos y detecta fechas importantes: vencimiento de pólizas, fin de contratos, mantenimientos
+obligatorios. Usted las confirma, y desde entonces recibe <b>avisos por correo 30, 15, 7 y 1 día antes</b>.</p>
+<figure><img src="jpg/admin-vencimientos.jpg"><figcaption>Resumen de vencimientos y agenda de los próximos días.</figcaption></figure>
+<h3>Revisar lo detectado</h3>
+<ol class="pasos">
+  <li>En <b>Por revisar</b> aparecen las fechas detectadas, cada una con el documento de origen.</li>
+  <li>Si es correcta, pulse <span class="ui">Confirmar</span>. Si hay algo mal (fecha, título, proveedor), pulse <span class="ui">Editar</span>, corríjalo y confirme.</li>
+  <li>Si no aplica, ábrala y pulse <span class="ui">Descartar</span>.</li>
+</ol>
+<p>Cambie entre <span class="ui">Lista</span> y <span class="ui">Calendario</span> para ver las fechas por mes. Los colores
+indican: vencido o en 7 días o menos, en 30 días o menos, y por revisar.</p>
+<figure><img src="jpg/flu-vencimientos-calendario.jpg"><figcaption>Vista de calendario de los vencimientos.</figcaption></figure>
+
+<!-- ---------- 9. Cotizaciones ---------- -->
+<h2 id="s9" data-indice="9. Cotizaciones">9. Cotizaciones</h2>
+<p>Compare de 2 a 4 cotizaciones del mismo servicio. La plataforma extrae de cada una el precio, el IVA, la garantía, el plazo, la
+forma de pago, qué incluye y qué no, y prepara una conclusión para el consejo. Cada dato se puede verificar en su documento.</p>
+<h3>Crear una comparación</h3>
+<ol class="pasos">
+  <li>Suba las cotizaciones en PDF con <span class="ui">Subir cotizaciones</span> (o desde Documentos, con la categoría Cotizaciones).</li>
+  <li>Pulse <span class="ui">Nueva comparación</span>.</li>
+  <li>Escriba <b>¿Qué se está cotizando?</b> (por ejemplo, «Impermeabilización cubierta torre 2») y marque entre 2 y 4 cotizaciones.</li>
+  <li>Pulse <span class="ui">Comparar</span>. En menos de un minuto aparece el cuadro comparativo.</li>
+</ol>
+<figure><img src="jpg/dlg-nueva-comparacion.jpg"><figcaption>Elegir las cotizaciones a comparar.</figcaption></figure>
+<figure><img src="jpg/admin-cotizacion.jpg"><figcaption>Cuadro comparativo con la conclusión y etiquetas como «Mejor precio» o «Mayor garantía».</figcaption></figure>
+<div class="tip"><b>Para presentar al consejo</b>La conclusión resume diferencias importantes (por ejemplo, una oferta barata que
+no incluye andamios). Use <span class="ui">Ver cotización</span> y los enlaces de página para mostrar la fuente de cada dato.</div>
+
+<!-- ---------- 10. Actas ---------- -->
+<h2 id="s10" data-indice="10. Actas">10. Actas</h2>
+<p>Suba las actas de asamblea y del consejo, y la plataforma extrae el resumen, los acuerdos, las votaciones y los
+<b>compromisos</b> (tareas con responsable), para hacerles seguimiento.</p>
+<figure><img src="jpg/admin-actas.jpg"><figcaption>Compromisos pendientes y lista de actas.</figcaption></figure>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Subir acta</span>, elija el PDF (también escaneado) y pulse <span class="ui">Subir documento</span>.</li>
+  <li>Abra el acta: verá tipo, fecha, quórum, resumen, acuerdos y votaciones, cada uno con <span class="ui">Ver en el acta · pág. N</span>.</li>
+  <li>Cuando un compromiso se cumpla, márquelo como <span class="ui">Hecha</span>. Con <span class="ui">Ver hechas</span> revisa los ya cumplidos.</li>
+</ol>
+<figure><img src="jpg/admin-acta.jpg"><figcaption>Detalle de un acta con sus acuerdos y la página de origen.</figcaption></figure>
+<p class="nota">Las actas de las asambleas hechas en PH Gestión (sección 16) se generan solas y se pueden guardar aquí con un clic.</p>
+
+<!-- ---------- 11. Unidades ---------- -->
+<h2 id="s11" data-indice="11. Unidades, directorio y censo">11. Unidades, directorio y censo</h2>
+<p>El censo de la copropiedad: cada unidad (apartamento, casa, local, oficina) con su coeficiente, sus anexos (parqueaderos,
+depósitos), las personas vinculadas (propietario, arrendatario, residente, autorizado) y los vehículos. Es la base de la
+cartera, las asambleas y el portal.</p>
+<figure><img src="jpg/admin-unidades.jpg"><figcaption>Unidades: indicadores del censo y lista filtrable.</figcaption></figure>
+<p>Arriba verá si los <b>coeficientes suman 100 %</b> (como exige la Ley 675), si hay unidades sin propietario y cuántas
+personas y vehículos hay. Filtre por torre, tipo u ocupación, o busque por unidad o nombre.</p>
+
+<h3>Importar el censo desde Excel (lo más rápido)</h3>
+<ol class="pasos">
+  <li>En <span class="ui">Unidades</span> pulse <span class="ui">Importar Excel</span>.</li>
+  <li>Descargue la <span class="ui">Plantilla del censo (.xlsx)</span>. Tiene tres hojas (Unidades, Personas y Vehículos), con ejemplos y listas desplegables. Si ya tiene un Excel del administrador anterior, súbalo tal cual.</li>
+  <li>Arrastre el archivo a la ventana.</li>
+  <li><b>Revise los cambios</b>: la plataforma muestra cuántas unidades, personas, vínculos y vehículos nuevos se crearán, y los errores fila por fila. Nada se guarda todavía.</li>
+  <li>Si todo está bien, confirme la importación. Si hay errores, corríjalos en el Excel y súbalo de nuevo.</li>
+</ol>
+<figure><img src="jpg/e2e-u7-importar-paso1.jpg"><figcaption>Paso 1 de la importación: plantilla y carga del archivo.</figcaption></figure>
+<div class="nota"><b>Reglas del importador</b>Una celda vacía significa «no cambiar». Las filas de ejemplo de la plantilla
+(Torre «Ejemplo») se ignoran. Puede reimportar el mismo archivo corregido: lo que ya existe no se duplica.</div>
+
+<h3>Crear una unidad a mano</h3>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Nueva unidad</span>.</li>
+  <li>Llene torre o bloque (vacío si no hay torres), número, tipo, coeficiente en porcentaje (por ejemplo, 1,8506), área y, si la tiene, la matrícula inmobiliaria.</li>
+  <li>Pulse <span class="ui">Registrar unidad</span>.</li>
+</ol>
+<figure><img src="jpg/dlg-nueva-unidad.jpg"><figcaption>Registrar una unidad.</figcaption></figure>
+
+<h3>La ficha de la unidad</h3>
+<p>Haga clic en cualquier unidad para abrir su ficha. Tiene cinco pestañas:</p>
+<figure><img src="jpg/admin-unidad.jpg"><figcaption>Ficha de una unidad, pestaña Personas.</figcaption></figure>
+<ul>
+  <li><b>Personas:</b> quién figura en la unidad, con marcas de <b>Contacto</b> principal, <b>Paga</b> (responsable de la cuota) y <b>Vive aquí</b>. El menú <b>⋯</b> de cada persona permite editar sus datos, hacerla contacto principal o responsable del pago, marcar si vive allí y <b>Retirar de la unidad…</b>.</li>
+  <li><b>Datos:</b> tipo, coeficiente, área, ocupación. Se cambian con <span class="ui">Editar</span>.</li>
+  <li><b>Vehículos:</b> placas registradas (recepción las reconoce al cobrar el parqueadero). Agregue con <span class="ui">Registrar</span>.</li>
+  <li><b>Historial:</b> personas que ya no figuran (ventas, arriendos terminados), con fechas y motivo.</li>
+  <li><b>Auditoría:</b> cada cambio, con quién lo hizo, cuándo y por qué.</li>
+</ul>
+
+<h3>Agregar una persona a una unidad</h3>
+<ol class="pasos">
+  <li>En la ficha, pulse <span class="ui">Agregar persona</span>.</li>
+  <li>Elija la relación: Propietario, Arrendatario, Residente o Autorizado; la fecha desde la que aplica (vacío = hoy) y si vive en la unidad.</li>
+  <li>Busque si ya está en el directorio (por ejemplo, alguien con varias unidades) o elija <span class="ui">Persona nueva</span> y llene sus datos.</li>
+  <li>Pulse <span class="ui">Vincular</span>.</li>
+</ol>
+<figure><img src="jpg/dlg-agregar-persona.jpg"><figcaption>Vincular una persona a la unidad.</figcaption></figure>
+
+<h3>Casos frecuentes</h3>
+<table>
+  <tr><th>Situación</th><th>Qué hacer</th></tr>
+  <tr><td>Se vendió el apartamento</td><td>Retire al propietario anterior (motivo «venta») y agregue al nuevo. Marque al nuevo como responsable del pago.</td></tr>
+  <tr><td>Llega un arrendatario</td><td>Agréguelo como Arrendatario y marque «vive en la unidad». Decida quién paga y márquelo como responsable.</td></tr>
+  <tr><td>Termina un arriendo</td><td>Retire al arrendatario con el motivo. Queda en el Historial.</td></tr>
+  <tr><td>Cambia el teléfono o correo de alguien</td><td>Menú ⋯ de la persona → Editar datos de contacto (o desde el Directorio).</td></tr>
+  <tr><td>Una unidad se creó por error</td><td>Retire a sus personas y luego use «Desactivar» en el menú de la ficha. No se borra: queda en la auditoría.</td></tr>
+</table>
+
+<h3>Directorio y exportar</h3>
+<p><span class="ui">Directorio</span> lista a todas las personas con sus unidades, relación, celular y documento. Filtre por
+relación o busque por nombre. <span class="ui">Exportar</span> (en Unidades) descarga el censo completo en Excel.</p>
+<figure><img src="jpg/admin-directorio.jpg"><figcaption>Directorio de propietarios y residentes.</figcaption></figure>
+
+<!-- ---------- 12. Usuarios ---------- -->
+<h2 id="s12" data-indice="12. Usuarios y accesos">12. Usuarios y accesos</h2>
+<p>Aquí la administración decide <b>quién entra</b> a la copropiedad y <b>con qué rol</b>. Solo la ve el rol Administrador.</p>
+<figure><img src="jpg/e2e-k5-usuarios.jpg"><figcaption>Usuarios de la copropiedad con su rol, estado y último ingreso.</figcaption></figure>
+<h3>Invitar a alguien del equipo</h3>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Invitar usuario</span>.</li>
+  <li>Escriba el nombre completo y el correo.</li>
+  <li>Elija el rol. Debajo de cada uno se explica qué puede hacer.</li>
+  <li>Pulse <span class="ui">Enviar invitación</span>. La persona recibe el correo para definir su contraseña (sección 2). Si ya usa PH Gestión en otra copropiedad, solo se le agrega esta y se le avisa.</li>
+</ol>
+<figure><img src="jpg/e2e-k4-invitar.jpg"><figcaption>Invitar a un usuario y elegir su rol.</figcaption></figure>
+<h3>Dar acceso al portal a un residente o propietario</h3>
+<p>Hágalo <b>desde la ficha de su unidad</b>, no desde Usuarios: así la cuenta queda vinculada a su unidad y verá su estado
+de cuenta y sus datos.</p>
+<ol class="pasos">
+  <li>Abra la unidad (Unidades → clic en la unidad) y vaya a la pestaña <span class="ui">Personas</span>.</li>
+  <li>En la persona, pulse <span class="ui">Dar acceso al portal</span>. Si no aparece el botón, la persona no tiene correo: agréguelo con «Editar datos de contacto».</li>
+  <li>Confirme con <span class="ui">Enviar invitación</span>. Cuando active su cuenta, aparecerá la marca «Con acceso al portal».</li>
+</ol>
+<figure><img src="jpg/e2e-k6-dar-acceso.jpg"><figcaption>Dar acceso al portal desde la ficha de la unidad.</figcaption></figure>
+<h3>Otras acciones</h3>
+<ul>
+  <li><b>Cambiar el rol:</b> elija otro en la lista de la columna Rol. Se aplica de inmediato.</li>
+  <li><b>Invitación pendiente:</b> si la persona no la activó, pulse <span class="ui">Reenviar</span> para mandarle un enlace nuevo.</li>
+  <li><b>Retirar el acceso:</b> <span class="ui">Retirar</span> quita el acceso a esta copropiedad de inmediato. Lo que la persona registró se conserva con su nombre.</li>
+</ul>
+<div class="nota"><b>Siempre queda un administrador</b>La plataforma no permite retirar ni cambiar de rol al último
+administrador de la copropiedad. Para relevar a la administración, invite primero al nuevo administrador.</div>
+
+<!-- ---------- 13. Cartera ---------- -->
+<h2 id="s13" data-indice="13. Cartera: cuotas de administración">13. Cartera: cuotas de administración</h2>
+<p>Facturación mensual de las cuotas, pagos, intereses de mora, cartera vencida, morosos y paz y salvos.</p>
+<figure><img src="jpg/admin-cartera.jpg"><figcaption>Panel de cartera: vencida, recaudo del mes, unidades en mora y antigüedad.</figcaption></figure>
+
+<h3>Configurar la cartera (una vez)</h3>
+<ol class="pasos">
+  <li>Vaya a <span class="ui">Cartera</span> → <span class="ui">Configuración</span>.</li>
+  <li>Elija cómo se calcula la cuota: <b>Por coeficiente</b> (presupuesto mensual × coeficiente de cada unidad, como dice la Ley 675) o <b>Tarifa por tipo de unidad</b> (un valor para apartamentos, otro para locales…).</li>
+  <li>Escriba el <b>presupuesto mensual de gastos</b>. La pantalla muestra cuánto pagaría una unidad de coeficiente 1 %.</li>
+  <li>Elija el redondeo de las cuotas, el <b>día de vencimiento</b>, el <b>descuento por pronto pago</b> (si existe) y la <b>tasa de interés de mora</b>.</li>
+  <li>Escriba los datos de pago que verán los residentes (por ejemplo, la cuenta bancaria) y pulse <span class="ui">Guardar configuración</span>.</li>
+</ol>
+<figure><img src="jpg/admin-cartera-config.jpg"><figcaption>Configuración de la cuota, el vencimiento, el descuento y los intereses.</figcaption></figure>
+<div class="ojo"><b>Intereses de mora</b>La tasa no puede superar el máximo legal (1,5 veces el interés bancario corriente, art. 30 de
+la Ley 675). Actualícela cuando la Superintendencia Financiera certifique una nueva tasa.</div>
+
+<h3>Facturar el mes</h3>
+<ol class="pasos">
+  <li>Vaya a <span class="ui">Facturación</span> (o desde el panel) y pulse <span class="ui">Facturar mes</span>.</li>
+  <li>Elija el mes. Verá una <b>vista previa</b>: cuántas unidades, el total de cuotas, los intereses de mora que se causan, el vencimiento, la fecha límite del descuento y el detalle por unidad.</li>
+  <li>Revise los avisos (por ejemplo, si los coeficientes no suman 100 %).</li>
+  <li>Pulse <span class="ui">Emitir</span>. Nada se guarda antes de este paso.</li>
+</ol>
+<figure><img src="jpg/dlg-facturar-mes.jpg"><figcaption>Vista previa de la facturación del mes antes de emitir.</figcaption></figure>
+<h3>Cuota extraordinaria o multa</h3>
+<ol class="pasos">
+  <li>En <span class="ui">Facturación</span> pulse <span class="ui">Cuota extraordinaria o multa</span>.</li>
+  <li>Elija el concepto (cuota extraordinaria, multa u otros cobros) y cómo se cobra: <b>total repartido por coeficiente</b> o <b>mismo valor por unidad</b>.</li>
+  <li>Escriba la descripción, el valor total aprobado, el número de cuotas mensuales y el primer vencimiento.</li>
+  <li>Pulse <span class="ui">Crear cobro</span>.</li>
+</ol>
+<figure><img src="jpg/dlg-cuota-extra.jpg"><figcaption>Crear una cuota extraordinaria diferida en cuotas.</figcaption></figure>
+
+<h3>Registrar un pago</h3>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Registrar pago</span> (desde Cartera, Pagos o el estado de cuenta de la unidad).</li>
+  <li>Elija la unidad, la fecha, el valor, el medio (efectivo, transferencia o consignación) y, si aplica, la referencia bancaria.</li>
+  <li>Confirme. El pago se aplica <b>solo</b>: primero a intereses y luego a la deuda más antigua (art. 1653 del Código Civil). Si sobra, queda como <b>saldo a favor</b> para las próximas cuotas.</li>
+  <li>Se genera el <b>recibo de caja</b> numerado, que puede descargar en PDF.</li>
+</ol>
+<figure><img src="jpg/dlg-registrar-pago.jpg"><figcaption>Registrar el pago de una cuota.</figcaption></figure>
+<div class="nota"><b>¿Se equivocó en un pago?</b>Abra el <b>estado de cuenta</b> de la unidad, ubique el pago en los
+movimientos y use <span class="ui">Anular</span> con un motivo; luego regístrelo bien. El pago anulado sigue visible en
+<span class="ui">Pagos</span> (casilla «Incluir pagos anulados») y en la auditoría.</div>
+
+<h3>Estado de cuenta y paz y salvo</h3>
+<p>Desde la ficha de la unidad (<span class="ui">Estado de cuenta</span>) o desde Morosos verá el saldo, lo pendiente por
+pagar y todos los movimientos con el saldo acumulado.</p>
+<figure><img src="jpg/admin-estado-cuenta.jpg"><figcaption>Estado de cuenta de una unidad.</figcaption></figure>
+<p>Para expedir un paz y salvo, pulse <span class="ui">Paz y salvo</span>: se genera el PDF numerado con un <b>código de
+verificación</b>, con el que cualquiera puede comprobar que es auténtico. Solo se expide si la unidad está al día.</p>
+
+<h3>Morosos</h3>
+<p><span class="ui">Morosos</span> lista las unidades con saldo vencido, agrupado por antigüedad (1–30, 31–60, 61–90 y más de
+90 días, que es cuando suele pasarse a cobro jurídico). <span class="ui">Exportar</span> descarga el listado en Excel.</p>
+<figure><img src="jpg/admin-cartera-morosos.jpg"><figcaption>Unidades en mora por antigüedad.</figcaption></figure>
+<div class="ojo"><b>Uso interno</b>La lista de morosos no debe publicarse en carteleras ni áreas comunes: la ley lo prohíbe.</div>
+
+<!-- ---------- 14. Recaudos ---------- -->
+<h2 id="s14" data-indice="14. Recaudos, caja y conciliación bancaria">14. Recaudos, caja y conciliación bancaria</h2>
+<p>Los ingresos distintos a la cuota de administración: parqueadero de visitantes, alquiler de zonas sociales, aseo y
+otros. El módulo sigue cada peso desde que se recibe hasta que se verifica en el banco:</p>
+<div class="flujo"><span>En caja</span><i>→ cierre y entrega →</i><span>En administración</span><i>→ consignación →</i><span>Consignado</span><i>→ extracto →</i><span>Verificado</span></div>
+<p>Las transferencias entran como <b>Por verificar</b> hasta que contabilidad las confirma en el extracto.</p>
+<figure><img src="jpg/admin-recaudos.jpg"><figcaption>Resumen de recaudos del mes.</figcaption></figure>
+
+<h3>Registrar un recaudo (recepción)</h3>
+<ol class="pasos">
+  <li>Vaya a <span class="ui">Registrar</span>.</li>
+  <li>Elija qué se cobra: Parqueadero de visitantes, Alquiler de zonas sociales, Aseo u Otros recaudos.</li>
+  <li><b>Parqueadero:</b> escriba la placa (si es de un residente, la reconoce), la hora de ingreso y de salida; el valor se calcula solo. <b>Zona social:</b> elija la zona y la fecha del evento; queda creada la reserva para esa fecha.</li>
+  <li>Escriba quién paga, la unidad (o «visitante externo») y el medio de pago.</li>
+  <li>Pulse <span class="ui">Registrar recaudo</span> y entregue el comprobante.</li>
+</ol>
+<figure><img src="jpg/flu-recaudo-parqueadero.jpg"><figcaption>Cobro de parqueadero: la tarifa se calcula con la hora de ingreso y salida.</figcaption></figure>
+<figure><img src="jpg/flu-recaudo-zona.jpg"><figcaption>Cobro de alquiler y aseo de una zona social, con la reserva incluida.</figcaption></figure>
+
+<h3>Cerrar la caja al final del turno (recepción)</h3>
+<ol class="pasos">
+  <li>Vaya a <span class="ui">Caja</span> y pulse <span class="ui">Cerrar caja</span>.</li>
+  <li>Escriba la <b>base</b> con la que empezó y el <b>dinero contado</b> físicamente.</li>
+  <li>La plataforma compara con lo registrado y muestra la <b>diferencia</b> (sobrante o faltante). Pulse <span class="ui">Confirmar cierre</span>.</li>
+  <li>Cuando entregue el efectivo, pulse <span class="ui">Entregar a administración</span>, elija quién recibe y pulse <span class="ui">Registrar entrega</span>.</li>
+</ol>
+<figure class="par"><div><img src="jpg/dlg-cerrar-caja.jpg"></div><div><img src="jpg/dlg-entregar-administracion.jpg"></div></figure>
+<figure style="margin-top:-3mm"><figcaption>Cierre de caja (izquierda) y entrega del efectivo a la administración (derecha).</figcaption></figure>
+<div class="nota"><b>Diferencias de caja</b>Si el conteo no cuadra, se genera una alerta de auditoría para la administración. No
+ajuste el conteo para que cuadre: registre lo real.</div>
+
+<h3>Consignar y conciliar (administración y contabilidad)</h3>
+<ol class="pasos">
+  <li>En <span class="ui">Conciliación</span>, sección «Efectivo por consignar», pulse <span class="ui">Consignar</span>.</li>
+  <li>Elija los recaudos que llevó al banco, la fecha, el banco, la referencia y el valor consignado. Para consignar solo una parte de alguno, escriba el valor en su fila.</li>
+  <li>Contabilidad pulsa <span class="ui">Aprobar</span> en la consignación (o la rechaza con motivo).</li>
+  <li>Cuando aparezca en el extracto bancario, pulsa <span class="ui">Verificar en extracto</span>. Los recaudos quedan <b>Verificados</b>.</li>
+  <li>Las transferencias se verifican una a una desde el detalle del recaudo (<span class="ui">Verificar en extracto</span>).</li>
+</ol>
+<figure><img src="jpg/flu-conciliacion-consignar.jpg"><figcaption>Registrar una consignación con los recaudos incluidos.</figcaption></figure>
+
+<h3>Movimientos, alertas, reportes y configuración</h3>
+<ul>
+  <li><span class="ui">Movimientos</span>: buscar cualquier recaudo por fecha, concepto, medio o estado. Desde el detalle se puede <b>anular</b> con motivo.</li>
+  <li><span class="ui">Alertas</span>: diferencias de caja, transferencias sin verificar después de 3 días, anulaciones de dinero ya consignado. Atienda cada una y pulse <span class="ui">Marcar como atendida</span>.</li>
+  <li><span class="ui">Reportes</span>: informes general, de parqueadero, de zonas sociales, de aseo, de caja (arqueo) y de trazabilidad, para este mes, el anterior, el año o un rango. Se ven en pantalla, en <span class="ui">Excel</span> o en <span class="ui">PDF</span>. El <b>corte mensual</b> se genera solo el día 1 y se envía a la administración y al consejo; también se puede generar con <span class="ui">Generar corte</span>.</li>
+  <li><span class="ui">Configuración</span>: conceptos de cobro (tarifa fija, por tiempo o valor libre) y zonas sociales con sus tarifas de alquiler y aseo. Agregar un cobro nuevo no requiere cambios en el sistema. Un cambio de tarifa aplica a los recaudos nuevos.</li>
+</ul>
+<figure><img src="jpg/flu-reportes-recaudos-informe.jpg"><figcaption>Informe general de ingresos del mes.</figcaption></figure>
+<figure class="par"><div><img src="jpg/dlg-nuevo-concepto.jpg"></div><div><img src="jpg/dlg-nueva-zona.jpg"></div></figure>
+<figure style="margin-top:-3mm"><figcaption>Crear un concepto de recaudo (izquierda) y una zona social (derecha).</figcaption></figure>
+
+<!-- ---------- 15. Atención al residente ---------- -->
+<h2 id="s15" data-indice="15. Atención al residente: PQRS, circulares y reservas">15. Atención al residente: PQRS, circulares y reservas</h2>
+<h3>PQRS</h3>
+<p>Peticiones, quejas, reclamos, sugerencias y felicitaciones. Las radican los residentes desde el portal, o recepción a
+nombre de alguien (presencial, por teléfono o por correo). El plazo de respuesta es de <b>15 días hábiles</b>; la
+plataforma cuenta los días hábiles con los festivos de Colombia.</p>
+<figure><img src="jpg/admin-portal-pqrs.jpg"><figcaption>Bandeja de PQRS con indicadores de plazo, tiempo de respuesta y satisfacción.</figcaption></figure>
+<p>Use las pestañas <span class="ui">Abiertas</span>, <span class="ui">Vencidas</span>, <span class="ui">Sin asignar</span>,
+<span class="ui">Asignadas a mí</span> y <span class="ui">Todas</span>, y el filtro de categoría.</p>
+<h4>Atender una PQRS</h4>
+<ol class="pasos">
+  <li>Abra la PQRS. A la derecha, asigne un <b>Responsable</b> y la <b>Prioridad</b>.</li>
+  <li>Abajo escriba y elija el tipo de mensaje: <span class="ui">Nota interna</span> (solo la ve el personal), <span class="ui">Enviar mensaje</span> (al residente, por ejemplo para pedir más datos) o <span class="ui">Responder oficialmente</span>.</li>
+  <li>La <b>respuesta oficial</b> deja la PQRS como «Respondida» y le llega por correo al residente, que puede calificarla o reabrirla si no quedó satisfecho.</li>
+  <li>Si es una falla de un equipo o zona común, pulse <span class="ui">Crear novedad de mantenimiento</span>: queda enlazada en el módulo de mantenimiento.</li>
+</ol>
+<figure><img src="jpg/admin-pqrs.jpg"><figcaption>Detalle de una PQRS con las opciones de respuesta y gestión.</figcaption></figure>
+<figure><img src="jpg/dlg-radicar-pqrs.jpg"><figcaption>Radicar una PQRS a nombre de un residente (presencial, teléfono o correo).</figcaption></figure>
+
+<h3>Circulares</h3>
+<p>Comunicados numerados a los residentes, con <b>acuse de lectura</b>.</p>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Nueva circular</span>.</li>
+  <li>Escriba el título, elija el tipo (informativa, convocatoria, mantenimiento…) y para quién (toda la copropiedad o una torre).</li>
+  <li>Escriba el texto. Admite formato sencillo: <b>**negrita**</b>, listas con guion y enlaces. Revise la <span class="ui">Vista previa</span>.</li>
+  <li>Marque <b>Importante</b> si debe destacarse en el inicio de los residentes, y <b>Enviar por correo al publicar</b> si debe llegar también por correo (incluye a propietarios sin cuenta que tengan correo en el directorio).</li>
+  <li>Pulse <span class="ui">Guardar borrador</span>. Revísela en la lista y pulse <span class="ui">Publicar</span> (o <span class="ui">Publicar y enviar por correo</span>). Al publicarla queda numerada y ya no se puede editar.</li>
+</ol>
+<figure><img src="jpg/dlg-nueva-circular.jpg"><figcaption>Redactar una circular.</figcaption></figure>
+<p>En la lista verá cuántos residentes con cuenta la han leído («Leída por X de Y»).</p>
+
+<h3>Reservas de zonas sociales</h3>
+<p>Los residentes reservan desde el portal según las reglas de cada zona. La administración aprueba o rechaza las solicitudes
+y fija las reglas.</p>
+<figure><img src="jpg/admin-portal-reservas.jpg"><figcaption>Solicitudes por aprobar, próximas reservas y reglas.</figcaption></figure>
+<ol class="pasos">
+  <li>En <b>Por aprobar</b>, revise cada solicitud (zona, fecha, horario, unidad, número de personas, motivo).</li>
+  <li>Pulse <span class="ui">Aprobar</span> o <span class="ui">Rechazar</span> (con motivo). El residente recibe un correo con la decisión.</li>
+  <li>El alquiler se cobra en <b>Recaudos → Registrar → Alquiler de zonas sociales</b>, asociándolo a la reserva.</li>
+</ol>
+<h4>Reglas de cada zona</h4>
+<p>Con <span class="ui">Reglas</span> defina horario de apertura y cierre, anticipación mínima y máxima, reservas por mes por
+unidad, capacidad, reglas de uso y si se reserva desde el portal, si requiere aprobación y si exige estar al día con la cartera.</p>
+<figure><img src="jpg/dlg-reglas-zona.jpg"><figcaption>Reglas de reserva de una zona social.</figcaption></figure>
+
+<!-- ---------- 16. Asambleas ---------- -->
+<h2 id="s16" data-indice="16. Asambleas">16. Asambleas</h2>
+<p>Asambleas de copropietarios según la Ley 675 de 2001: convocatoria, padrón, quórum por coeficiente <b>en vivo</b>,
+votaciones (en la sala o desde el celular de cada propietario) y acta automática.</p>
+<figure><img src="jpg/admin-asambleas.jpg"><figcaption>Lista de asambleas: programadas, en curso y cerradas.</figcaption></figure>
+
+<h3>1. Programar la asamblea</h3>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Programar asamblea</span>.</li>
+  <li>Escriba el título, el tipo (ordinaria o extraordinaria), la modalidad (presencial, virtual o mixta), la fecha y hora, el lugar y la convocatoria (primera o segunda).</li>
+  <li>Escriba el máximo de poderes por apoderado (según su reglamento).</li>
+  <li>Arme el <b>orden del día</b>: para cada punto indique si es informativo o <b>se vota</b> y con qué mayoría (simple, calificada del 70 % o elección).</li>
+  <li>Guarde. Publique la convocatoria con al menos <b>15 días calendario</b> de anticipación (art. 39), por ejemplo con una circular de tipo Convocatoria.</li>
+</ol>
+<figure><img src="jpg/dlg-programar-asamblea.jpg"><figcaption>Programar la asamblea y su orden del día.</figcaption></figure>
+<div class="nota"><b>Modalidad virtual o mixta</b>Los propietarios con cuenta en el portal pueden registrar su asistencia y votar
+desde su celular el día de la asamblea.</div>
+
+<h3>2. Instalar la asamblea y registrar la asistencia</h3>
+<ol class="pasos">
+  <li>El día de la asamblea, abra la asamblea y pulse <span class="ui">Instalar asamblea</span>. Escriba el presidente y el secretario. En ese momento se <b>fija el padrón</b> con las unidades, coeficientes y propietarios del día.</li>
+  <li>En <b>Padrón y asistencia</b>, pulse <span class="ui">Registrar</span> en cada unidad que llega: como <b>Propietario</b> o como <b>Apoderado (con poder)</b>, con su nombre y documento. Conserve el poder firmado.</li>
+  <li>El <b>quórum</b> se actualiza solo, en porcentaje de coeficientes. Con más del 50 % (primera convocatoria) aparece «Hay quórum».</li>
+  <li>Si alguien se va antes de una votación, pulse <span class="ui">Retiro</span>: deja de contar para el quórum desde ese momento.</li>
+</ol>
+<figure><img src="jpg/e2e-a4-sala-quorum.jpg"><figcaption>Padrón y asistencia durante la asamblea.</figcaption></figure>
+
+<h3>3. Votar cada punto</h3>
+<ol class="pasos">
+  <li>En el orden del día, pulse <span class="ui">Abrir votación</span> en el punto. Solo se puede votar con quórum y un punto a la vez.</li>
+  <li>Los propietarios presentes con cuenta votan desde su celular. Los que están en la sala sin celular se votan desde la lista <b>Votos en la sala</b> (Sí, No o Abstención por unidad).</li>
+  <li>Los resultados se actualizan solos, en unidades y en coeficientes, e indican si el punto se aprueba con la mayoría exigida.</li>
+  <li>Pulse <span class="ui">Cerrar votación</span>. Los puntos informativos se cierran con <span class="ui">Marcar tratado</span>, con una conclusión opcional.</li>
+</ol>
+<figure><img src="jpg/e2e-a6-votacion-en-vivo.jpg"><figcaption>Votación en vivo con resultados por coeficiente.</figcaption></figure>
+<figure class="movil"><img src="jpg/e2e-a5-residente-voto-movil.jpg"><figcaption>Así vota un propietario desde su celular.</figcaption></figure>
+
+<h3>4. Cerrar la asamblea y obtener el acta</h3>
+<ol class="pasos">
+  <li>Al terminar, pulse <span class="ui">Cerrar asamblea</span>.</li>
+  <li>Pulse <span class="ui">Acta en PDF</span>: se genera el acta con la asistencia, el quórum, cada punto, sus votaciones y sus resultados.</li>
+  <li>Pulse <span class="ui">Guardar acta en Documentos</span> para que quede en el archivo y sea consultable en el buscador.</li>
+</ol>
+<figure><img src="jpg/admin-asamblea-cerrada.jpg"><figcaption>Asamblea cerrada con su acta y los resultados.</figcaption></figure>
+<div class="ojo"><b>Validez jurídica</b>La plataforma calcula quórum y mayorías según la Ley 675, pero la validez de la asamblea
+depende también de la convocatoria correcta y del acta firmada por el presidente y el secretario.</div>
+
+<!-- ---------- 17. Mantenimiento ---------- -->
+<h2 id="s17" data-indice="17. Mantenimiento: activos, planes y fallas">17. Mantenimiento: activos, planes y fallas</h2>
+<p>Hojas de vida de los equipos e infraestructura (ascensores, motobombas, planta eléctrica, cubiertas…), con su
+<b>semáforo</b> de mantenimiento, planes preventivos, fallas (novedades), recomendaciones técnicas, contratistas, códigos QR y reportes.</p>
+<figure><img src="jpg/admin-activos-panel.jpg"><figcaption>Panel de mantenimiento: cumplimiento, fallas, costos y presupuesto.</figcaption></figure>
+
+<h3>Activos</h3>
+<figure><img src="jpg/admin-activos.jpg"><figcaption>Lista de activos con su estado y semáforo de mantenimiento.</figcaption></figure>
+<ol class="pasos">
+  <li>Pulse <span class="ui">Nuevo activo</span>.</li>
+  <li>Llene nombre, categoría, tipo, ubicación, marca, modelo, serie, fecha de instalación, vida útil, garantía, <b>criticidad</b> (qué tanto afecta si falla) y el contratista que lo mantiene.</li>
+  <li>Guarde. El código interno (ACT-…) y el <b>código QR</b> se generan solos.</li>
+</ol>
+<figure><img src="jpg/dlg-nuevo-activo.jpg"><figcaption>Registrar un activo.</figcaption></figure>
+<p><span class="ui">Etiquetas QR</span> descarga un PDF con las etiquetas para pegar en cada equipo. Al escanear una con el
+celular, el técnico abre la ficha del equipo y registra el trabajo en el sitio.</p>
+
+<h4>La ficha del activo</h4>
+<figure><img src="jpg/admin-activo.jpg"><figcaption>Ficha de un activo: estado, criticidad y pestañas.</figcaption></figure>
+<ul>
+  <li><b>Resumen:</b> ficha técnica, estado y vida útil.</li>
+  <li><b>Plan y agenda:</b> planes preventivos del equipo y sus próximas fechas (<span class="ui">Ejecutar</span>).</li>
+  <li><b>Historial:</b> intervenciones realizadas. Es un registro inmutable: los errores se anulan y quedan visibles.</li>
+  <li><b>Novedades</b> y <b>Recomendaciones:</b> fallas y sugerencias de los técnicos para este equipo.</li>
+  <li><b>Documentos:</b> manuales, garantías, contratos y certificados vinculados (<span class="ui">Vincular</span>).</li>
+  <li><b>Fotos</b> y <b>Auditoría</b>.</li>
+</ul>
+
+<h3>Planes preventivos y calendario</h3>
+<ol class="pasos">
+  <li>En <span class="ui">Planes</span> pulse <span class="ui">Nuevo plan</span>: elija el activo, la actividad, la periodicidad, quién lo ejecuta, el costo por vez y, si quiere, una lista de chequeo.</li>
+  <li>Al aprobarlo se crean las fechas de los próximos 12 meses en el <span class="ui">Calendario</span>. Los planes que propone recepción aparecen en «Pendientes de aprobación» con el botón <span class="ui">Aprobar</span>.</li>
+  <li>En el calendario, los mantenimientos vencidos aparecen arriba. Pulse <span class="ui">Ejecutar</span> para registrarlo o reprogramarlo.</li>
+</ol>
+<figure><img src="jpg/admin-activos-calendario.jpg"><figcaption>Calendario de mantenimiento con lo vencido primero.</figcaption></figure>
+
+<h3>Registrar un mantenimiento</h3>
+<ol class="pasos">
+  <li>Desde el calendario (<span class="ui">Ejecutar</span>) o desde la ficha del activo (<span class="ui">Registrar mantenimiento</span>).</li>
+  <li>Elija el tipo (preventivo, correctivo, predictivo o inspección), la fecha y quién lo hizo. Llene la lista de chequeo si el plan la tiene.</li>
+  <li>Describa el trabajo, los repuestos, el tiempo, los hallazgos y el <b>estado en que queda el equipo</b>.</li>
+  <li>Escriba los costos (mano de obra y repuestos) y las <b>recomendaciones</b>: cada una queda como tarea con seguimiento.</li>
+  <li>Guarde. El registro no se edita después; un error se corrige anulándolo.</li>
+</ol>
+<figure><img src="jpg/dlg-registrar-mantenimiento.jpg"><figcaption>Registrar un mantenimiento ejecutado.</figcaption></figure>
+
+<h3>Novedades (fallas)</h3>
+<p>Cualquiera del equipo puede reportar una falla con <span class="ui">Reportar falla</span>: elige el activo, describe el
+problema, la prioridad y adjunta fotos. Las <b>críticas</b> llegan además por correo a la administración. Cada novedad pasa de
+Reportada → En ejecución → Cerrada, con trazabilidad. «Demoradas» son las críticas con más de 24 horas, o las altas con más de 72, sin atender.</p>
+<figure><img src="jpg/admin-activos-novedades.jpg"><figcaption>Bandeja de novedades.</figcaption></figure>
+<figure><img src="jpg/dlg-reportar-falla.jpg"><figcaption>Reportar una falla.</figcaption></figure>
+
+<h3>Recomendaciones, contratistas y reportes</h3>
+<ul>
+  <li><span class="ui">Recomendaciones</span>: lo que sugieren los técnicos, con prioridad, responsable, fecha límite y costo estimado. El costo pendiente entra en la proyección del presupuesto.</li>
+  <li><span class="ui">Contratistas</span>: empresas con su NIT, contacto, especialidades y contrato. El fin del contrato genera avisos a 60 y 30 días.</li>
+  <li><span class="ui">Reportes</span>: inventario y hojas de vida, cumplimiento del plan, correctivos, matriz de recomendaciones, costos y proyección del presupuesto, e infraestructura. Se ven en pantalla, en Excel o en PDF (para el consejo o la asamblea). La hoja de vida de cada activo, con su QR, se descarga desde su ficha.</li>
+</ul>
+<figure><img src="jpg/flu-reportes-activos-informe.jpg"><figcaption>Reporte de costos y proyección del mantenimiento.</figcaption></figure>
+
+<!-- ======================================================================= -->
+<h1 class="parte" id="parte4" data-indice="Parte IV · Guías por rol" data-nivel="parte"><small>Parte IV</small>Guías por rol</h1>
+<p class="intro-parte">Las tareas de cada día para cada persona del equipo y para los residentes.</p>
+
+<h2 id="s18" class="seguido" data-indice="18. Recepción">18. Recepción</h2>
+<p>Al entrar verá el buscador y en el menú: Atención al residente, Unidades (consulta), Recaudos y Mantenimiento.</p>
+<table>
+  <tr><th>Tarea</th><th>Dónde</th><th>Sección</th></tr>
+  <tr><td>Cobrar parqueadero, alquiler o aseo</td><td>Recaudos → Registrar</td><td>14</td></tr>
+  <tr><td>Radicar una PQRS que llega en persona o por teléfono</td><td>PQRS → Radicar PQRS</td><td>15</td></tr>
+  <tr><td>Consultar a quién pertenece una placa o una unidad</td><td>Unidades / Directorio</td><td>11</td></tr>
+  <tr><td>Reportar una falla</td><td>Mantenimiento → Novedades → Reportar falla</td><td>17</td></tr>
+  <tr><td>Cerrar la caja al terminar el turno</td><td>Recaudos → Caja → Cerrar caja</td><td>14</td></tr>
+  <tr><td>Entregar el efectivo a la administración</td><td>Recaudos → Caja → Entregar a administración</td><td>14</td></tr>
+  <tr><td>Registrar asistencia en la asamblea</td><td>Asambleas → la asamblea → Padrón</td><td>16</td></tr>
+</table>
+<figure><img src="jpg/recepcion-recaudos-caja.jpg"><figcaption>La caja de recepción con el efectivo del turno.</figcaption></figure>
+
+<h2 id="s19" class="seguido" data-indice="19. Contabilidad">19. Contabilidad</h2>
+<table>
+  <tr><th>Tarea</th><th>Dónde</th><th>Sección</th></tr>
+  <tr><td>Aprobar las consignaciones y verificarlas en el extracto</td><td>Recaudos → Conciliación</td><td>14</td></tr>
+  <tr><td>Verificar transferencias recibidas</td><td>Recaudos → Movimientos (estado «Por verificar») → Verificar en extracto</td><td>14</td></tr>
+  <tr><td>Registrar pagos de cuotas</td><td>Cartera → Registrar pago</td><td>13</td></tr>
+  <tr><td>Revisar alertas de auditoría</td><td>Recaudos → Alertas</td><td>14</td></tr>
+  <tr><td>Informes para la contabilidad</td><td>Recaudos → Reportes (Excel)</td><td>14</td></tr>
+</table>
+<figure><img src="jpg/contabilidad-recaudos-conciliacion.jpg"><figcaption>Conciliación vista por contabilidad: aprobar y verificar consignaciones.</figcaption></figure>
+<p class="nota">PH Gestión no reemplaza el software contable ni factura ante la DIAN: los informes en Excel se llevan al software del contador.</p>
+
+<h2 id="s20" class="seguido" data-indice="20. Consejo de administración">20. Consejo de administración</h2>
+<p>Rol de consulta, sin modificar: tableros de recaudos y cartera, panel de mantenimiento, actas, asambleas y documentos.
+El primer día de cada mes recibe por correo el <b>corte mensual de recaudos</b> en PDF.</p>
+<figure><img src="jpg/consejo-activos-panel.jpg"><figcaption>Panel de mantenimiento como lo ve el consejo.</figcaption></figure>
+
+<h2 id="s21" class="seguido" data-indice="21. Técnico de mantenimiento">21. Técnico de mantenimiento</h2>
+<p>Al entrar ve <span class="ui">Mi trabajo</span>: lo vencido y lo de hoy primero, y lo de los próximos 60 días. Está
+pensado para el celular.</p>
+<ol class="pasos">
+  <li>Escanee la etiqueta QR del equipo con la cámara del celular, o elija el mantenimiento en la lista.</li>
+  <li>Pulse <span class="ui">Ejecutar</span>, llene la lista de chequeo (Hecho / No aplica / Pendiente), describa el trabajo, adjunte fotos y guarde.</li>
+  <li>Si encuentra una falla, pulse <span class="ui">Reportar falla</span>.</li>
+</ol>
+<figure class="par">
+  <div><img src="jpg/flu-tecnico-movil.jpg" style="max-height:110mm"></div>
+  <div><img src="jpg/dlg-tecnico-ejecutar.jpg" style="max-height:110mm"></div>
+</figure>
+<figure style="margin-top:-3mm"><figcaption>«Mi trabajo» en el celular (izquierda) y registro con lista de chequeo (derecha).</figcaption></figure>
+
+<h2 id="s22" data-indice="22. Guía del residente y propietario">22. Guía del residente y propietario</h2>
+<p>El portal del residente funciona igual en el celular y en el computador. Para entrar necesita que la administración le dé
+acceso (le llega un correo para activar su cuenta, ver sección 2).</p>
+<figure class="par">
+  <div><img src="jpg/movil-inicio.jpg" style="max-height:120mm"></div>
+  <div><img src="jpg/movil-mi-cuenta.jpg" style="max-height:120mm"></div>
+</figure>
+<figure style="margin-top:-3mm"><figcaption>Inicio del residente (izquierda) y su estado de cuenta (derecha), en el celular.</figcaption></figure>
+<h3>Inicio</h3>
+<p>Muestra si está al día con la administración, las circulares sin leer, sus PQRS y reservas, y accesos rápidos.</p>
+<h3>Mi cuenta: cuotas, pagos y paz y salvo</h3>
+<ol class="pasos">
+  <li>Entre a <span class="ui">Mi cuenta</span>. Verá su saldo, lo pendiente por pagar y todos los movimientos.</li>
+  <li>Los datos para pagar (por ejemplo, la cuenta bancaria) aparecen arriba.</li>
+  <li>Descargue su estado de cuenta en <span class="ui">PDF</span>. Si está al día, descargue su <span class="ui">Paz y salvo</span>, con código de verificación.</li>
+</ol>
+<figure><img src="jpg/residente-mi-cuenta.jpg"><figcaption>Estado de cuenta del residente.</figcaption></figure>
+<h3>Radicar una PQRS</h3>
+<ol class="pasos">
+  <li>Entre a <span class="ui">PQRS</span> y pulse <span class="ui">Nueva PQRS</span>.</li>
+  <li>Elija el tipo (petición, queja, reclamo, sugerencia o felicitación) y el tema.</li>
+  <li>Escriba el asunto y la descripción (qué pasa, desde cuándo y dónde). Adjunte fotos o PDF si ayudan.</li>
+  <li>Pulse <span class="ui">Radicar</span>. Recibirá un número de radicado y la respuesta llegará por correo y al portal en máximo 15 días hábiles.</li>
+  <li>Cuando le respondan, califique la atención o reábrala si el problema sigue.</li>
+</ol>
+<figure><img src="jpg/dlg-nueva-pqrs.jpg"><figcaption>Radicar una PQRS desde el portal.</figcaption></figure>
+<h3>Circulares</h3>
+<p>En <span class="ui">Circulares</span> lea los comunicados de la administración. Al abrir una, queda registrado que la leyó
+(«Lectura confirmada»).</p>
+<figure><img src="jpg/flu-circular-abierta.jpg"><figcaption>Una circular abierta con la lectura confirmada.</figcaption></figure>
+<h3>Reservar una zona social</h3>
+<ol class="pasos">
+  <li>Entre a <span class="ui">Reservar</span> y elija la zona (salón social, BBQ, cancha…). Verá su capacidad, su costo y sus reglas.</li>
+  <li>Elija el día en el calendario: los días con reservas muestran las horas ocupadas.</li>
+  <li>Elija el horario, el número de personas y el motivo, y envíe la solicitud.</li>
+  <li>Según la zona, queda <b>confirmada de inmediato</b> o <b>esperando aprobación</b> (le llega un correo con la decisión). Puede cancelarla desde «Mis próximas reservas».</li>
+</ol>
+<figure><img src="jpg/flu-reservar-salon.jpg"><figcaption>Reservar una zona social: calendario y reglas.</figcaption></figure>
+<h3>Asambleas: asistir y votar</h3>
+<ol class="pasos">
+  <li>En <span class="ui">Asambleas</span> verá las convocatorias. El día de una asamblea virtual o mixta, ábrala y pulse <span class="ui">Registrar mi asistencia</span>: desde ese momento cuenta para el quórum.</li>
+  <li>Cuando la administración abra la votación de un punto, aparecerán los botones (Sí, No, Abstención o los candidatos). Toque su opción.</li>
+  <li>Verá los resultados en vivo. Después podrá descargar el acta.</li>
+</ol>
+<p>Si no puede asistir, otorgue un poder por escrito a otra persona, según el reglamento.</p>
+<h3>Mi unidad, buscador y documentos</h3>
+<ul>
+  <li><span class="ui">Mi unidad</span>: sus datos en el censo (personas, vehículos, coeficiente). Si algo está mal, avísele a la administración con una PQRS.</li>
+  <li><span class="ui">Buscador</span>: pregunte, por ejemplo, «¿Se permiten mascotas?» o «¿Cuál es el horario de la piscina?». Responde con los documentos publicados para los residentes.</li>
+  <li><span class="ui">Documentos</span>: reglamento, manual de convivencia y lo que publique la administración.</li>
+</ul>
+
+<!-- ======================================================================= -->
+<h1 class="parte" id="parte5" data-indice="Parte V · Ayuda" data-nivel="parte"><small>Parte V</small>Ayuda</h1>
+<p class="intro-parte">Respuestas a las dudas más comunes, solución de problemas y glosario.</p>
+
+<h2 id="s23" class="seguido" data-indice="23. Preguntas frecuentes y solución de problemas">23. Preguntas frecuentes y solución de problemas</h2>
+<h3>Cuenta y acceso</h3>
+<table>
+  <tr><th>Problema</th><th>Solución</th></tr>
+  <tr><td>No me llegó el correo de invitación o de recuperación</td><td>Revise correo no deseado y «Promociones». Espere unos minutos. Pida a la administración que use <b>Reenviar</b> en Usuarios y accesos, o use «¿Olvidó su contraseña?» (si nunca activó la cuenta, le llega de nuevo la invitación).</td></tr>
+  <tr><td>«El enlace ya no sirve»</td><td>Ya se usó o venció (7 días la invitación, 1 hora la recuperación), o se pidió uno más nuevo. Pida otro con «Pedir un enlace nuevo».</td></tr>
+  <tr><td>«Correo o contraseña incorrectos»</td><td>Revise mayúsculas y que el correo sea el registrado. Si no la recuerda, use «¿Olvidó su contraseña?».</td></tr>
+  <tr><td>«Demasiados intentos»</td><td>Es una protección automática. Espere unos 15 minutos o recupere la contraseña.</td></tr>
+  <tr><td>«Su cuenta aún no tiene copropiedades»</td><td>Su cuenta existe, pero ninguna copropiedad le ha dado acceso (o se lo retiraron). Hable con la administración.</td></tr>
+  <tr><td>No veo una sección que necesito</td><td>Su rol no la incluye. La administración puede cambiarle el rol.</td></tr>
+  <tr><td>Administro varias copropiedades</td><td>Use el mismo correo en todas. Cambie de copropiedad con el selector de arriba a la izquierda.</td></tr>
+  <tr><td>Un residente no tiene correo</td><td>No puede tener cuenta en el portal, pero sí figurar en el censo. Recepción puede radicar sus PQRS y registrar sus pagos.</td></tr>
+</table>
+<h3>Documentos y buscador</h3>
+<table>
+  <tr><th>Problema</th><th>Solución</th></tr>
+  <tr><td>El documento quedó en «Error»</td><td>En el menú ⋯ del documento use <b>Reintentar procesamiento</b>. Si sigue fallando, verifique que sea un PDF válido, sin contraseña y de menos de 50 MB, elimínelo y súbalo de nuevo.</td></tr>
+  <tr><td>El buscador no encuentra algo que sí está en un documento</td><td>Confirme que el documento esté «Disponible» y, si pregunta un residente, que sea visible para residentes. Reformule la pregunta con las palabras del documento.</td></tr>
+  <tr><td>No aparecen los vencimientos de un contrato</td><td>Revise que el documento tenga la categoría Contratos (o Mantenimiento) y que esté «Disponible»; si es escaneado, que sea legible. Puede usar «Volver a procesar». Para contratos de mantenimiento, registre también la fecha de fin en Mantenimiento → Contratistas, que avisa a los 60 y 30 días.</td></tr>
+</table>
+<h3>Dinero, cartera y recaudos</h3>
+<table>
+  <tr><th>Problema</th><th>Solución</th></tr>
+  <tr><td>Registré mal un pago o un recaudo</td><td>Anúlelo con motivo y regístrelo de nuevo: el pago, desde el estado de cuenta de la unidad; el recaudo, desde su detalle en Movimientos. Nada se borra: la anulación queda en la auditoría.</td></tr>
+  <tr><td>La cuota de una unidad no es la esperada</td><td>Revise su coeficiente (ficha de la unidad) y la configuración de la cartera. Los coeficientes deben sumar 100 %.</td></tr>
+  <tr><td>El pago quedó en intereses y no en la cuota</td><td>Es lo que exige la ley: los pagos se aplican primero a intereses y luego a lo más antiguo.</td></tr>
+  <tr><td>No me deja expedir el paz y salvo</td><td>La unidad tiene saldo pendiente. Revise el estado de cuenta.</td></tr>
+  <tr><td>La caja no cuadra</td><td>Registre el conteo real; la diferencia queda como alerta para la administración, que la revisa con los movimientos del turno.</td></tr>
+  <tr><td>Una transferencia sigue «Por verificar»</td><td>Contabilidad debe confirmarla contra el extracto. Después de 3 días se genera una alerta.</td></tr>
+</table>
+<h3>Residentes, reservas y asambleas</h3>
+<table>
+  <tr><th>Problema</th><th>Solución</th></tr>
+  <tr><td>Un residente no puede reservar</td><td>Revise las reglas de la zona: anticipación, reservas por mes y si exige estar al día con la cartera.</td></tr>
+  <tr><td>No se puede abrir la votación</td><td>Se necesita quórum y solo puede haber un punto en votación a la vez.</td></tr>
+  <tr><td>Un propietario no puede votar desde el celular</td><td>Debe tener cuenta vinculada a su unidad y haber registrado su asistencia. Si no, vote por él desde «Votos en la sala».</td></tr>
+  <tr><td>Cambió el censo después de instalar la asamblea</td><td>No afecta: el padrón se fija al instalarla, como exige la ley.</td></tr>
+</table>
+<h3>Privacidad y seguridad</h3>
+<ul>
+  <li>Cada copropiedad está aislada de las demás: nadie de otro conjunto puede ver sus datos.</li>
+  <li>Cada rol ve solo lo que le corresponde (por ejemplo, un residente solo ve su unidad y su cuenta).</li>
+  <li>La política de tratamiento de datos está en <b>https://app.propiedadhorizontal.app/privacidad</b>.</li>
+  <li>Nunca comparta su contraseña. Si cree que alguien la conoce, cámbiela (sección 3): se cierran las demás sesiones.</li>
+</ul>
+
+<h2 id="s24" class="seguido" data-indice="24. Glosario">24. Glosario</h2>
+<dl class="glosario dos-col">
+  <dt>Coeficiente de copropiedad</dt><dd>Porcentaje de cada unidad sobre el total del conjunto. Define la cuota y el peso del voto. Todos suman 100 %.</dd>
+  <dt>Quórum</dt><dd>Mínimo de coeficientes presentes para deliberar: más del 50 % en primera convocatoria.</dd>
+  <dt>Mayoría simple</dt><dd>Más de la mitad de los coeficientes presentes.</dd>
+  <dt>Mayoría calificada</dt><dd>El 70 % de los coeficientes del conjunto, para decisiones como reformar el reglamento.</dd>
+  <dt>Padrón</dt><dd>Lista de unidades con derecho a voto en una asamblea, fijada al instalarla.</dd>
+  <dt>Apoderado</dt><dd>Persona que asiste y vota en nombre de un propietario, con poder escrito.</dd>
+  <dt>Periodo</dt><dd>Mes facturado en la cartera.</dd>
+  <dt>Saldo a favor</dt><dd>Lo que sobra de un pago; se aplica a las próximas cuotas.</dd>
+  <dt>Paz y salvo</dt><dd>Certificado de que la unidad no tiene deudas, con código de verificación.</dd>
+  <dt>Recaudo</dt><dd>Ingreso distinto a la cuota (parqueadero, alquiler, aseo…).</dd>
+  <dt>Cierre de caja (arqueo)</dt><dd>Conteo del efectivo al terminar el turno, comparado con lo registrado.</dd>
+  <dt>Consignación</dt><dd>Depósito del efectivo en el banco, que agrupa varios recaudos.</dd>
+  <dt>Verificar en extracto</dt><dd>Confirmar que el dinero aparece en el extracto bancario.</dd>
+  <dt>PQRS</dt><dd>Petición, queja, reclamo, sugerencia (y felicitación).</dd>
+  <dt>Días hábiles</dt><dd>De lunes a viernes, sin festivos de Colombia.</dd>
+  <dt>Activo</dt><dd>Equipo o elemento de infraestructura con hoja de vida.</dd>
+  <dt>Novedad</dt><dd>Falla reportada en un activo.</dd>
+  <dt>Plan preventivo</dt><dd>Regla de cada cuánto se mantiene un activo; genera las fechas del calendario.</dd>
+  <dt>Criticidad</dt><dd>Qué tanto afecta a la copropiedad si un activo falla.</dd>
+  <dt>Anular</dt><dd>Dejar sin efecto un registro con un motivo. El registro anulado sigue visible.</dd>
+  <dt>Auditoría</dt><dd>Registro automático de quién hizo cada cambio, cuándo y por qué. Nadie puede editarlo.</dd>
+</dl>
+
+<h2 id="s25" class="seguido" data-indice="25. ¿Necesita más ayuda?">25. ¿Necesita más ayuda?</h2>
+<ol class="pasos">
+  <li>Busque su duda en el índice o en las preguntas frecuentes (sección 23).</li>
+  <li>Pregúntele al buscador de la plataforma sobre el reglamento y los documentos de su copropiedad.</li>
+  <li>Si es residente, radique una PQRS a la administración.</li>
+  <li>Si es parte del equipo, consulte con la administración de su copropiedad, que es quien gestiona los accesos y la configuración.</li>
+</ol>
+<p style="margin-top:10mm;color:var(--gris);font-size:9pt">PH Gestión · Manual de usuario · noviembre de 2026. Las capturas
+corresponden a un conjunto de demostración con datos ficticios. Algunas pantallas pueden cambiar ligeramente con las
+actualizaciones de la plataforma.</p>
+
+<script>
+  // Índice automático a partir de los títulos (las páginas las completa el segundo pase de generación)
+  const paginas = window.__paginas || {};
+  const lista = document.getElementById("lista-indice");
+  document.querySelectorAll("[data-indice]").forEach((h) => {
+    const li = document.createElement("li");
+    if (h.dataset.nivel === "parte") li.className = "parte";
+    else if (!h.textContent.trim().match(/^\d/)) li.className = "sub";
+    li.innerHTML = `<a href="#${h.id}">${h.dataset.indice}</a><span class="puntos"></span><span class="pag">${paginas[h.id] ?? ""}</span>`;
+    lista.appendChild(li);
+  });
+</script>
+</body>
+</html>
