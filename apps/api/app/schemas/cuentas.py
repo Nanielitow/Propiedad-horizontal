@@ -157,3 +157,7 @@ class EnlaceInvitacion(BaseModel):
     nombre: str
     email: str
     enlace: str
+
+
+class EliminarCopropiedadIn(_Base):
+    confirmacion: Annotated[str, Field(min_length=1, max_length=200)]  # el nombre exacto de la copropiedad

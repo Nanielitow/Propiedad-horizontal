@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Building2, FlaskConical, Link2, Loader2, Pencil, Plus } from "lucide-react";
+import { ArrowRight, Building2, FlaskConical, Link2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ export function PlataformaView({ me }: { me: Me }) {
   const [editar, setEditar] = useState<Copropiedad | null>(null);
   const [enlaces, setEnlaces] = useState<{ lista: EnlaceInvitacion[]; copropiedad: string; reemplazo: boolean } | null>(null);
   const [generar, setGenerar] = useState<Copropiedad | null>(null);
+  const [eliminar, setEliminar] = useState<Copropiedad | null>(null);
 
   async function generarEnlace() {
     if (!generar) return;
@@ -196,7 +197,16 @@ export function PlataformaView({ me }: { me: Me }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <EditarDialog copropiedad={editar} onOpenChange={(o) => !o && setEditar(null)} onGuardada={() => void mutate()} />
+      <EditarDialog
+        copropiedad={editar}
+        onOpenChange={(o) => !o && setEditar(null)}
+        onGuardada={() => void mutate()}
+        onEliminar={() => {
+          setEliminar(editar);
+          setEditar(null);
+        }}
+      />
+      <EliminarDialog copropiedad={eliminar} onOpenChange={(o) => !o && setEliminar(null)} onEliminada={() => void mutate()} />
     </div>
   );
 }
@@ -330,10 +340,12 @@ function EditarDialog({
   copropiedad,
   onOpenChange,
   onGuardada,
+  onEliminar,
 }: {
   copropiedad: Copropiedad | null;
   onOpenChange: (o: boolean) => void;
   onGuardada: () => void;
+  onEliminar: () => void;
 }) {
   const [f, setF] = useState({ nombre: "", nit: "", ciudad: "", direccion: "", is_demo: false });
   const [enviando, setEnviando] = useState(false);
@@ -420,6 +432,16 @@ function EditarDialog({
           </label>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </form>
+        <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/25 px-3 py-2.5">
+          <div className="min-w-0 text-sm">
+            <p className="font-medium">Eliminar copropiedad</p>
+            <p className="text-xs text-muted-foreground">Por ejemplo, si la creó por error.</p>
+          </div>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={onEliminar}>
+            <Trash2 className="size-4" />
+            Eliminar…
+          </Button>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
@@ -427,6 +449,94 @@ function EditarDialog({
           <Button type="submit" form="editar-copropiedad" disabled={enviando}>
             {enviando && <Loader2 className="size-4 animate-spin" />}
             Guardar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EliminarDialog({
+  copropiedad,
+  onOpenChange,
+  onEliminada,
+}: {
+  copropiedad: Copropiedad | null;
+  onOpenChange: (o: boolean) => void;
+  onEliminada: () => void;
+}) {
+  const [texto, setTexto] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!copropiedad) return;
+    setTexto("");
+    setError(null);
+  }, [copropiedad]);
+
+  const coincide = !!copropiedad && texto.trim() === copropiedad.nombre.trim();
+
+  async function eliminar() {
+    if (!copropiedad) return;
+    setEnviando(true);
+    setError(null);
+    try {
+      await api(`${URL}/${copropiedad.id}/eliminar`, { method: "POST", json: { confirmacion: texto.trim() } });
+      toast.success(`${copropiedad.nombre} eliminada`);
+      onOpenChange(false);
+      onEliminada();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "No se pudo eliminar.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <Dialog open={!!copropiedad} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Eliminar {copropiedad?.nombre}</DialogTitle>
+          <DialogDescription>
+            Desaparece de su panel y del selector de todos sus usuarios, y nadie podrá entrar a ella. Las invitaciones
+            pendientes dejan de servir. Los datos se conservan en la base por seguridad.
+          </DialogDescription>
+        </DialogHeader>
+        {copropiedad && (copropiedad.unidades > 0 || copropiedad.usuarios - copropiedad.invitaciones_pendientes > 0) && (
+          <p className="rounded-md border border-destructive/25 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            Esta copropiedad ya tiene {copropiedad.unidades} unidad(es) y {copropiedad.usuarios} usuario(s): quienes entran
+            a ella perderán el acceso.
+          </p>
+        )}
+        <form
+          id="eliminar-copropiedad"
+          className="space-y-1.5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (coincide) void eliminar();
+          }}
+        >
+          <Label htmlFor="confirmar-nombre">
+            Escriba <span className="font-semibold">{copropiedad?.nombre}</span> para confirmar
+          </Label>
+          <input
+            id="confirmar-nombre"
+            className={campoClase()}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            autoComplete="off"
+            autoFocus
+          />
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="eliminar-copropiedad" variant="destructive" disabled={!coincide || enviando}>
+            {enviando && <Loader2 className="size-4 animate-spin" />}
+            Eliminar copropiedad
           </Button>
         </DialogFooter>
       </DialogContent>

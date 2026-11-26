@@ -7,14 +7,15 @@ DEFINER, solo cifras) y la copropiedad nueva se inicializa con contexto SYSTEM.
 import re
 import unicodedata
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import select, text
+from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import TenantContext
 from app.db.rls import set_rls_context
-from app.models import Membership, Tenant, User
+from app.models import AccountToken, Membership, Tenant, User
 from app.models.enums import UserRole
 from app.schemas.cuentas import (
     CopropiedadIn,
@@ -147,3 +148,19 @@ async def enlaces_pendientes(db: AsyncSession, dueno: User, tenant_id: uuid.UUID
             status.HTTP_409_CONFLICT, "Esta copropiedad no tiene administradores con la invitación pendiente"
         )
     return salida
+
+
+async def eliminar(db: AsyncSession, tenant_id: uuid.UUID, confirmacion: str) -> None:
+    """Borrado lógico (deleted_at): desaparece del panel y del selector de sus usuarios y nadie puede entrar.
+    Los datos se conservan en la base. Las invitaciones pendientes de esa copropiedad dejan de servir."""
+    t = await db.get(Tenant, tenant_id)
+    if t is None or t.deleted_at is not None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Copropiedad no encontrada")
+    if confirmacion.strip() != t.name.strip():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Escriba el nombre exacto de la copropiedad para confirmar")
+    ahora = datetime.now(UTC)
+    t.deleted_at = ahora
+    await db.execute(
+        update(AccountToken).where(AccountToken.tenant_id == t.id, AccountToken.used_at.is_(None)).values(used_at=ahora)
+    )
+    await db.flush()

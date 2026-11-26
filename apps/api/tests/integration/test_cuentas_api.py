@@ -342,3 +342,40 @@ async def test_usuario_dado_de_baja_no_entra(api: Cliente) -> None:
     assert api.correos == []
     assert (await api.invitar(email)).status_code == 409
     assert await api.mundo.db.scalar(select(User.is_active).where(User.email == email)) is False
+
+
+async def test_eliminar_copropiedad_creada_por_error(api: Cliente) -> None:
+    dueno = (
+        await api.mundo.db.execute(
+            text(
+                "INSERT INTO users (email, full_name, password_hash, is_platform_admin) "
+                "VALUES (:e, 'Dueño', :h, true) RETURNING id"
+            ),
+            {"e": _email(), "h": hash_password(CLAVE)},
+        )
+    ).scalar_one()
+    token = create_access_token(dueno)[0]
+    admin_email = _email()
+    datos = {"nombre": "Conjunto Equivocado", "admin_email": admin_email, "admin_nombre": "Ana Ruiz"}
+    c = (await api.publico("POST", "/plataforma/copropiedades", datos, token)).json()["copropiedad"]
+    enlace_viejo = api.ultimo_token()
+    ruta = f"/plataforma/copropiedades/{c['id']}/eliminar"
+
+    # Confirmación con el nombre exacto; nadie más que el dueño
+    assert (await api.publico("POST", ruta, {"confirmacion": "Conjunto"}, token)).status_code == 400
+    admin_token = api.auth("ADMIN")["Authorization"][7:]
+    assert (await api.publico("POST", ruta, {"confirmacion": c["nombre"]}, admin_token)).status_code == 404
+    assert (await api.publico("POST", ruta, {"confirmacion": " Conjunto Equivocado "}, token)).status_code == 204
+
+    lista = (await api.publico("GET", "/plataforma/copropiedades", token=token)).json()
+    assert all(x["id"] != c["id"] for x in lista)
+    assert (await api.publico("POST", "/auth/enlace", {"token": enlace_viejo})).status_code == 400  # invitación anulada
+    assert (await api.publico("POST", ruta, {"confirmacion": c["nombre"]}, token)).status_code == 404  # ya no existe
+
+    # La misma persona se puede invitar a la copropiedad correcta y activar su cuenta
+    bien = await api.publico("POST", "/plataforma/copropiedades", {**datos, "nombre": "Conjunto Correcto"}, token)
+    assert bien.status_code == 201 and bien.json()["enlace_invitacion"]
+    r = await api.publico(
+        "POST", "/auth/activar", {"token": api.ultimo_token(), "password": CLAVE, "acepta_politica": True}
+    )
+    assert [m["tenant_name"] for m in r.json()["memberships"]] == ["Conjunto Correcto"]

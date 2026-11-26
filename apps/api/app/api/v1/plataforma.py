@@ -9,7 +9,14 @@ from fastapi import APIRouter, Request, status
 
 from app.api.deps import DbSession, PlatformAdmin
 from app.core.rate_limit import INVITES_PER_USER, enforce
-from app.schemas.cuentas import CopropiedadCreada, CopropiedadIn, CopropiedadOut, CopropiedadUpdate, EnlaceInvitacion
+from app.schemas.cuentas import (
+    CopropiedadCreada,
+    CopropiedadIn,
+    CopropiedadOut,
+    CopropiedadUpdate,
+    EliminarCopropiedadIn,
+    EnlaceInvitacion,
+)
 from app.services.cuentas import plataforma, usuarios
 from app.services.notifications.email import email_enabled
 from app.workers.celery_app import celery_app
@@ -53,3 +60,10 @@ async def enlaces_pendientes(
     salida = await plataforma.enlaces_pendientes(db, dueno, tenant_id)
     await db.commit()
     return salida
+
+
+@router.post("/copropiedades/{tenant_id}/eliminar", status_code=status.HTTP_204_NO_CONTENT)
+async def eliminar(tenant_id: uuid.UUID, body: EliminarCopropiedadIn, _: PlatformAdmin, db: DbSession) -> None:
+    """Borrado lógico, confirmado con el nombre exacto de la copropiedad."""
+    await plataforma.eliminar(db, tenant_id, body.confirmacion)
+    await db.commit()
