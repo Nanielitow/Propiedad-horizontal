@@ -228,8 +228,9 @@ Tenga presentes estas cifras al definir cuánto cobrar (el precio de venta es de
 ### Monitoreo
 
 - Salud de la app: `https://app.propiedadhorizontal.app/api/health` debe responder `{"web":"ok","postgres":"ok","redis":"ok"}`.
-- **Recomendado:** un monitor gratuito (UptimeRobot o Better Stack) que consulte esa dirección cada 5 minutos y le
-  avise por correo o WhatsApp si cae.
+- **Monitor activo (26 nov 2026):** UptimeRobot consulta `/api/health` cada 5 minutos y avisa por correo y en la app
+  del celular si cae (responde 503 si falla la web, la API, la base o Redis). Un «Down» corto durante un despliegue es
+  normal.
 - **Alertas de errores (Sentry):** con `SENTRY_DSN` en `api`, `worker` y `beat`, cada error de la API o de una tarea
   llega por correo, agrupado y sin datos personales (ni contraseñas, cookies, tokens ni formularios).
 - Registros: Railway → servicio → *Deployments → Deploy Logs*. Los de la API no muestran claves ni enlaces de
@@ -285,7 +286,8 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 | Antes de invitar residentes | Pasar Resend a Pro (US$20 ≈ $66.000 al mes) |
 | Hecho (26 nov) | Límites de gasto en Railway, Neon y Gemini (prepago) |
 | Hecho (26 nov) | Renovación automática del dominio en Cloudflare |
-| Ya | Copia de `.env` en un gestor de contraseñas; monitor de disponibilidad |
+| Hecho (26 nov) | Monitor de disponibilidad (UptimeRobot) |
+| Ya | Copia de `.env` en un gestor de contraseñas |
 | Antes de usar la app con datos reales | Revisión de `/privacidad` por un abogado y contrato de encargo con cada copropiedad |
 | Antes del 1 ene 2027 | Decidir el modelo de extracción (`EXTRACTION_MODEL`): su precio se duplica ese día |
 | Cada mes | Revisar *Usage* de Railway, Neon y Gemini; confirmar en `/plataforma` que los respaldos están al día |
