@@ -84,7 +84,8 @@ Lecciones del primer despliegue:
 - `web` necesita `PORT=3000`, el puerto al que apunta el dominio público.
 - El registro DNS `app` en Cloudflare va con la nube **gris** para que Railway verifique y emita el certificado.
 
-Ya borrados el proyecto de Neon en São Paulo y el túnel de Cloudflare. Pendiente: correo (SMTP).
+Ya borrados el proyecto de Neon en São Paulo y el túnel de Cloudflare. Correo por Resend activo y verificado
+(2026-11-25): la respuesta a una PQRS llegó al destinatario autorizado.
 
 ## Dominio raíz
 
