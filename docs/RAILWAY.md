@@ -44,7 +44,7 @@ cambiaron.
    Los nombres importan: `web` llega a la API por `api.railway.internal`.
 3. *+ New* → *Database* → **Redis** (debe llamarse `Redis`: las variables lo referencian así).
 4. Región de **cada** servicio (y del Redis): *Settings → Deploy → Region* → **US East (Virginia)**.
-5. Variables: en `api`, `worker` y `beat` → *Variables* → *Raw Editor* → pegar `python.env`; en `web`, pegar
+5. Variables: en `api`, `workerrevisi` y `beat` → *Variables* → *Raw Editor* → pegar `python.env`; en `web`, pegar
    `web.env`.
 6. Dominio: `web` → *Settings → Networking* → *Custom Domain* → `app.propiedadhorizontal.app`. Railway muestra
    un registro **CNAME**: en Cloudflare → DNS, cambiar el registro `app` (hoy apunta al túnel) por ese CNAME, con la
