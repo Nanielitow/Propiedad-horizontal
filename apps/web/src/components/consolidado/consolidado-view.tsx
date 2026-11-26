@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 
+import { AceptarPolitica } from "@/components/auth/aceptar-politica";
 import { BotonSalir } from "@/components/auth/boton-salir";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -200,6 +201,7 @@ export function ConsolidadoView({ me }: { me: Me }) {
 
   return (
     <div className="min-h-dvh bg-background">
+      <AceptarPolitica requiere={me.user.requiere_politica} />
       <header className="flex items-center gap-3 bg-sidebar px-4 py-3 text-sidebar-foreground sm:px-6">
         <div className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
           <Building2 className="size-4.5" />

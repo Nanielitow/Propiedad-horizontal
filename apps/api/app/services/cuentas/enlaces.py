@@ -23,7 +23,7 @@ VIGENCIA = {INVITACION: timedelta(days=7), RECUPERACION: timedelta(hours=1)}
 RUTA = {INVITACION: "activar", RECUPERACION: "restablecer"}
 
 # Versión de la política de tratamiento de datos que acepta quien activa su cuenta (Ley 1581 de 2012)
-POLITICA_VERSION = "2026-11-25"
+POLITICA_VERSION = "2026-11-26"
 
 ENLACE_INVALIDO = HTTPException(
     status.HTTP_400_BAD_REQUEST, "El enlace no es válido o ya expiró. Pida uno nuevo a la administración."

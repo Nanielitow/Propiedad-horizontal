@@ -179,3 +179,7 @@ class RespaldosOut(BaseModel):
 
 class DescargaRespaldoIn(_Base):
     clave: Annotated[str, Field(min_length=10, max_length=200)]
+
+
+class AceptarPoliticaIn(_Base):
+    version: Annotated[str, Field(min_length=4, max_length=20)]

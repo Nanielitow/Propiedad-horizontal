@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+import { AceptarPolitica } from "@/components/auth/aceptar-politica";
 import { BotonSalir } from "@/components/auth/boton-salir";
 import { campoClase, Etiqueta, Vacio } from "@/components/recaudos/comunes";
 import {
@@ -68,6 +69,7 @@ export function PlataformaView({ me }: { me: Me }) {
 
   return (
     <div className="min-h-dvh bg-background">
+      <AceptarPolitica requiere={me.user.requiere_politica} />
       <header className="flex items-center gap-3 bg-sidebar px-4 py-3 text-sidebar-foreground sm:px-6">
         <div className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
           <Building2 className="size-4.5" />

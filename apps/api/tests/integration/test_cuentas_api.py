@@ -379,3 +379,34 @@ async def test_eliminar_copropiedad_creada_por_error(api: Cliente) -> None:
         "POST", "/auth/activar", {"token": api.ultimo_token(), "password": CLAVE, "acepta_politica": True}
     )
     assert [m["tenant_name"] for m in r.json()["memberships"]] == ["Conjunto Correcto"]
+
+
+async def test_aceptar_la_politica_vigente(api: Cliente) -> None:
+    from app.services.cuentas.enlaces import POLITICA_VERSION
+
+    user_id = (
+        await api.mundo.db.execute(
+            text(
+                "INSERT INTO users (email, full_name, password_hash, terms_version) "
+                "VALUES (:e, 'Versión Vieja', :h, '2020-01-01') RETURNING id"
+            ),
+            {"e": _email(), "h": hash_password(CLAVE)},
+        )
+    ).scalar_one()
+    token = create_access_token(user_id)[0]
+    assert (await api.publico("GET", "/auth/me", token=token)).json()["user"]["requiere_politica"] is True
+    viejo = await api.publico("POST", "/auth/aceptar-politica", {"version": "2020-01-01"}, token)
+    assert viejo.status_code == 409
+    ok = await api.publico("POST", "/auth/aceptar-politica", {"version": POLITICA_VERSION}, token)
+    assert ok.status_code == 200 and ok.json()["requiere_politica"] is False
+    assert (await api.publico("GET", "/auth/me", token=token)).json()["user"]["requiere_politica"] is False
+
+    # Las cuentas demo (compartidas) nunca la piden
+    demo = (
+        await api.mundo.db.execute(
+            text("INSERT INTO users (email, full_name, password_hash) VALUES (:e, 'Demo', :h) RETURNING id"),
+            {"e": f"{uuid.uuid4().hex[:8]}@lospinos.demo", "h": hash_password(CLAVE)},
+        )
+    ).scalar_one()
+    me = await api.publico("GET", "/auth/me", token=create_access_token(demo)[0])
+    assert me.json()["user"]["requiere_politica"] is False

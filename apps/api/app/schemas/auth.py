@@ -23,6 +23,7 @@ class UserOut(BaseModel):
     email: str
     full_name: str
     is_platform_admin: bool = False
+    requiere_politica: bool = False  # debe aceptar la versión vigente de la política de datos antes de seguir
 
 
 class MeResponse(BaseModel):

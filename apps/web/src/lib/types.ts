@@ -18,6 +18,7 @@ export interface User {
   email: string;
   full_name: string;
   is_platform_admin?: boolean;
+  requiere_politica?: boolean; // debe aceptar la versión vigente de la política de datos
 }
 
 export interface Membership {

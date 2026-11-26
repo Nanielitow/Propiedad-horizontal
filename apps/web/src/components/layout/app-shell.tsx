@@ -3,6 +3,7 @@
 import { Building2, FlaskConical, Menu } from "lucide-react";
 import { useState } from "react";
 
+import { AceptarPolitica } from "@/components/auth/aceptar-politica";
 import { PdfPanel } from "@/components/pdf-viewer/pdf-panel";
 import { PdfViewerProvider } from "@/components/pdf-viewer/viewer-context";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function AppShell({ user, memberships, current, children }: Props) {
   return (
     <TenantProvider value={{ user, memberships, tenant: current, isAdmin: current.role === "ADMIN" }}>
       <PdfViewerProvider>
+        <AceptarPolitica requiere={user.requiere_politica} />
         <div className="flex h-dvh overflow-hidden bg-background">
           <aside className="hidden w-64 shrink-0 lg:block">
             <Sidebar />

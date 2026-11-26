@@ -40,7 +40,15 @@ from app.schemas.auth import (
     TokenPair,
     UserOut,
 )
-from app.schemas.cuentas import ActivarIn, CambiarClaveIn, EnlaceIn, EnlaceOut, RecuperarIn, RestablecerIn
+from app.schemas.cuentas import (
+    AceptarPoliticaIn,
+    ActivarIn,
+    CambiarClaveIn,
+    EnlaceIn,
+    EnlaceOut,
+    RecuperarIn,
+    RestablecerIn,
+)
 from app.services.cuentas import enlaces
 from app.workers.celery_app import celery_app
 
@@ -166,7 +174,14 @@ async def me(user: CurrentUser, db: DbSession) -> MeResponse:
 
 
 def _user_out(user: User) -> UserOut:
-    return UserOut(id=user.id, email=user.email, full_name=user.full_name, is_platform_admin=user.is_platform_admin)
+    return UserOut(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        is_platform_admin=user.is_platform_admin,
+        # Las cuentas demo son compartidas: nadie acepta en nombre de otros
+        requiere_politica=not enlaces.es_cuenta_demo(user.email) and user.terms_version != enlaces.POLITICA_VERSION,
+    )
 
 
 # ---------------------------------------------------------------------------------------------
@@ -270,3 +285,14 @@ async def cambiar_clave(body: CambiarClaveIn, user: CurrentUser, db: DbSession, 
     user.sessions_valid_after = sessions_cutoff()
     await db.commit()
     return await _issue_tokens(request.app.state.redis, user.id)
+
+
+@router.post("/aceptar-politica", response_model=UserOut)
+async def aceptar_politica(body: AceptarPoliticaIn, user: CurrentUser, db: DbSession) -> UserOut:
+    """Registra que la persona aceptó la versión vigente de la política de tratamiento de datos (prueba de la
+    autorización, Ley 1581). Se pide al entrar cuando la política cambió de fondo."""
+    if body.version != enlaces.POLITICA_VERSION:
+        raise HTTPException(status.HTTP_409_CONFLICT, "La política cambió mientras la leía: recargue la página")
+    user.terms_accepted_at, user.terms_version = datetime.now(UTC), enlaces.POLITICA_VERSION
+    await db.commit()
+    return _user_out(user)
