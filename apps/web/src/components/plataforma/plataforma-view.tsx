@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Building2, FlaskConical, Loader2, Pencil, Plus } from "lucide-react";
+import { ArrowRight, Building2, FlaskConical, Link2, Loader2, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,14 +8,26 @@ import useSWR from "swr";
 
 import { BotonSalir } from "@/components/auth/boton-salir";
 import { campoClase, Etiqueta, Vacio } from "@/components/recaudos/comunes";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api, ApiError, fetcher } from "@/lib/api";
-import type { Copropiedad, CopropiedadCreada } from "@/lib/cuentas";
+import type { Copropiedad, CopropiedadCreada, EnlaceInvitacion } from "@/lib/cuentas";
 import type { Me } from "@/lib/types";
+
+import { EnlacesDialog } from "./enlaces-dialog";
 
 const URL = "/plataforma/copropiedades";
 
@@ -23,6 +35,20 @@ export function PlataformaView({ me }: { me: Me }) {
   const { data, mutate, isLoading } = useSWR<Copropiedad[]>(URL, fetcher);
   const [nueva, setNueva] = useState(false);
   const [editar, setEditar] = useState<Copropiedad | null>(null);
+  const [enlaces, setEnlaces] = useState<{ lista: EnlaceInvitacion[]; copropiedad: string; reemplazo: boolean } | null>(null);
+  const [generar, setGenerar] = useState<Copropiedad | null>(null);
+
+  async function generarEnlace() {
+    if (!generar) return;
+    const c = generar;
+    setGenerar(null);
+    try {
+      const lista = await api<EnlaceInvitacion[]>(`${URL}/${c.id}/enlaces`, { method: "POST" });
+      setEnlaces({ lista, copropiedad: c.nombre, reemplazo: true });
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "No se pudo generar el enlace.");
+    }
+  }
   const mias = new Set(me.memberships.map((m) => m.tenant_id));
   const reales = data?.filter((c) => !c.is_demo) ?? [];
 
@@ -98,7 +124,7 @@ export function PlataformaView({ me }: { me: Me }) {
                   <TableCell className="text-right tabular-nums">{c.unidades}</TableCell>
                   <TableCell className="text-right tabular-nums">{c.usuarios}</TableCell>
                   <TableCell>
-                    {c.invitaciones_pendientes > 0 && c.administradores > 0 && c.usuarios === c.invitaciones_pendientes ? (
+                    {c.administradores > 0 && c.invitaciones_pendientes === c.administradores ? (
                       <Etiqueta tono="warning">Invitación sin activar</Etiqueta>
                     ) : c.administradores > 0 ? (
                       <Etiqueta tono="success">
@@ -110,6 +136,12 @@ export function PlataformaView({ me }: { me: Me }) {
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-1">
+                      {c.invitaciones_pendientes > 0 && !c.is_demo && (
+                        <Button variant="ghost" size="sm" onClick={() => setGenerar(c)}>
+                          <Link2 className="size-4" />
+                          Enlace
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" onClick={() => setEditar(c)} aria-label={`Editar ${c.nombre}`}>
                         <Pencil className="size-4" />
                       </Button>
@@ -134,13 +166,50 @@ export function PlataformaView({ me }: { me: Me }) {
         </p>
       </main>
 
-      <NuevaDialog open={nueva} onOpenChange={setNueva} onCreada={() => void mutate()} />
+      <NuevaDialog
+        open={nueva}
+        onOpenChange={setNueva}
+        onCreada={(r, admin) => {
+          void mutate();
+          if (r.enlace_invitacion)
+            setEnlaces({ lista: [{ ...admin, enlace: r.enlace_invitacion }], copropiedad: r.copropiedad.nombre, reemplazo: false });
+        }}
+      />
+      <EnlacesDialog
+        enlaces={enlaces?.lista ?? null}
+        copropiedad={enlaces?.copropiedad ?? ""}
+        reemplazo={enlaces?.reemplazo ?? false}
+        onOpenChange={(o) => !o && setEnlaces(null)}
+      />
+      <AlertDialog open={!!generar} onOpenChange={(o) => !o && setGenerar(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Generar un enlace nuevo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para la administración de {generar?.nombre} que aún no activa su cuenta. El enlace que se envió por correo
+              dejará de funcionar; envíe el nuevo por WhatsApp o chat.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void generarEnlace()}>Generar enlace</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <EditarDialog copropiedad={editar} onOpenChange={(o) => !o && setEditar(null)} onGuardada={() => void mutate()} />
     </div>
   );
 }
 
-function NuevaDialog({ open, onOpenChange, onCreada }: { open: boolean; onOpenChange: (o: boolean) => void; onCreada: () => void }) {
+function NuevaDialog({
+  open,
+  onOpenChange,
+  onCreada,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onCreada: (r: CopropiedadCreada, admin: { nombre: string; email: string }) => void;
+}) {
   const vacio = { nombre: "", nit: "", ciudad: "", direccion: "", admin_nombre: "", admin_email: "" };
   const [f, setF] = useState(vacio);
   const [enviando, setEnviando] = useState(false);
@@ -181,7 +250,7 @@ function NuevaDialog({ open, onOpenChange, onCreada }: { open: boolean; onOpenCh
       );
       if (!r.correo_enviado) toast.warning("El correo no está configurado en este servidor: el aviso no saldrá.");
       onOpenChange(false);
-      onCreada();
+      onCreada(r, { nombre: f.admin_nombre.trim(), email: f.admin_email.trim().toLowerCase() });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "No se pudo crear la copropiedad.");
     } finally {

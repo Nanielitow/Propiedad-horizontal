@@ -37,6 +37,13 @@ export interface CopropiedadCreada {
   copropiedad: Copropiedad;
   administrador_nuevo: boolean;
   correo_enviado: boolean;
+  enlace_invitacion: string | null;
+}
+
+export interface EnlaceInvitacion {
+  nombre: string;
+  email: string;
+  enlace: string;
 }
 
 export const baseUsuarios = (tenantId: string) => `/tenants/${tenantId}/usuarios`;

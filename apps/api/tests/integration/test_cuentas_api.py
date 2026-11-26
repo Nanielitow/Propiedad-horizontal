@@ -288,6 +288,21 @@ async def test_panel_de_la_plataforma(api: Cliente) -> None:
     assert c["slug"].startswith("mirador-del-rio") and c["is_demo"] is False
     assert c["administradores"] == 1 and c["invitaciones_pendientes"] == 1
     assert api.correos[-1][0] == admin_email and "Mirador del Río" in api.correos[-1][1]
+    # El dueño recibe el mismo enlace del correo, para enviarlo él mismo si quiere
+    del_correo = api.ultimo_token()
+    assert r.json()["enlace_invitacion"].endswith(f"/activar?token={del_correo}")
+
+    # «Enlace»: genera uno nuevo y anula el del correo
+    enl = await api.publico("POST", f"/plataforma/copropiedades/{c['id']}/enlaces", token=token)
+    assert enl.status_code == 200, enl.text
+    assert [(x["email"], x["nombre"]) for x in enl.json()] == [(admin_email, "Patricia Mora")]
+    nuevo_token = enl.json()[0]["enlace"].split("token=")[1]
+    assert nuevo_token != del_correo
+    assert (await api.publico("GET", f"/auth/enlaces/{del_correo}")).status_code == 400
+    admin_token = api.auth("ADMIN")["Authorization"][7:]
+    assert (
+        await api.publico("POST", f"/plataforma/copropiedades/{c['id']}/enlaces", token=admin_token)
+    ).status_code == 404
 
     # Los catálogos base quedaron creados (recaudos, activos, cartera)
     await set_rls_context(api.mundo.db, tenant_id=uuid.UUID(c["id"]), role="SYSTEM")
@@ -296,10 +311,10 @@ async def test_panel_de_la_plataforma(api: Cliente) -> None:
         assert n and n > 0, tabla
 
     # La administradora activa su cuenta y entra directo a su copropiedad
-    r = await api.publico(
-        "POST", "/auth/activar", {"token": api.ultimo_token(), "password": CLAVE, "acepta_politica": True}
-    )
+    r = await api.publico("POST", "/auth/activar", {"token": nuevo_token, "password": CLAVE, "acepta_politica": True})
     assert [(m["tenant_slug"], m["role"]) for m in r.json()["memberships"]] == [(c["slug"], "ADMIN")]
+    # Ya activó: no hay enlaces que generar (a una cuenta activa nunca se le genera uno)
+    assert (await api.publico("POST", f"/plataforma/copropiedades/{c['id']}/enlaces", token=token)).status_code == 409
 
     lista = (await api.publico("GET", "/plataforma/copropiedades", token=token)).json()
     assert any(x["id"] == c["id"] and x["invitaciones_pendientes"] == 0 for x in lista)

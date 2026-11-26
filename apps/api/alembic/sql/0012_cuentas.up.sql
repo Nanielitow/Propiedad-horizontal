@@ -48,8 +48,9 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
          (SELECT count(*) FROM units u WHERE u.tenant_id = t.id),
          (SELECT count(*) FROM memberships m WHERE m.tenant_id = t.id),
          (SELECT count(*) FROM memberships m WHERE m.tenant_id = t.id AND m.role = 'ADMIN'),
+         -- administradores que aún no activan su cuenta (lo único que gestiona el dueño)
          (SELECT count(*) FROM memberships m JOIN users x ON x.id = m.user_id
-           WHERE m.tenant_id = t.id AND x.password_hash IS NULL)
+           WHERE m.tenant_id = t.id AND m.role = 'ADMIN' AND x.password_hash IS NULL)
     FROM tenants t
    WHERE t.deleted_at IS NULL
      AND EXISTS (SELECT 1 FROM users p WHERE p.id = app_user_id() AND p.is_platform_admin AND p.is_active)

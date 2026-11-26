@@ -41,5 +41,8 @@ Los conjuntos de ejemplo (Los Pinos y Torre Central) conviven con los reales y s
 2. Cuenta del dueño (una vez): `python -m app.scripts.plataforma dueno --email … --nombre "…"`. Envía el enlace de
    activación por correo; nunca lo imprime.
 3. El dueño entra a `/plataforma` → «Nueva copropiedad» (nombre, NIT, ciudad y el correo de la administradora).
+   Además del correo automático, la ventana muestra el enlace de activación para enviarlo por WhatsApp. Si la
+   administradora no lo usó, «Enlace» en la fila genera uno nuevo (anula el anterior; solo para administradores
+   que aún no activan: a una cuenta activa nunca se le genera enlace).
 4. La administradora activa su cuenta con el correo, importa las unidades (Excel), configura la cartera e invita a su
    equipo y a los residentes.

@@ -137,10 +137,19 @@ class CopropiedadOut(BaseModel):
     unidades: int
     usuarios: int
     administradores: int
-    invitaciones_pendientes: int
+    invitaciones_pendientes: int  # administradores que aún no activan su cuenta
 
 
 class CopropiedadCreada(BaseModel):
     copropiedad: CopropiedadOut
     administrador_nuevo: bool
     correo_enviado: bool
+    enlace_invitacion: str | None  # el mismo del correo; None si el administrador ya tenía cuenta
+
+
+class EnlaceInvitacion(BaseModel):
+    """Enlace de activación de un administrador invitado, para que el dueño lo envíe él mismo (p. ej. WhatsApp)."""
+
+    nombre: str
+    email: str
+    enlace: str

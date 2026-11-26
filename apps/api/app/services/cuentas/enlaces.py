@@ -38,6 +38,7 @@ class Correo:
     asunto: str
     texto: str
     html: str
+    enlace: str | None = None  # enlace de activación (para que el dueño pueda copiarlo y enviarlo él mismo)
 
 
 def es_cuenta_demo(email: str) -> bool:
@@ -119,7 +120,7 @@ def correo_invitacion(user: User, url: str, copropiedad: str | None, invita: str
         boton="Definir mi contraseña",
         pie="Si no esperaba este correo, ignórelo: sin definir la contraseña nadie puede entrar con su cuenta.",
     )
-    return Correo(user.email, asunto, texto, html)
+    return Correo(user.email, asunto, texto, html, enlace=url)
 
 
 def correo_recuperacion(user: User, url: str) -> Correo:

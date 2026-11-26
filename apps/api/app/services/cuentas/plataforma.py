@@ -14,10 +14,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import TenantContext
 from app.db.rls import set_rls_context
-from app.models import Tenant, User
+from app.models import Membership, Tenant, User
 from app.models.enums import UserRole
-from app.schemas.cuentas import CopropiedadIn, CopropiedadOut, CopropiedadUpdate, InvitacionIn
-from app.services.cuentas import usuarios
+from app.schemas.cuentas import (
+    CopropiedadIn,
+    CopropiedadOut,
+    CopropiedadUpdate,
+    EnlaceInvitacion,
+    InvitacionIn,
+)
+from app.services.cuentas import enlaces, usuarios
 from app.services.cuentas.enlaces import Correo
 
 # Catálogos base de cada módulo (idempotentes)
@@ -110,3 +116,34 @@ async def actualizar(db: AsyncSession, tenant_id: uuid.UUID, body: CopropiedadUp
     await db.flush()
     await db.refresh(t)
     return await _con_conteos(db, t)
+
+
+async def enlaces_pendientes(db: AsyncSession, dueno: User, tenant_id: uuid.UUID) -> list[EnlaceInvitacion]:
+    """Enlaces NUEVOS para los administradores que aún no activan su cuenta (anulan los enviados antes).
+
+    Solo administradores sin clave: a una cuenta activa nunca se le genera un enlace (sería tomar su cuenta).
+    """
+    t = await db.get(Tenant, tenant_id)
+    if t is None or t.deleted_at is not None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Copropiedad no encontrada")
+    await set_rls_context(db, tenant_id=t.id, user_id=dueno.id, role="SYSTEM")
+    pendientes = await db.scalars(
+        select(User)
+        .join(Membership, Membership.user_id == User.id)
+        .where(
+            Membership.tenant_id == t.id,
+            Membership.role == UserRole.ADMIN,
+            User.password_hash.is_(None),
+            User.is_active,
+        )
+        .order_by(User.full_name)
+    )
+    salida = []
+    for user in pendientes:
+        url = await enlaces.emitir(db, user, enlaces.INVITACION, tenant_id=t.id, creado_por=dueno.id)
+        salida.append(EnlaceInvitacion(nombre=user.full_name, email=user.email, enlace=url))
+    if not salida:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "Esta copropiedad no tiene administradores con la invitación pendiente"
+        )
+    return salida

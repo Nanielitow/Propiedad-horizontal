@@ -9,7 +9,7 @@ from fastapi import APIRouter, Request, status
 
 from app.api.deps import DbSession, PlatformAdmin
 from app.core.rate_limit import INVITES_PER_USER, enforce
-from app.schemas.cuentas import CopropiedadCreada, CopropiedadIn, CopropiedadOut, CopropiedadUpdate
+from app.schemas.cuentas import CopropiedadCreada, CopropiedadIn, CopropiedadOut, CopropiedadUpdate, EnlaceInvitacion
 from app.services.cuentas import plataforma, usuarios
 from app.services.notifications.email import email_enabled
 from app.workers.celery_app import celery_app
@@ -29,7 +29,12 @@ async def crear(body: CopropiedadIn, dueno: PlatformAdmin, db: DbSession, reques
     copropiedad, nuevo, correo = await plataforma.crear(db, dueno, body)
     await db.commit()
     celery_app.send_task(CORREO_TASK, args=usuarios.correo_a_tarea(correo))
-    return CopropiedadCreada(copropiedad=copropiedad, administrador_nuevo=nuevo, correo_enviado=email_enabled())
+    return CopropiedadCreada(
+        copropiedad=copropiedad,
+        administrador_nuevo=nuevo,
+        correo_enviado=email_enabled(),
+        enlace_invitacion=correo.enlace,
+    )
 
 
 @router.patch("/copropiedades/{tenant_id}", response_model=CopropiedadOut)
@@ -37,3 +42,14 @@ async def actualizar(tenant_id: uuid.UUID, body: CopropiedadUpdate, _: PlatformA
     out = await plataforma.actualizar(db, tenant_id, body)
     await db.commit()
     return out
+
+
+@router.post("/copropiedades/{tenant_id}/enlaces", response_model=list[EnlaceInvitacion])
+async def enlaces_pendientes(
+    tenant_id: uuid.UUID, dueno: PlatformAdmin, db: DbSession, request: Request
+) -> list[EnlaceInvitacion]:
+    """Enlaces nuevos de activación para enviarlos por otro medio. Anulan los que se enviaron por correo."""
+    await enforce(request, INVITES_PER_USER, str(dueno.id))
+    salida = await plataforma.enlaces_pendientes(db, dueno, tenant_id)
+    await db.commit()
+    return salida
