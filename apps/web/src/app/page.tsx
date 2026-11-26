@@ -8,6 +8,8 @@ export default async function Home() {
   const me = await getMe();
   const first = me?.memberships[0];
   if (first) redirect(`/${first.tenant_slug}/search`);
-  if (!me && (await cookies()).get(REFRESH_COOKIE)) redirect("/api/auth/refresh?next=/");
+  if (me?.user.is_platform_admin) redirect("/plataforma");
+  if (me) redirect("/sin-acceso");
+  if ((await cookies()).get(REFRESH_COOKIE)) redirect("/api/auth/refresh?next=/");
   redirect("/login");
 }

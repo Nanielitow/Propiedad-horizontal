@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, Eye, EyeOff, Loader2, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { errorMessage } from "@/lib/api";
-import { DEMO_MODE } from "@/lib/config";
+import { destinoInicial } from "@/lib/destino";
 import type { Me } from "@/lib/types";
 
 const DEMO_ACCOUNTS = [
@@ -18,7 +19,8 @@ const DEMO_ACCOUNTS = [
 ];
 const DEMO_PASSWORD = "Demo1234!";
 
-export function LoginForm() {
+/** `demo`: muestra las cuentas compartidas de los conjuntos de ejemplo (solo en /demo, no en el login real). */
+export function LoginForm({ demo = false }: { demo?: boolean }) {
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,15 +42,10 @@ export function LoginForm() {
         setError(res.status === 401 ? "Correo o contraseña incorrectos." : errorMessage(data));
         return;
       }
-      const first = (data as Me).memberships[0];
-      if (!first) {
-        setError("Su usuario no está vinculado a ninguna copropiedad. Contacte a la administración.");
-        return;
-      }
-      const next = params.get("next");
+      const destino = destinoInicial(data as Me, params.get("next"));
       // Navegación COMPLETA (no router.push): descarta cualquier dato en memoria
       // de una sesión anterior en la misma pestaña (caché de SWR, visor, chat).
-      window.location.assign(next?.startsWith("/") && !next.startsWith("//") ? next : `/${first.tenant_slug}`);
+      window.location.assign(destino ?? "/sin-acceso");
     } catch {
       setError("No se pudo conectar con el servidor.");
     } finally {
@@ -94,7 +91,12 @@ export function LoginForm() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Contraseña</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Contraseña</Label>
+            <Link href="/recuperar" className="text-xs text-primary underline-offset-4 hover:underline">
+              ¿Olvidó su contraseña?
+            </Link>
+          </div>
           <div className="relative">
             <Input
               id="password"
@@ -121,7 +123,7 @@ export function LoginForm() {
         </Button>
       </form>
 
-      {DEMO_MODE && (
+      {demo && (
         <div className="mt-10">
           <div className="flex items-center gap-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
             <span className="h-px flex-1 bg-border" />

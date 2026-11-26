@@ -41,7 +41,7 @@ copiar() { v=$(val "$1"); [ -n "$v" ] && printf '%s="%s"\n' "$1" "$v"; return 0;
 {
   echo "ENVIRONMENT=\"production\""
   echo "LOG_LEVEL=\"INFO\""
-  echo "DEMO_MODE=\"true\""
+  echo "DEMO_MODE=\"false\""  # la demo es por copropiedad (tenants.is_demo), ver docs/CUENTAS.md
   echo "PORT=\"8000\""
   echo "APP_URL=\"https://app.propiedadhorizontal.app\""
   echo "CORS_ORIGINS=\"https://app.propiedadhorizontal.app\""
@@ -67,7 +67,6 @@ copiar() { v=$(val "$1"); [ -n "$v" ] && printf '%s="%s"\n' "$1" "$v"; return 0;
 {
   echo 'API_INTERNAL_URL="http://${{api.RAILWAY_PRIVATE_DOMAIN}}:8000"'
   echo "PORT=\"3000\""  # el dominio público de Railway apunta al 3000
-  echo "NEXT_PUBLIC_DEMO_MODE=\"true\""
   for k in GOOGLE_CLIENT_ID GOOGLE_API_KEY GOOGLE_PROJECT_NUMBER; do copiar "$k"; done
 } > deploy/railway/web.env
 

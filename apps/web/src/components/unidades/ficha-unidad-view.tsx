@@ -8,6 +8,7 @@ import {
   CreditCard,
   History,
   Home,
+  MailPlus,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -31,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InvitarDialog } from "@/components/usuarios/invitar-dialog";
 import { api, ApiError, fetcher } from "@/lib/api";
 import { puedeCartera } from "@/lib/cartera";
 import { type EstadoRecaudo, fechaCorta, pesos } from "@/lib/recaudos";
@@ -55,7 +57,7 @@ import { MarcasVinculo, OcupacionBadge, RelacionBadge, Telefono, useRefrescarUni
 import { CerrarVinculoDialog, PersonaFormDialog, UnidadFormDialog, VehiculoDialog, VincularDialog } from "./formularios";
 
 export function FichaUnidadView({ unidadId }: { unidadId: string }) {
-  const { tenant } = useTenant();
+  const { tenant, isAdmin } = useTenant();
   const clave = `${baseUnidades(tenant.tenant_id)}/${unidadId}`;
   const { data: u, error, mutate } = useSWR<UnidadDetalle>(clave, fetcher);
   const refrescar = useRefrescarUnidades();
@@ -69,6 +71,7 @@ export function FichaUnidadView({ unidadId }: { unidadId: string }) {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [retirarVehiculo, setRetirarVehiculo] = useState<Vehiculo | null>(null);
   const [desactivar, setDesactivar] = useState(false);
+  const [acceso, setAcceso] = useState<{ id: string; nombre: string; email: string } | null>(null);
 
   function actualizado(nueva: UnidadDetalle) {
     void mutate(nueva, { revalidate: false });
@@ -265,8 +268,23 @@ export function FichaUnidadView({ unidadId }: { unidadId: string }) {
                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                           <MarcasVinculo v={v} />
                           <span className="text-muted-foreground">Desde {fechaCorta(v.fecha_inicio)}</span>
-                          {v.persona.tiene_cuenta && <Etiqueta tono="info">Tiene cuenta</Etiqueta>}
+                          {v.persona.tiene_cuenta && <Etiqueta tono="info">Con acceso al portal</Etiqueta>}
                         </div>
+                        {isAdmin && !v.persona.tiene_cuenta && !tenant.is_demo && v.persona.email && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-3"
+                            onClick={() => setAcceso({ id: v.persona.id, nombre: v.persona.nombre_completo, email: v.persona.email ?? "" })}
+                          >
+                            <MailPlus className="size-4" /> Dar acceso al portal
+                          </Button>
+                        )}
+                        {isAdmin && !v.persona.tiene_cuenta && !tenant.is_demo && !v.persona.email && (
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            Sin correo registrado: agréguelo en «Editar datos de contacto» para darle acceso al portal.
+                          </p>
+                        )}
                       </div>
                       {gestionar && (
                         <DropdownMenu>
@@ -506,6 +524,15 @@ export function FichaUnidadView({ unidadId }: { unidadId: string }) {
             }}
           />
         </>
+      )}
+      {isAdmin && (
+        <InvitarDialog
+          tenantId={tenant.tenant_id}
+          open={!!acceso}
+          onOpenChange={(o) => !o && setAcceso(null)}
+          persona={acceso ?? undefined}
+          onInvitado={() => void mutate()}
+        />
       )}
     </div>
   );

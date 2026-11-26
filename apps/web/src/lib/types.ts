@@ -17,6 +17,7 @@ export interface User {
   id: string;
   email: string;
   full_name: string;
+  is_platform_admin?: boolean;
 }
 
 export interface Membership {
@@ -24,6 +25,7 @@ export interface Membership {
   tenant_name: string;
   tenant_slug: string;
   role: Role;
+  is_demo?: boolean; // conjunto de ejemplo
 }
 
 export interface Me {

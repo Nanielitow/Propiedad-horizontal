@@ -6,4 +6,3 @@ export const API_URL = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_A
 export const TOKEN_COOKIE = "ph_token"; // acceso: 15 min
 export const REFRESH_COOKIE = "ph_refresh"; // renovación: 7 días, rotativo
 
-export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";

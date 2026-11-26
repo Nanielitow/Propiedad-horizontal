@@ -35,10 +35,16 @@ import {
   ShieldAlert,
   FileBarChart,
   Wallet,
+  KeyRound,
+  ShieldCheck,
+  UserCog,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+
+import { CambiarClaveDialog } from "@/components/auth/cambiar-clave-dialog";
 
 import {
   DropdownMenu,
@@ -105,6 +111,8 @@ const UNIDADES_NAV: (NavItem & { permiso: Parameters<typeof puedeUnidades>[1] })
   { href: "unidades/directorio", label: "Directorio", description: "Propietarios y residentes", icon: Contact, permiso: "directorio" },
 ];
 
+const USUARIOS_ITEM: NavItem = { href: "usuarios", label: "Usuarios y accesos", description: "Invitar y asignar roles", icon: UserCog };
+
 const ASAMBLEAS_ITEM: NavItem = { href: "asambleas", label: "Asambleas", description: "Quórum, votaciones y actas", icon: Gavel };
 
 // Cartera de cuotas de administración (el residente ve «Mi cuenta»)
@@ -167,7 +175,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const unidades: NavItem[] = [
     ...UNIDADES_NAV.filter((i) => puedeUnidades(tenant.role, i.permiso)),
     ...(tenant.role !== "RESIDENTE" && puedeAsambleas(tenant.role, "ver") ? [ASAMBLEAS_ITEM] : []),
+    ...(isAdmin ? [USUARIOS_ITEM] : []),
   ];
+  const [cambiarClave, setCambiarClave] = useState(false);
   const cartera = CARTERA_NAV.filter((i) => puedeCartera(tenant.role, i.permiso));
   const residente = tenant.role === "RESIDENTE";
   const portal = PORTAL_NAV.filter((i) => puedePortal(tenant.role, i.permiso));
@@ -381,18 +391,45 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             <p className="truncate text-sm font-medium text-white">{user.full_name.replace(/\s*\(.*\)/, "")}</p>
             <p className="truncate text-xs text-sidebar-muted">{ROLE_LABEL[tenant.role]}</p>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={logout}
-                className="rounded-md p-1.5 text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-white"
-                aria-label="Cerrar sesión"
-              >
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger
+                  className="rounded-md p-1.5 text-sidebar-muted transition-colors hover:bg-sidebar-accent hover:text-white"
+                  aria-label="Mi cuenta"
+                >
+                  <Settings2 className="size-4" />
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top">Mi cuenta</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent side="top" align="end" className="w-60">
+              <DropdownMenuLabel className="font-normal">
+                <p className="truncate text-sm font-medium">{user.full_name.replace(/s*(.*)/, "")}</p>
+                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {!user.email.endsWith(".demo") && (
+                <DropdownMenuItem onSelect={() => setCambiarClave(true)}>
+                  <KeyRound className="size-4" />
+                  Cambiar contraseña
+                </DropdownMenuItem>
+              )}
+              {user.is_platform_admin && (
+                <DropdownMenuItem asChild>
+                  <Link href="/plataforma" onClick={onNavigate}>
+                    <ShieldCheck className="size-4" />
+                    Panel de la plataforma
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onSelect={() => void logout()}>
                 <LogOut className="size-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top">Cerrar sesión</TooltipContent>
-          </Tooltip>
+                Cerrar sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <CambiarClaveDialog open={cambiarClave} onOpenChange={setCambiarClave} />
         </div>
       </div>
     </div>
