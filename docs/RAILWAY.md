@@ -57,7 +57,8 @@ Sin `SMTP_HOST` la aplicación no envía correos (los avisos quedan en la app). 
 SMTP (`smtp.resend.com:587`, usuario `resend`, la clave de API como contraseña), remitente
 `no-responder@propiedadhorizontal.app`.
 
-1. Resend → *Domains* → *Add domain* → `propiedadhorizontal.app`, región **us-east-1**. Agregar en Cloudflare →
+1. Resend → *Domains* → *Add domain* → `propiedadhorizontal.app` (región **sa-east-1**, la única que ofreció la cuenta; para correo la región no
+   importa: el envío es asíncrono y el host SMTP es el mismo). Agregar en Cloudflare →
    DNS los registros que muestra (DKIM `TXT`, y `MX` + `TXT` de SPF en el subdominio `send`), con la nube **gris**;
    o usar el botón de configuración automática con Cloudflare. Esperar a que diga *Verified*.
 2. Resend → *API Keys* → *Create API key*, permiso **Sending access**, solo ese dominio.
