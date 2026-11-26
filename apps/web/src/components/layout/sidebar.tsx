@@ -45,6 +45,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { CambiarClaveDialog } from "@/components/auth/cambiar-clave-dialog";
+import { administradas } from "@/lib/destino";
 
 import {
   DropdownMenu,
@@ -311,6 +312,17 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             {memberships.length > 1 && <ChevronsUpDown className="size-4 text-sidebar-muted" />}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-60">
+            {administradas({ memberships }) >= 2 && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/mis-copropiedades" onClick={onNavigate}>
+                    <LayoutDashboard className="size-4" />
+                    <span className="font-medium">Resumen de todas</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuLabel>Cambiar de copropiedad</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {memberships.map((m) => (

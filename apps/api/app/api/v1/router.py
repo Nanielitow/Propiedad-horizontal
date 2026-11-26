@@ -7,6 +7,7 @@ from app.api.v1 import (
     asambleas,
     auth,
     cartera,
+    consolidado,
     deadlines,
     documents,
     minutes,
@@ -51,3 +52,4 @@ api_router.include_router(asambleas.router)
 # Cuentas: usuarios de cada copropiedad y panel del dueño de la plataforma
 api_router.include_router(usuarios.router)
 api_router.include_router(plataforma.router)
+api_router.include_router(consolidado.router)
