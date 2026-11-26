@@ -94,7 +94,7 @@ Modelos configurados en `.env` (y en las variables de Railway):
 | Uso | Modelo | Precio por millón de tokens (entrada / salida) |
 |---|---|---|
 | Buscador con IA (chat) | `gemini-3.5-flash-lite` | US$0,30 / US$2,50 (≈ $990 / $8.250) |
-| Leer documentos: vencimientos, cotizaciones, actas | `gemini-3.5-flash` → **redirige a `gemini-3.6-flash`** | US$0,75 / US$3,75 (≈ $2.475 / $12.375) **hasta el 31 dic 2026** · **US$1,50 / US$7,50 (≈ $4.950 / $24.750) desde el 1 ene 2027** |
+| Leer documentos: vencimientos, cotizaciones, actas | `gemini-3.8-flash` (desde el 26 nov 2026) | US$0,75 / US$3,75 (≈ $2.475 / $12.375) hasta el 31 dic 2026 · US$1,50 / US$7,50 (≈ $4.950 / $24.750) desde el 1 ene 2027 |
 | Índice para buscar (embeddings) | `gemini-embedding-001` | US$0,15 (≈ $495), solo entrada |
 
 Un millón de tokens equivale a unas 750.000 palabras: unos 1.500 PDF de una página.
@@ -119,11 +119,12 @@ al mes por conjunto.**
 - En los conjuntos de demostración, 40 preguntas al día por visitante.
 
 **Pendientes:**
-- **Antes del 1 de enero de 2027** decida el modelo de extracción, porque ese día su precio se duplica. Opciones:
-  - dejar `gemini-3.6-flash` y asumir el doble (sigue siendo poco);
-  - pasar a `gemini-3.5-flash-lite`, que es 2,5 veces más barato, probando antes que lea bien sus documentos.
-
-  Se cambia en la variable `EXTRACTION_MODEL` de `api` y `worker`.
+- **Modelo de extracción decidido (26 nov 2026): `gemini-3.8-flash`.** Se comparó con los documentos de la demo (11
+  tareas) contra el anterior (`3.5-flash`, que redirigía a `3.6-flash`) y `3.5-flash-lite`: calidad prácticamente igual
+  en los tres (todo verificado en actas; 9 de 9 vencimientos; 26 de 28 campos en cotizaciones). Costo por documento
+  desde enero: `3.8-flash` ~US$0,014, el anterior ~US$0,017 y el lite ~US$0,0017 (10 veces menos porque no
+  «razona»). Se eligió `3.8-flash` por calidad en documentos difíciles y por ser la versión vigente. Si algún día
+  conviene ahorrar al máximo, el lite es una alternativa razonable. Se cambia en `EXTRACTION_MODEL` de `api` y `worker`.
 - `gemini-embedding-001` se apaga el **14 de mayo de 2028**; su reemplazo es `gemini-embedding-2`. Cambiarlo
   exige re-indexar los documentos: planéelo con tiempo.
 - **Activada la capa paga (prepago, 26 nov 2026).** Úsela siempre, no la gratuita: en la gratuita Google puede usar los datos para entrenar sus
@@ -291,7 +292,7 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 | Hecho (26 nov) | Monitor de disponibilidad (UptimeRobot) |
 | Hecho (26 nov) | Copia de `.env` en Bitwarden (actualizarla al rotar cualquier clave) |
 | Hecho (26 nov) | Revisión jurídica de la política y de los contratos. Falta: firmar el contrato de transmisión de datos y el de servicios con cada copropiedad |
-| Antes del 1 ene 2027 | Decidir el modelo de extracción (`EXTRACTION_MODEL`): su precio se duplica ese día |
+| Hecho (26 nov) | Modelo de extracción: `gemini-3.8-flash` (variable `EXTRACTION_MODEL` en `api` y `worker`) |
 | Cada mes | Revisar *Usage* de Railway, Neon y Gemini; confirmar en `/plataforma` que los respaldos están al día |
 | Cada trimestre | Restaurar un respaldo en una rama de prueba de Neon |
 | Cada trimestre | Revisar precios de los proveedores |
