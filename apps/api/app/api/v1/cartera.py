@@ -4,7 +4,7 @@ import uuid
 from datetime import date
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Query, Request, Response, status
+from fastapi import APIRouter, File, Query, Request, Response, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 
@@ -22,7 +22,15 @@ from app.models import (
     Unit,
 )
 from app.models.enums import MedioPago
-from app.schemas.cartera import AjusteIn, AnularIn, CargoManualIn, ConfigIn, EmitirPeriodoIn, PagoIn
+from app.schemas.cartera import (
+    AjusteIn,
+    AnularIn,
+    CargoManualIn,
+    ConciliacionIn,
+    ConfigIn,
+    EmitirPeriodoIn,
+    PagoIn,
+)
 from app.schemas.cartera_out import (
     AjusteOut,
     CargoOut,
@@ -39,10 +47,10 @@ from app.schemas.cartera_out import (
     ResultadoPagoOut,
     ResumenCartera,
 )
-from app.services.cartera import cargos, comun, consultas, documentos, facturacion, pagos, paz_y_salvo
+from app.services.cartera import cargos, comun, consultas, documentos, extracto, facturacion, pagos, paz_y_salvo
 from app.services.cartera import dominio as d
 from app.services.cartera.consultas import FiltroPagos
-from app.services.comun import NoEncontrado, exigir
+from app.services.comun import NoEncontrado, ValidacionError, exigir
 from app.services.recaudos import exportar
 
 router = APIRouter(prefix="/tenants/{tenant_id}/cartera", tags=["cartera"])
@@ -359,3 +367,40 @@ async def verificar_paz_y_salvo(codigo: str, ctx: TenantCtx, db: DbSession) -> d
         "fecha_emision": p.fecha_emision.isoformat(),
         "valido_hasta": p.valido_hasta.isoformat(),
     }
+
+
+# --- Conciliación con el extracto bancario --------------------------------------------------------------
+@router.post("/extracto/analizar", response_model=None)
+async def analizar_extracto(
+    request: Request, ctx: TenantCtx, db: DbSession, archivo: Annotated[UploadFile, File()]
+) -> dict[str, Any]:
+    """Lee el extracto (Excel o CSV) y sugiere la unidad de cada entrada de dinero. No guarda nada."""
+    await limitar(request, ctx)
+    nombre = (archivo.filename or "extracto.csv").replace("\\", "/").split("/")[-1][:200]
+    datos = await archivo.read(extracto.MAX_BYTES + 1)
+    movimientos = await run_in_threadpool(extracto.leer_extracto, datos, nombre)
+    if not movimientos:
+        raise ValidacionError("El extracto no tiene entradas de dinero (créditos) en el periodo")
+    resultado = await extracto.sugerir(db, ctx, movimientos)
+    return {"archivo": nombre, **resultado}
+
+
+@router.post("/extracto/registrar", response_model=None)
+async def registrar_extracto(body: ConciliacionIn, request: Request, ctx: TenantCtx, db: DbSession) -> dict[str, Any]:
+    """Registra como pagos los movimientos confirmados (cada uno con su recibo). Los que fallen se informan."""
+    await limitar(request, ctx)
+    items = [
+        PagoIn(
+            unidad_id=i.unidad_id,
+            fecha_pago=i.fecha_pago,
+            valor=i.valor,
+            medio_pago=i.medio_pago,
+            referencia=i.referencia,
+            pagador_nombre=i.pagador_nombre,
+            observaciones="Conciliado con el extracto bancario",
+        )
+        for i in body.items
+    ]
+    resultado = await extracto.registrar(db, ctx, items, [i.fila for i in body.items])
+    await db.commit()
+    return resultado

@@ -121,6 +121,7 @@ const CARTERA_NAV: (NavItem & { permiso: Parameters<typeof puedeCartera>[1] })[]
   { href: "cartera", label: "Cartera", description: "Facturado, recaudado y mora", icon: LayoutDashboard, permiso: "ver", exact: true },
   { href: "cartera/periodos", label: "Facturación", description: "Cuotas de cada mes", icon: CalendarRange, permiso: "ver" },
   { href: "cartera/pagos", label: "Pagos", description: "Recibos de caja", icon: HandCoins, permiso: "ver" },
+  { href: "cartera/conciliar", label: "Conciliar extracto", description: "Pagos desde el banco", icon: Landmark, permiso: "registrarPago" },
   { href: "cartera/morosos", label: "Morosos", description: "Saldos vencidos por antigüedad", icon: UserX, permiso: "ver" },
   { href: "cartera/configuracion", label: "Configuración", description: "Cuota, descuento e intereses", icon: Settings2, permiso: "configurar" },
 ];

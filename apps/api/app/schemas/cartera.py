@@ -104,3 +104,19 @@ class AjusteIn(_Base):
 
 class AnularIn(_Base):
     motivo: Motivo
+
+
+class ConciliacionItemIn(_Base):
+    """Un movimiento del extracto confirmado por la administración para registrarlo como pago."""
+
+    fila: Annotated[int, Field(ge=1)]
+    unidad_id: uuid.UUID
+    fecha_pago: date
+    valor: Dinero
+    medio_pago: MedioPago
+    referencia: Annotated[str, Field(min_length=4, max_length=100)]
+    pagador_nombre: Annotated[str, Field(max_length=200)] | None = None
+
+
+class ConciliacionIn(_Base):
+    items: Annotated[list[ConciliacionItemIn], Field(min_length=1, max_length=500)]

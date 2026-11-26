@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, HandCoins, Paperclip, Printer, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, HandCoins, Landmark, Paperclip, Printer, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -66,9 +66,16 @@ export function PagosView() {
         description="Recibos de caja de la cartera, con su aplicación y el saldo a favor que dejaron."
         actions={
           puedeCartera(tenant.role, "registrarPago") && (
-            <Button onClick={() => setNuevo(true)}>
-              <HandCoins className="size-4" /> Registrar pago
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild variant="outline">
+                <Link href={`/${tenant.tenant_slug}/cartera/conciliar`}>
+                  <Landmark className="size-4" /> Conciliar extracto
+                </Link>
+              </Button>
+              <Button onClick={() => setNuevo(true)}>
+                <HandCoins className="size-4" /> Registrar pago
+              </Button>
+            </div>
           )
         }
       />
