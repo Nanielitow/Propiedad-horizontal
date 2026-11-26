@@ -15,3 +15,12 @@ def reset_demo() -> dict[str, object]:
     counts = restore_snapshot()
     removed = delete_orphan_files()
     return {"restored": counts, "orphan_files_removed": removed}
+
+
+@celery_app.task(name="demo.restablecer_conjuntos")
+def restablecer_conjuntos() -> dict[str, object]:
+    """Desde el panel de la plataforma: deja como nuevos solo los conjuntos de demostración (no toca los reales)."""
+    from app.services.demo import restablecer_conjuntos_demo
+
+    counts = restablecer_conjuntos_demo()
+    return {"restablecidos": sum(counts.values())}

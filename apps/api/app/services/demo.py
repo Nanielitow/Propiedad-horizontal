@@ -235,6 +235,82 @@ def restore_snapshot() -> dict[str, int]:
     return counts
 
 
+def restablecer_conjuntos_demo() -> dict[str, int]:
+    """Deja como nuevos SOLO los conjuntos de demostración de la instantánea, sin tocar las copropiedades reales.
+
+    A diferencia de restore_snapshot (que vacía todas las tablas), borra y vuelve a insertar únicamente las filas de
+    los conjuntos de la instantánea (todas las tablas de la demo tienen tenant_id). Las cuentas demo se recrean si
+    faltan; nunca se borran usuarios. Todo en una transacción: o queda completo o no se toca nada. Se niega si alguno
+    de esos conjuntos fue marcado como real.
+    """
+    counts: dict[str, int] = {}
+    with _owner_engine().begin() as conn:
+        exists = conn.execute(
+            text("SELECT 1 FROM information_schema.schemata WHERE schema_name = :s"), {"s": SNAPSHOT_SCHEMA}
+        ).first()
+        if not exists:
+            raise RuntimeError("No hay instantánea de la demo en esta base")
+        ids = list(conn.scalars(text(f"SELECT id FROM {SNAPSHOT_SCHEMA}.tenants")))  # noqa: S608
+        if not ids:
+            raise RuntimeError("La instantánea de la demo no tiene conjuntos")
+        reales = list(
+            conn.scalars(text("SELECT name FROM public.tenants WHERE id = ANY(:ids) AND NOT is_demo"), {"ids": ids})
+        )
+        if reales:
+            raise RuntimeError(f"Estos conjuntos ya no están marcados como demostración: {', '.join(reales)}")
+        in_snapshot = set(
+            conn.scalars(
+                text("SELECT table_name FROM information_schema.tables WHERE table_schema = :s"), {"s": SNAPSHOT_SCHEMA}
+            )
+        )
+        with sin_triggers(conn):
+            conn.execute(text("DELETE FROM public.account_tokens WHERE tenant_id = ANY(:ids)"), {"ids": ids})
+            # Hijos primero (orden inverso de TABLES); las cuentas (users) nunca se borran
+            for table in map(_ident, reversed(TABLES)):
+                if table == "users":
+                    continue
+                col = "id" if table == "tenants" else "tenant_id"
+                conn.execute(text(f"DELETE FROM public.{table} WHERE {col} = ANY(:ids)"), {"ids": ids})  # noqa: S608
+            for table in map(_ident, TABLES):
+                if table not in in_snapshot:
+                    counts[table] = 0
+                    continue
+                cols = ", ".join(_columns(conn, SNAPSHOT_SCHEMA, table))
+                filtro = (
+                    ""
+                    if table == "users"
+                    else ("WHERE id = ANY(:ids)" if table == "tenants" else "WHERE tenant_id = ANY(:ids)")
+                )
+                # Las filas de estos conjuntos se acaban de borrar, así que no hay choques, salvo: cuentas demo que ya
+                # existen (users) y ids numéricos de auditoría. (ON CONFLICT no admite restricciones diferibles,
+                # por eso no va en las demás tablas.)
+                conflicto = (
+                    " ON CONFLICT DO NOTHING"
+                    if table == "users"
+                    else (" ON CONFLICT (id) DO NOTHING" if table in _IDENTITY_TABLES else "")
+                )
+                result = conn.execute(
+                    text(
+                        f"INSERT INTO public.{table} ({cols}) OVERRIDING SYSTEM VALUE "  # noqa: S608
+                        f"SELECT {cols} FROM {SNAPSHOT_SCHEMA}.{table} {filtro}{conflicto}"
+                    ),
+                    {"ids": ids},
+                )
+                counts[table] = result.rowcount
+        conn.execute(text("UPDATE public.tenants SET is_demo = true WHERE id = ANY(:ids)"), {"ids": ids})
+        for table in map(_ident, _IDENTITY_TABLES):
+            conn.execute(
+                text(
+                    f"SELECT setval(pg_get_serial_sequence('public.{table}', 'id'), "  # noqa: S608
+                    f"coalesce((SELECT max(id) FROM public.{table}), 0) + 1, false)"
+                )
+            )
+        for semilla in ("seed_conceptos_recaudo", "seed_categorias_activos", "seed_conceptos_cartera"):
+            conn.execute(text(f"SELECT {semilla}(id) FROM public.tenants WHERE id = ANY(:ids)"), {"ids": ids})  # noqa: S608
+    log.info("conjuntos de demostración restablecidos: %s", {k: v for k, v in counts.items() if v})
+    return counts
+
+
 def delete_orphan_files() -> int:
     """Borra del almacenamiento los PDF de documentos que ya no existen en la base
     (los que subieron los visitantes durante el día)."""

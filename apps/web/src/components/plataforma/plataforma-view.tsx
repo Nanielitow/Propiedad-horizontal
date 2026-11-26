@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Building2, FlaskConical, Link2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Building2, FlaskConical, Link2, Loader2, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -39,6 +39,18 @@ export function PlataformaView({ me }: { me: Me }) {
   const [enlaces, setEnlaces] = useState<{ lista: EnlaceInvitacion[]; copropiedad: string; reemplazo: boolean } | null>(null);
   const [generar, setGenerar] = useState<Copropiedad | null>(null);
   const [eliminar, setEliminar] = useState<Copropiedad | null>(null);
+  const [restablecer, setRestablecer] = useState(false);
+
+  async function restablecerDemo() {
+    setRestablecer(false);
+    try {
+      const r = await api<{ detail: string }>("/plataforma/demo/restablecer", { method: "POST" });
+      toast.success(r.detail);
+      setTimeout(() => void mutate(), 15_000);
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "No se pudo restablecer la demostración.");
+    }
+  }
 
   async function generarEnlace() {
     if (!generar) return;
@@ -81,10 +93,18 @@ export function PlataformaView({ me }: { me: Me }) {
               {data && data.length > reales.length && ` · ${data.length - reales.length} de demostración`}
             </p>
           </div>
-          <Button onClick={() => setNueva(true)}>
-            <Plus className="size-4" />
-            Nueva copropiedad
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {data && data.length > reales.length && (
+              <Button variant="outline" onClick={() => setRestablecer(true)}>
+                <RotateCcw className="size-4" />
+                Restablecer demostración
+              </Button>
+            )}
+            <Button onClick={() => setNueva(true)}>
+              <Plus className="size-4" />
+              Nueva copropiedad
+            </Button>
+          </div>
         </div>
 
         <div className="mt-4 overflow-x-auto rounded-lg border bg-card">
@@ -184,6 +204,21 @@ export function PlataformaView({ me }: { me: Me }) {
         reemplazo={enlaces?.reemplazo ?? false}
         onOpenChange={(o) => !o && setEnlaces(null)}
       />
+      <AlertDialog open={restablecer} onOpenChange={setRestablecer}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Restablecer los conjuntos de demostración?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Los conjuntos de ejemplo vuelven a sus datos originales: se borra todo lo que hayan hecho los visitantes
+              (pagos, PQRS, reservas, documentos…). Las copropiedades reales no se tocan. Tarda unos segundos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void restablecerDemo()}>Restablecer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={!!generar} onOpenChange={(o) => !o && setGenerar(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

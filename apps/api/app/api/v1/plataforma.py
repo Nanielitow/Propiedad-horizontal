@@ -129,3 +129,11 @@ async def probar_alerta(dueno: PlatformAdmin, request: Request) -> dict[str, obj
         sentry_sdk.capture_exception(AlertaDePrueba("Alerta de prueba enviada desde el panel de la plataforma"))
     await run_in_threadpool(sentry_sdk.flush, 5)
     return {"activas": True, "detail": "Alerta de prueba enviada: llegará a su correo de Sentry en unos minutos."}
+
+
+@router.post("/demo/restablecer", status_code=status.HTTP_202_ACCEPTED)
+async def restablecer_demo(dueno: PlatformAdmin, request: Request) -> dict[str, str]:
+    """Deja como nuevos los conjuntos de demostración (antes de una presentación). No toca las copropiedades reales."""
+    await enforce(request, BACKUPS_PER_USER, str(dueno.id))
+    celery_app.send_task("demo.restablecer_conjuntos")
+    return {"detail": "Restableciendo los conjuntos de demostración: quedan listos en unos segundos."}

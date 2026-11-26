@@ -165,3 +165,22 @@ async def test_alerta_de_prueba(http: httpx.AsyncClient, mundo: Mundo, monkeypat
     assert con["activas"] is True and len(enviados) == 1
     otro = {"Authorization": f"Bearer {create_access_token(mundo.usuarios['ADMIN'])[0]}"}
     assert (await http.post("/api/v1/plataforma/probar-alerta", headers=otro)).status_code == 404
+
+
+async def test_boton_restablecer_demo(http: httpx.AsyncClient, mundo: Mundo, monkeypatch: pytest.MonkeyPatch) -> None:
+    tareas: list[str] = []
+    monkeypatch.setattr(celery_app, "send_task", lambda n, *a, **k: tareas.append(n))
+    dueno = (
+        await mundo.db.execute(
+            text(
+                "INSERT INTO users (email, full_name, password_hash, is_platform_admin) VALUES (:e, 'D', 'x', true) RETURNING id"
+            ),
+            {"e": f"{uuid.uuid4().hex[:8]}@ejemplo.co"},
+        )
+    ).scalar_one()
+    ok = await http.post(
+        "/api/v1/plataforma/demo/restablecer", headers={"Authorization": f"Bearer {create_access_token(dueno)[0]}"}
+    )
+    assert ok.status_code == 202 and tareas == ["demo.restablecer_conjuntos"]
+    otro = {"Authorization": f"Bearer {create_access_token(mundo.usuarios['ADMIN'])[0]}"}
+    assert (await http.post("/api/v1/plataforma/demo/restablecer", headers=otro)).status_code == 404
