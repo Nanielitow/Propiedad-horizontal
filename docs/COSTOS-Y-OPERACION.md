@@ -287,7 +287,7 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 | Hecho (26 nov) | Límites de gasto en Railway, Neon y Gemini (prepago) |
 | Hecho (26 nov) | Renovación automática del dominio en Cloudflare |
 | Hecho (26 nov) | Monitor de disponibilidad (UptimeRobot) |
-| Ya | Copia de `.env` en un gestor de contraseñas |
+| Hecho (26 nov) | Copia de `.env` en Bitwarden (actualizarla al rotar cualquier clave) |
 | Antes de usar la app con datos reales | Revisión de `/privacidad` por un abogado y contrato de encargo con cada copropiedad |
 | Antes del 1 ene 2027 | Decidir el modelo de extracción (`EXTRACTION_MODEL`): su precio se duplica ese día |
 | Cada mes | Revisar *Usage* de Railway, Neon y Gemini; confirmar en `/plataforma` que los respaldos están al día |
