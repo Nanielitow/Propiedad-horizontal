@@ -24,6 +24,9 @@ FROM base AS builder
 # Las variables NEXT_PUBLIC_* se incrustan en el JavaScript del navegador AL COMPILAR
 ARG NEXT_PUBLIC_DEMO_MODE=false
 ENV NEXT_PUBLIC_DEMO_MODE=$NEXT_PUBLIC_DEMO_MODE
+# Correo de contacto de la política de datos (/privacidad). Vacío = no se muestra.
+ARG NEXT_PUBLIC_CONTACT_EMAIL=
+ENV NEXT_PUBLIC_CONTACT_EMAIL=$NEXT_PUBLIC_CONTACT_EMAIL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
