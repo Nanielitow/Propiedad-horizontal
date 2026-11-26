@@ -285,7 +285,7 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 
 | Cuándo | Qué |
 |---|---|
-| Antes de invitar residentes | Pasar Resend a Pro (US$20 ≈ $66.000 al mes) |
+| Descartado por ahora (26 nov) | Resend Pro: con los clientes actuales basta el plan gratis (3.000 correos al mes, 100 al día). Reconsiderarlo solo si se invita a muchos residentes a la vez o se envían circulares por correo a todo un conjunto |
 | Hecho (26 nov) | Límites de gasto en Railway, Neon y Gemini (prepago) |
 | Hecho (26 nov) | Renovación automática del dominio en Cloudflare |
 | Hecho (26 nov) | Monitor de disponibilidad (UptimeRobot) |
