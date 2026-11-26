@@ -19,11 +19,43 @@ def email_enabled() -> bool:
     return bool(get_settings().smtp_host)
 
 
+# Dominios reservados (RFC 2606/6761) y el de los datos de demostración: nunca existen, y escribirles
+# en producción solo genera rebotes que dañan la reputación del remitente.
+_DOMINIOS_FICTICIOS = (".demo", ".local", ".localhost", ".test", ".example", ".invalid")
+
+
+def destinatarios_permitidos(to: list[str]) -> list[str]:
+    """Filtra los destinatarios en producción. En desarrollo pasan todos (Mailpit los atrapa)."""
+    s = get_settings()
+    if s.environment != "production":
+        return list(to)
+    salida = []
+    for d in to:
+        dominio = d.rsplit("@", 1)[-1].strip().lower()
+        if "@" in d and not dominio.endswith(_DOMINIOS_FICTICIOS) and "." in dominio:
+            salida.append(d)
+    if s.demo_mode:
+        lista = {x.strip().lower() for x in s.smtp_demo_recipients.split(",") if x.strip()}
+        salida = [d for d in salida if d.strip().lower() in lista]
+    return salida
+
+
 def send_email(
     to: list[str], subject: str, text: str, html: str, attachments: list[tuple[str, bytes, str]] | None = None
 ) -> None:
     """Lanza excepción si falla: quien llama decide si reintenta. attachments = [(nombre, datos, mime)]."""
     settings = get_settings()
+    permitidos = destinatarios_permitidos(to)
+    if len(permitidos) < len(to):
+        log.info(
+            "correo '%s': %d de %d destinatarios omitidos (ficticios o fuera de la lista de la demo)",
+            subject,
+            len(to) - len(permitidos),
+            len(to),
+        )
+    if not permitidos:
+        return
+    to = permitidos
     msg = EmailMessage()
     msg["From"] = settings.smtp_from
     msg["To"] = ", ".join(to)

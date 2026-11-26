@@ -51,10 +51,24 @@ cambiaron.
    nube en **gris** (solo DNS) para que Railway emita el certificado.
 7. Apagar la demo del PC: `npm run demo:down` y quitar las rutas del túnel en Cloudflare (Zero Trust → Tunnels).
 
-## Correo (opcional)
+## Correo (Resend)
 
-Sin `SMTP_HOST` la aplicación no envía correos (los avisos quedan en la app). Para activarlos: una cuenta de un
-proveedor SMTP (p. ej. Resend, con el dominio verificado en Cloudflare) y las variables `SMTP_*` en `api` y `worker`.
+Sin `SMTP_HOST` la aplicación no envía correos (los avisos quedan en la app). En producción se usa **Resend** por
+SMTP (`smtp.resend.com:587`, usuario `resend`, la clave de API como contraseña), remitente
+`no-responder@propiedadhorizontal.app`.
+
+1. Resend → *Domains* → *Add domain* → `propiedadhorizontal.app`, región **us-east-1**. Agregar en Cloudflare →
+   DNS los registros que muestra (DKIM `TXT`, y `MX` + `TXT` de SPF en el subdominio `send`), con la nube **gris**;
+   o usar el botón de configuración automática con Cloudflare. Esperar a que diga *Verified*.
+2. Resend → *API Keys* → *Create API key*, permiso **Sending access**, solo ese dominio.
+3. En `.env`: `RESEND_API_KEY="…"` y `SMTP_DEMO_RECIPIENTS="correo1@…,correo2@…"`.
+4. `sh deploy/railway/generar_variables.sh` → pegar `deploy/railway/smtp.env` al final de las variables de
+   `api`, `worker` y `beat` (Raw Editor) → borrar los `.env` generados.
+
+Protecciones (`app/services/notifications/email.py`): en producción nunca se escribe a dominios ficticios
+(`.demo`, `.local`, `.test`, `.example`, `.invalid`), y con `DEMO_MODE=true` **solo** a `SMTP_DEMO_RECIPIENTS`: los
+visitantes comparten cuentas y podrían registrar correos de terceros. Al quitar `DEMO_MODE` los correos llegan a
+todos los destinatarios reales.
 
 ## Estado (2026-11-25)
 

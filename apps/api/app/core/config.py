@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_starttls: bool = True
     smtp_from: str = "PH Gestión <no-responder@phgestion.local>"
+    # Con DEMO_MODE en producción solo se escribe a estas direcciones (separadas por coma): los
+    # visitantes comparten cuentas y podrían registrar correos de terceros. Vacío = ningún correo.
+    smtp_demo_recipients: str = ""
     # URL pública del frontend, para los enlaces de los correos
     app_url: str = "http://localhost:3000"
 

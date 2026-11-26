@@ -71,6 +71,23 @@ copiar() { v=$(val "$1"); [ -n "$v" ] && printf '%s="%s"\n' "$1" "$v"; return 0;
   for k in GOOGLE_CLIENT_ID GOOGLE_API_KEY GOOGLE_PROJECT_NUMBER; do copiar "$k"; done
 } > deploy/railway/web.env
 
+
+# --- Correo por Resend (opcional): solo si RESEND_API_KEY está en .env ------------------------
+if [ -n "$(val RESEND_API_KEY)" ]; then
+  {
+    echo "SMTP_HOST=\"smtp.resend.com\""
+    echo "SMTP_PORT=\"587\""
+    echo "SMTP_STARTTLS=\"true\""
+    echo "SMTP_USER=\"resend\""
+    echo "SMTP_PASSWORD=\"$(val RESEND_API_KEY)\""
+    echo "SMTP_FROM=\"PH Gestión <no-responder@propiedadhorizontal.app>\""
+    # Con DEMO_MODE solo se escribe a estas direcciones (los correos de la demo son ficticios)
+    echo "SMTP_DEMO_RECIPIENTS=\"$(val SMTP_DEMO_RECIPIENTS)\""
+  } > deploy/railway/smtp.env
+  cat deploy/railway/smtp.env >> deploy/railway/python.env
+  echo "✓ deploy/railway/smtp.env: $(grep -c . deploy/railway/smtp.env) variables de correo (también incluidas en python.env)"
+fi
+
 echo "✓ deploy/railway/python.env: $(grep -c . deploy/railway/python.env) variables (api, worker y beat)"
 echo "✓ deploy/railway/web.env: $(grep -c . deploy/railway/web.env) variables (web)"
 echo "  Tienen secretos: péguelos en Railway y bórrelos (rm deploy/railway/*.env)."
