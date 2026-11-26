@@ -19,10 +19,10 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, token_revoked
 from app.db.rls import set_rls_context
 from app.db.session import SessionLocal
-from app.models import Membership, User
+from app.models import Membership, Tenant, User
 from app.models.enums import UserRole
 
 _bearer = HTTPBearer(auto_error=False)
@@ -55,7 +55,7 @@ async def get_current_user(
     except jwt.InvalidTokenError as exc:
         raise _UNAUTHORIZED from exc
     user = await db.get(User, user_id)
-    if user is None or not user.is_active:
+    if user is None or not user.is_active or token_revoked(credentials.credentials, user.sessions_valid_after):
         raise _UNAUTHORIZED
     await set_rls_context(db, user_id=user.id)
     return user
@@ -69,6 +69,7 @@ class TenantContext:
     tenant_id: uuid.UUID
     user_id: uuid.UUID
     role: UserRole
+    is_demo: bool = False  # conjunto de ejemplo: sin invitaciones ni correos reales
 
     @property
     def is_admin(self) -> bool:
@@ -76,14 +77,19 @@ class TenantContext:
 
 
 async def get_tenant_context(tenant_id: uuid.UUID, user: CurrentUser, db: DbSession) -> TenantContext:
-    role = await db.scalar(
-        select(Membership.role).where(Membership.tenant_id == tenant_id, Membership.user_id == user.id)
-    )
-    if role is None:
+    fila = (
+        await db.execute(
+            select(Membership.role, Tenant.is_demo)
+            .join(Tenant, Tenant.id == Membership.tenant_id)
+            .where(Membership.tenant_id == tenant_id, Membership.user_id == user.id, Tenant.deleted_at.is_(None))
+        )
+    ).first()
+    if fila is None:
         # 404 y no 403: no revelar si un edificio existe a quien no pertenece a él
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Copropiedad no encontrada")
+    role, is_demo = fila
     await set_rls_context(db, tenant_id=tenant_id, role=role.value)
-    return TenantContext(tenant_id=tenant_id, user_id=user.id, role=role)
+    return TenantContext(tenant_id=tenant_id, user_id=user.id, role=role, is_demo=is_demo)
 
 
 TenantCtx = Annotated[TenantContext, Depends(get_tenant_context)]
@@ -96,3 +102,13 @@ def require_admin(ctx: TenantCtx) -> TenantContext:
 
 
 AdminCtx = Annotated[TenantContext, Depends(require_admin)]
+
+
+def require_platform_admin(user: CurrentUser) -> User:
+    """Dueño de la plataforma: crea copropiedades y su primer administrador."""
+    if not user.is_platform_admin:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No encontrado")
+    return user
+
+
+PlatformAdmin = Annotated[User, Depends(require_platform_admin)]

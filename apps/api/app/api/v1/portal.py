@@ -51,7 +51,7 @@ router = APIRouter(prefix="/tenants/{tenant_id}/portal", tags=["portal del resid
 
 async def limitar(request: Request, ctx: TenantCtx) -> None:
     await enforce(request, PORTAL_WRITES_PER_MINUTE, str(ctx.user_id))
-    await enforce_demo(request, DEMO_PORTAL_PER_IP_DAY)
+    await enforce_demo(request, DEMO_PORTAL_PER_IP_DAY, demo=ctx.is_demo)
 
 
 async def _encolar(nombre: str, *args: str) -> None:

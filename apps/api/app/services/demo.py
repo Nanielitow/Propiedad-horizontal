@@ -191,6 +191,12 @@ def restore_snapshot() -> dict[str, int]:
         ).first()
         if not exists:
             raise RuntimeError("No hay instantánea de la demo: ejecute primero `python -m app.scripts.demo snapshot`")
+        # La restauración vacía TODAS las tablas: jamás con copropiedades reales en la base
+        reales = conn.scalar(text("SELECT count(*) FROM public.tenants WHERE NOT is_demo AND deleted_at IS NULL"))
+        if reales:
+            raise RuntimeError(
+                f"Hay {reales} copropiedad(es) reales en esta base: restaurar la demo las borraría. Operación cancelada."
+            )
         in_snapshot = set(
             conn.scalars(
                 text("SELECT table_name FROM information_schema.tables WHERE table_schema = :s"), {"s": SNAPSHOT_SCHEMA}
@@ -219,6 +225,8 @@ def restore_snapshot() -> dict[str, int]:
                     f"coalesce((SELECT max(id) FROM public.{table}), 0) + 1, false)"
                 )
             )
+        # Todo lo que viene de la instantánea es de ejemplo (fotos anteriores a la migración 0012 no traen la marca)
+        conn.execute(text("UPDATE public.tenants SET is_demo = true"))
         # Copropiedades restauradas desde una foto sin conceptos de recaudo: crearlos (idempotente)
         conn.execute(text("SELECT seed_conceptos_recaudo(id) FROM public.tenants"))
         conn.execute(text("SELECT seed_categorias_activos(id) FROM public.tenants"))

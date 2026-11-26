@@ -41,4 +41,11 @@ def test_send_email_sin_destinatarios_no_conecta(monkeypatch: pytest.MonkeyPatch
         raise AssertionError("no debía abrir conexión SMTP")
 
     monkeypatch.setattr(email.smtplib, "SMTP", explotar)
-    email.send_email(["admin@lospinos.demo"], "Asunto", "texto", "<p>html</p>")
+    email.send_email(["admin@lospinos.demo"], "Asunto", "texto", "<p>html</p>", demo=False)
+
+
+def test_conjunto_demo_sin_modo_demo_global(monkeypatch: pytest.MonkeyPatch) -> None:
+    """La app real (DEMO_MODE apagado) escribe a todos; un conjunto de ejemplo solo a la lista permitida."""
+    _settings(monkeypatch, smtp_demo_recipients="dueño@empresa.co")
+    assert email.destinatarios_permitidos(TODOS) == ["ana@gmail.com", "Dueño@Empresa.co"]
+    assert email.destinatarios_permitidos(TODOS, demo=True) == ["Dueño@Empresa.co"]

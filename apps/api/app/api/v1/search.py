@@ -121,7 +121,7 @@ async def search(
 async def ask(body: AskRequest, ctx: TenantCtx, db: DbSession, request: Request) -> StreamingResponse:
     await enforce(request, ASK_PER_MINUTE, str(ctx.user_id))
     await enforce(request, ASK_PER_DAY, str(ctx.user_id))
-    await enforce_demo(request, DEMO_ASK_PER_IP_DAY)
+    await enforce_demo(request, DEMO_ASK_PER_IP_DAY, demo=ctx.is_demo)
     started = time.perf_counter()
     settings = get_settings()
     try:

@@ -15,12 +15,14 @@ class MembershipOut(BaseModel):
     tenant_name: str
     tenant_slug: str
     role: UserRole
+    is_demo: bool = False  # conjunto de ejemplo
 
 
 class UserOut(BaseModel):
     id: uuid.UUID
     email: str
     full_name: str
+    is_platform_admin: bool = False
 
 
 class MeResponse(BaseModel):

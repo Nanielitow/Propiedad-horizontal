@@ -85,7 +85,7 @@ MAX_ETIQUETAS = 200
 
 async def limitar_escritura(request: Request, ctx: TenantCtx) -> None:
     await enforce(request, ACTIVOS_WRITES_PER_MINUTE, str(ctx.user_id))
-    await enforce_demo(request, DEMO_ACTIVOS_PER_IP_DAY)
+    await enforce_demo(request, DEMO_ACTIVOS_PER_IP_DAY, demo=ctx.is_demo)
 
 
 async def tenant_slug_y_nombre(db: DbSession, ctx: TenantCtx) -> tuple[str, str]:

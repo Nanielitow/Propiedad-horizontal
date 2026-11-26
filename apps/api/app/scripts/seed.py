@@ -41,7 +41,7 @@ def main() -> None:
         for data in TENANTS:
             tenant = db.scalar(select(Tenant).where(Tenant.slug == data["slug"]))
             if tenant is None:
-                tenant = Tenant(id=uuid.uuid4(), **data)
+                tenant = Tenant(id=uuid.uuid4(), is_demo=True, **data)  # conjuntos de ejemplo
                 db.add(tenant)
             tenants[data["slug"]] = tenant
         db.commit()

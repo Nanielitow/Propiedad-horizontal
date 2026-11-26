@@ -52,7 +52,7 @@ MIME = {"xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.she
 
 async def limitar(request: Request, ctx: TenantCtx) -> None:
     await enforce(request, CARTERA_WRITES_PER_MINUTE, str(ctx.user_id))
-    await enforce_demo(request, DEMO_CARTERA_PER_IP_DAY)
+    await enforce_demo(request, DEMO_CARTERA_PER_IP_DAY, demo=ctx.is_demo)
 
 
 async def _tenant(db: DbSession, ctx: TenantCtx) -> Tenant:

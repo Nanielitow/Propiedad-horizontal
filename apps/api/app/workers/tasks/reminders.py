@@ -57,10 +57,12 @@ def send_deadline_reminders() -> dict[str, int]:
     today = datetime.now(TZ).date()
     settings = get_settings()
     with SyncSessionLocal() as db:  # tenants y users son globales (sin RLS)
-        tenants = list(db.execute(select(Tenant.id, Tenant.name, Tenant.slug).where(Tenant.deleted_at.is_(None))))
+        tenants = list(
+            db.execute(select(Tenant.id, Tenant.name, Tenant.slug, Tenant.is_demo).where(Tenant.deleted_at.is_(None)))
+        )
 
     in_app = emails = failures = 0
-    for tenant_id, tenant_name, tenant_slug in tenants:
+    for tenant_id, tenant_name, tenant_slug, tenant_demo in tenants:
         with _system_session(tenant_id) as db:  # contexto RLS por edificio
             due = [
                 (d, doc_title)
@@ -104,7 +106,7 @@ def send_deadline_reminders() -> dict[str, int]:
                                 document=doc_title,
                                 url=f"{settings.app_url}/{tenant_slug}/deadlines",
                             )
-                            send_email(admins, subject, text, html)
+                            send_email(admins, subject, text, html, demo=tenant_demo)
                             emails += 1
                 except Exception:
                     failures += 1

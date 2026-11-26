@@ -20,6 +20,7 @@ celery_app = Celery(
         "app.workers.tasks.recaudos",
         "app.workers.tasks.activos",
         "app.workers.tasks.portal",
+        "app.workers.tasks.cuentas",
     ],
 )
 

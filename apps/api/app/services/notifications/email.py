@@ -24,8 +24,11 @@ def email_enabled() -> bool:
 _DOMINIOS_FICTICIOS = (".demo", ".local", ".localhost", ".test", ".example", ".invalid")
 
 
-def destinatarios_permitidos(to: list[str]) -> list[str]:
-    """Filtra los destinatarios en producción. En desarrollo pasan todos (Mailpit los atrapa)."""
+def destinatarios_permitidos(to: list[str], *, demo: bool = False) -> list[str]:
+    """Filtra los destinatarios en producción. En desarrollo pasan todos (Mailpit los atrapa).
+
+    `demo`: el correo sale de un conjunto de ejemplo. Sus visitantes comparten cuentas y podrían registrar
+    correos de terceros, así que solo se escribe a SMTP_DEMO_RECIPIENTS (igual que con DEMO_MODE)."""
     s = get_settings()
     if s.environment != "production":
         return list(to)
@@ -34,18 +37,26 @@ def destinatarios_permitidos(to: list[str]) -> list[str]:
         dominio = d.rsplit("@", 1)[-1].strip().lower()
         if "@" in d and not dominio.endswith(_DOMINIOS_FICTICIOS) and "." in dominio:
             salida.append(d)
-    if s.demo_mode:
+    if demo or s.demo_mode:
         lista = {x.strip().lower() for x in s.smtp_demo_recipients.split(",") if x.strip()}
         salida = [d for d in salida if d.strip().lower() in lista]
     return salida
 
 
 def send_email(
-    to: list[str], subject: str, text: str, html: str, attachments: list[tuple[str, bytes, str]] | None = None
+    to: list[str],
+    subject: str,
+    text: str,
+    html: str,
+    attachments: list[tuple[str, bytes, str]] | None = None,
+    *,
+    demo: bool,
 ) -> None:
-    """Lanza excepción si falla: quien llama decide si reintenta. attachments = [(nombre, datos, mime)]."""
+    """Lanza excepción si falla: quien llama decide si reintenta. attachments = [(nombre, datos, mime)].
+
+    `demo` es obligatorio a propósito: todo envío desde una copropiedad debe decir si es de ejemplo."""
     settings = get_settings()
-    permitidos = destinatarios_permitidos(to)
+    permitidos = destinatarios_permitidos(to, demo=demo)
     if len(permitidos) < len(to):
         log.info(
             "correo '%s': %d de %d destinatarios omitidos (ficticios o fuera de la lista de la demo)",
@@ -213,3 +224,18 @@ def aviso_portal(
   <p style="font-size:12px;color:#8a929e">Mensaje automático de PH Gestión. No responda este correo: use la plataforma.</p>
 </div>"""
     return subject, "\n".join(lines), html
+
+
+def correo_cuenta(*, titulo: str, parrafos: list[str], url: str, boton: str, pie: str) -> tuple[str, str, str]:
+    """Correos de la cuenta (invitación, recuperación, acceso a otra copropiedad). Devuelve (asunto, texto, html)."""
+    subject = f"{titulo} · PH Gestión"
+    text = "\n".join([titulo, "", *parrafos, "", f"{boton}: {url}", "", pie])
+    html = f"""<div style="font-family:Arial,sans-serif;color:#1b2430;max-width:560px">
+  <p style="color:#5b6573;margin:0 0 4px">PH Gestión</p>
+  <h2 style="margin:0 0 12px;color:#1f3a5f">{escape(titulo)}</h2>
+  {"".join(f'<p style="margin:0 0 10px;font-size:14px">{escape(p)}</p>' for p in parrafos)}
+  <p style="margin:22px 0"><a href="{escape(url)}" style="background:#1f3a5f;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">{escape(boton)}</a></p>
+  <p style="font-size:12px;color:#8a929e;word-break:break-all">Si el botón no funciona, copie este enlace en el navegador: {escape(url)}</p>
+  <p style="font-size:12px;color:#8a929e">{escape(pie)}</p>
+</div>"""
+    return subject, text, html

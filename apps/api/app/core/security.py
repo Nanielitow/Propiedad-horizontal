@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -19,7 +21,9 @@ def hash_password(password: str) -> str:
     return _hasher.hash(password)
 
 
-def verify_password(password: str, password_hash: str) -> bool:
+def verify_password(password: str, password_hash: str | None) -> bool:
+    if not password_hash:  # invitado sin clave todavía
+        return False
     try:
         return _hasher.verify(password_hash, password)
     except (VerificationError, InvalidHashError):
@@ -70,3 +74,36 @@ def decode_access_token(token: str) -> uuid.UUID:
         return uuid.UUID(payload["sub"])
     except ValueError as exc:
         raise jwt.InvalidTokenError("sub inválido") from exc
+
+
+def issued_at(token: str) -> datetime | None:
+    """Fecha de emisión (`iat`) de un token YA verificado; None si no la trae."""
+    iat = jwt.decode(token, options={"verify_signature": False}).get("iat")
+    return datetime.fromtimestamp(iat, UTC) if isinstance(iat, int | float) else None
+
+
+def token_revoked(token: str, sessions_valid_after: datetime | None) -> bool:
+    """True si el token se emitió antes del último cambio o recuperación de clave."""
+    if sessions_valid_after is None:
+        return False
+    iat = issued_at(token)
+    return iat is None or iat < sessions_valid_after
+
+
+# --- Enlaces de un solo uso (invitación, recuperación) -------------------------------------------
+MIN_PASSWORD = 10
+
+
+def new_link_token() -> tuple[str, str]:
+    """(token para el enlace, SHA-256 que se guarda). 32 bytes aleatorios: imposible de adivinar."""
+    token = secrets.token_urlsafe(32)
+    return token, hashlib.sha256(token.encode()).hexdigest()
+
+
+def hash_link_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def sessions_cutoff() -> datetime:
+    """Momento desde el que valen los tokens nuevos (al segundo, como el `iat` de los JWT)."""
+    return datetime.now(UTC).replace(microsecond=0)

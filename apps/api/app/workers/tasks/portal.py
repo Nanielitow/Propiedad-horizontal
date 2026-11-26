@@ -82,7 +82,7 @@ def pqrs_radicada(tenant_id: str, pqrs_id: str) -> dict[str, int]:
             url=_url(tenant, f"portal/pqrs/{p.id}"),
             boton="Atender la PQRS",
         )
-        send_email(destinos, asunto, texto, html)
+        send_email(destinos, asunto, texto, html, demo=tenant.is_demo)
         return len(destinos)
 
     return _correr(tenant_id, trabajo)
@@ -108,7 +108,7 @@ def pqrs_respondida(tenant_id: str, pqrs_id: str, respuesta: str) -> dict[str, i
             url=_url(tenant, f"mi-portal/pqrs/{p.id}"),
             boton="Ver y calificar la respuesta",
         )
-        send_email([destino], asunto, texto, html)
+        send_email([destino], asunto, texto, html, demo=tenant.is_demo)
         return 1
 
     return _correr(tenant_id, trabajo)
@@ -134,7 +134,7 @@ def circular_publicada(tenant_id: str, circular_id: str) -> dict[str, int]:
                 boton="Leer la circular completa",
             )
             try:
-                send_email([x.email], asunto, texto, html)
+                send_email([x.email], asunto, texto, html, demo=tenant.is_demo)
                 enviados += 1
             except OSError:
                 log.warning("no se pudo enviar la circular %s a %s", c.id, x.email)
@@ -167,7 +167,7 @@ def reserva_solicitada(tenant_id: str, reserva_id: str) -> dict[str, int]:
             url=_url(tenant, "portal/reservas"),
             boton="Revisar la solicitud",
         )
-        send_email(destinos, asunto, texto, html)
+        send_email(destinos, asunto, texto, html, demo=tenant.is_demo)
         return len(destinos)
 
     return _correr(tenant_id, trabajo)
@@ -198,7 +198,7 @@ def reserva_decidida(tenant_id: str, reserva_id: str) -> dict[str, int]:
             url=_url(tenant, "mi-portal/reservas"),
             boton="Ver mis reservas",
         )
-        send_email([str(u.email)], asunto, texto, html)
+        send_email([str(u.email)], asunto, texto, html, demo=tenant.is_demo)
         return 1
 
     return _correr(tenant_id, trabajo)

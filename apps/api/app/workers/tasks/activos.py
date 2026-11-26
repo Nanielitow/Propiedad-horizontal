@@ -31,11 +31,12 @@ from app.workers.celery_app import celery_app
 log = logging.getLogger(__name__)
 
 
-def _tenants() -> list[tuple[uuid.UUID, str, str]]:
+def _tenants() -> list[tuple[uuid.UUID, str, str, bool]]:
     with SyncSessionLocal() as db:
-        return [
-            tuple(r) for r in db.execute(select(Tenant.id, Tenant.name, Tenant.slug).where(Tenant.deleted_at.is_(None)))
-        ]  # type: ignore[misc]
+        filas = db.execute(
+            select(Tenant.id, Tenant.name, Tenant.slug, Tenant.is_demo).where(Tenant.deleted_at.is_(None))
+        )
+        return [(r[0], r[1], r[2], r[3]) for r in filas]
 
 
 async def _en_tenant[T](tenant_id: uuid.UUID, trabajo: Callable[[AsyncSession], Awaitable[T]]) -> T:
@@ -57,20 +58,20 @@ async def _personal(db: AsyncSession, tenant_id: uuid.UUID) -> list[tuple[uuid.U
     return [(i, str(e), r) for i, e, r in filas]
 
 
-def _enviar(tenant: str, slug: str, por_correo: dict[str, list[tuple[str, str]]]) -> int:
+def _enviar(tenant: str, slug: str, por_correo: dict[str, list[tuple[str, str]]], *, demo: bool) -> int:
     url = f"{get_settings().app_url.rstrip('/')}/{slug}/activos"
     orden = list(alertas.SECCIONES.values())
     for correo, items in por_correo.items():
         items.sort(key=lambda it: orden.index(it[0]))
         asunto, texto, html = maintenance_alerts(tenant_name=tenant, items=items, url=url)
-        send_email([correo], asunto, texto, html)
+        send_email([correo], asunto, texto, html, demo=demo)
     return len(por_correo)
 
 
 @celery_app.task(name="activos.programacion")
 def programacion() -> dict[str, int]:
     creadas = movidas = 0
-    for tenant_id, nombre, _ in _tenants():
+    for tenant_id, nombre, _, _ in _tenants():
 
         async def trabajo(db: AsyncSession) -> tuple[int, int]:
             c = await planes.extender_programacion(db)
@@ -93,16 +94,20 @@ def alertas_diarias() -> dict[str, int]:
     avisos se reintentan en la próxima ejecución en lugar de perderse."""
     hoy = hoy_bogota()
     total_avisos = correos = 0
-    for tenant_id, nombre, slug in _tenants():
+    for tenant_id, nombre, slug, es_demo in _tenants():
 
         async def trabajo(
-            db: AsyncSession, tenant_id: uuid.UUID = tenant_id, nombre: str = nombre, slug: str = slug
+            db: AsyncSession,
+            tenant_id: uuid.UUID = tenant_id,
+            nombre: str = nombre,
+            slug: str = slug,
+            es_demo: bool = es_demo,
         ) -> tuple[int, int]:
             nuevos = await alertas.registrar_nuevos(db, tenant_id, await alertas.calcular(db, hoy))
             enviados = 0
             if nuevos and email_enabled():
                 por_correo = alertas.agrupar_por_destinatario(nuevos, await _personal(db, tenant_id))
-                enviados = _enviar(nombre, slug, por_correo)
+                enviados = _enviar(nombre, slug, por_correo, demo=es_demo)
             await db.commit()
             return len(nuevos), enviados
 
@@ -145,7 +150,10 @@ def novedad_critica(tenant_id: str, novedad_id: str) -> dict[str, int]:
         enviados = 0
         if email_enabled():
             enviados = _enviar(
-                tenant.name, tenant.slug, alertas.agrupar_por_destinatario([aviso], await _personal(db, tid))
+                tenant.name,
+                tenant.slug,
+                alertas.agrupar_por_destinatario([aviso], await _personal(db, tid)),
+                demo=tenant.is_demo,
             )
         await db.commit()
         return enviados

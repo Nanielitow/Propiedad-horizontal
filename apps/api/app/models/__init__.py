@@ -37,7 +37,7 @@ from app.models.document import (
     DocumentPage,
     ProcessingJob,
 )
-from app.models.identity import Membership, Tenant, User
+from app.models.identity import AccountToken, Membership, Tenant, User
 from app.models.minutes import ActionItem, MinutesSummary
 from app.models.portal import AuditoriaPortal, Circular, CircularLectura, Pqrs, PqrsMensaje
 from app.models.quote import QuoteComparison, QuoteComparisonDocument
@@ -123,6 +123,7 @@ __all__ = [
     "Document",
     "DocumentChunk",
     "DocumentPage",
+    "AccountToken",
     "Membership",
     "Message",
     "ProcessingJob",

@@ -118,7 +118,7 @@ async def _enqueue_ingestion(db: AsyncSession, ctx: TenantContext, doc: Document
 @router.post("/uploads", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
 async def create_upload(body: UploadRequest, ctx: AdminCtx, db: DbSession, request: Request) -> UploadResponse:
     await enforce(request, UPLOADS_PER_HOUR, str(ctx.user_id))
-    await enforce_demo(request, DEMO_UPLOADS_PER_IP_DAY)
+    await enforce_demo(request, DEMO_UPLOADS_PER_IP_DAY, demo=ctx.is_demo)
     settings = get_settings()
     if body.size_bytes > settings.max_upload_bytes:
         raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"Máximo {settings.max_upload_mb} MB por archivo")
@@ -183,7 +183,7 @@ async def import_from_google_drive(
     """
     for _ in body.files:
         await enforce(request, UPLOADS_PER_HOUR, str(ctx.user_id))
-        await enforce_demo(request, DEMO_UPLOADS_PER_IP_DAY)
+        await enforce_demo(request, DEMO_UPLOADS_PER_IP_DAY, demo=ctx.is_demo)
     settings = get_settings()
     storage = get_storage()
     access = body.access_level or (AccessLevel.PUBLIC if body.category in PUBLIC_BY_DEFAULT else AccessLevel.ADMIN)

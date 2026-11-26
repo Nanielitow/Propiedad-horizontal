@@ -89,11 +89,12 @@ async def enforce(request: Request, limit: Limit, subject: str) -> None:
         )
 
 
-async def enforce_demo(request: Request, limit: Limit) -> None:
-    """Límite adicional por visitante, solo cuando la app corre como demo pública."""
+async def enforce_demo(request: Request, limit: Limit, *, demo: bool) -> None:
+    """Límite adicional por visitante en los conjuntos de ejemplo (todos comparten las cuentas demo)
+    o en toda la app si corre como demo pública (DEMO_MODE)."""
     from app.core.config import get_settings
 
-    if get_settings().demo_mode:
+    if demo or get_settings().demo_mode:
         await enforce(request, limit, client_ip(request))
 
 
@@ -134,3 +135,10 @@ PORTAL_WRITES_PER_MINUTE = Limit("portal-escritura", 30, 60, "Demasiadas operaci
 DEMO_PORTAL_PER_IP_DAY = Limit(
     "demo-portal-ip", 80, 86_400, "La demo pública permite 80 operaciones del portal al día por visitante."
 )
+
+# Cuentas: recuperación de clave y enlaces (frena el envío masivo de correos y la enumeración de cuentas)
+RECOVER_PER_IP = Limit("recover-ip", 10, 3_600, "Demasiadas solicitudes de recuperación.")
+RECOVER_PER_ACCOUNT = Limit("recover-account", 3, 3_600, "Ya enviamos varios enlaces a ese correo.")
+LINKS_PER_IP = Limit("links-ip", 60, 3_600, "Demasiados intentos con enlaces.")
+PASSWORD_CHANGE_PER_USER = Limit("password-user", 10, 3_600, "Demasiados intentos de cambio de contraseña.")
+INVITES_PER_USER = Limit("invites-user", 100, 3_600, "Alcanzó el límite de invitaciones por hora.")

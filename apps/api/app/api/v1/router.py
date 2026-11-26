@@ -10,6 +10,7 @@ from app.api.v1 import (
     deadlines,
     documents,
     minutes,
+    plataforma,
     portal,
     quotes,
     recaudos,
@@ -17,6 +18,7 @@ from app.api.v1 import (
     recaudos_panel,
     search,
     unidades,
+    usuarios,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -45,3 +47,7 @@ api_router.include_router(cartera.router)
 api_router.include_router(portal.router)
 # Asambleas de copropietarios
 api_router.include_router(asambleas.router)
+
+# Cuentas: usuarios de cada copropiedad y panel del dueño de la plataforma
+api_router.include_router(usuarios.router)
+api_router.include_router(plataforma.router)

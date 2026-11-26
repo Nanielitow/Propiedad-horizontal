@@ -55,7 +55,7 @@ NOTIFICAR_TASK = "recaudos.notificar_alertas"
 
 async def limitar_escritura(request: Request, ctx: TenantCtx) -> None:
     await enforce(request, RECAUDOS_WRITES_PER_MINUTE, str(ctx.user_id))
-    await enforce_demo(request, DEMO_RECAUDOS_PER_IP_DAY)
+    await enforce_demo(request, DEMO_RECAUDOS_PER_IP_DAY, demo=ctx.is_demo)
 
 
 async def confirmar(db: DbSession, ctx: TenantCtx, alertas: Iterable[AlertaRecaudo] = ()) -> None:

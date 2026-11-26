@@ -49,7 +49,7 @@ otros_router = APIRouter(prefix="/tenants/{tenant_id}", tags=["unidades"])
 
 async def limitar_escritura(request: Request, ctx: TenantCtx) -> None:
     await enforce(request, UNIDADES_WRITES_PER_MINUTE, str(ctx.user_id))
-    await enforce_demo(request, DEMO_UNIDADES_PER_IP_DAY)
+    await enforce_demo(request, DEMO_UNIDADES_PER_IP_DAY, demo=ctx.is_demo)
 
 
 async def _leer_excel(archivo: UploadFile) -> tuple[str, bytes]:

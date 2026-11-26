@@ -70,7 +70,7 @@ def notificar_alertas(tenant_id: str, alerta_ids: list[str]) -> dict[str, int]:
         subject, text, html = recaudo_alerts(
             tenant_name=tenant.name, alertas=[(a.severidad.value, a.mensaje) for a in alertas], url=url
         )
-        send_email(destinatarios, subject, text, html)  # si falla, no se marca y se reintenta
+        send_email(destinatarios, subject, text, html, demo=tenant.is_demo)  # si falla, no se marca y se reintenta
         ahora = datetime.now(UTC)
         for a in alertas:
             a.notificada_at = ahora
@@ -146,9 +146,11 @@ def corte_mensual(anio: int | None = None, mes: int | None = None) -> dict[str, 
     if anio is None or mes is None:
         anio, mes = mes_anterior()
     with SyncSessionLocal() as db:
-        tenants = list(db.execute(select(Tenant.id, Tenant.name, Tenant.slug).where(Tenant.deleted_at.is_(None))))
+        tenants = list(
+            db.execute(select(Tenant.id, Tenant.name, Tenant.slug, Tenant.is_demo).where(Tenant.deleted_at.is_(None)))
+        )
     generados = enviados = 0
-    for tenant_id, nombre, slug in tenants:
+    for tenant_id, nombre, slug, es_demo in tenants:
         resultado = asyncio.run(_generar_corte(tenant_id, anio, mes))
         if resultado is None:
             continue
@@ -182,6 +184,7 @@ def corte_mensual(anio: int | None = None, mes: int | None = None) -> dict[str, 
                     texto,
                     html,
                     [(f"corte-recaudos-{anio}-{mes:02d}.pdf", pdf, "application/pdf")],
+                    demo=es_demo,
                 )
                 enviados += 1
             except OSError:  # el corte ya quedó guardado; el correo no debe tumbar a las demás copropiedades
