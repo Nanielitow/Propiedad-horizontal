@@ -516,6 +516,40 @@ la Ley 675). Actualícela cuando la Superintendencia Financiera certifique una n
 movimientos y use <span class="ui">Anular</span> con un motivo; luego regístrelo bien. El pago anulado sigue visible en
 <span class="ui">Pagos</span> (casilla «Incluir pagos anulados») y en la auditoría.</div>
 
+<h3 id="s13-conciliar" data-indice="Conciliar los pagos con el extracto bancario" data-nivel="sub">Conciliar los pagos con el extracto bancario</h3>
+<p>En lugar de registrar uno por uno los pagos que llegan por transferencia o consignación, suba el extracto del banco y la
+plataforma propone a qué unidad corresponde cada entrada de dinero. Usted revisa y registra todos de una vez.</p>
+<ol class="pasos">
+  <li>En la banca en línea de la cuenta de la copropiedad, descargue los movimientos del periodo en <b>Excel (.xlsx) o CSV</b>. Si el banco solo da <i>.xls</i> antiguo, ábralo en Excel y guárdelo como .xlsx.</li>
+  <li>Vaya a <span class="ui">Cartera</span> → <span class="ui">Conciliar extracto</span> (también desde el botón <span class="ui">Conciliar extracto</span> en Pagos) y arrastre el archivo.</li>
+  <li>La plataforma reconoce las columnas de cualquier banco y toma solo las <b>entradas de dinero</b>: ignora los cobros del banco, el 4x1000 y los pagos que salen.</li>
+</ol>
+<figure><img src="jpg/conciliar-subir.jpg"><figcaption>Subir el extracto del banco.</figcaption></figure>
+<p>Para cada movimiento verá la <b>unidad sugerida</b>, la confianza y el motivo:</p>
+<table>
+  <tr><th>Confianza</th><th>Cuándo</th><th>Qué hacer</th></tr>
+  <tr><td>Alta</td><td>Varias señales coinciden (por ejemplo, la referencia dice «T1 APTO 502» y el valor es justo lo que debe esa unidad)</td><td>Viene marcado: solo confirme</td></tr>
+  <tr><td>Media</td><td>Una señal fuerte: la unidad en la referencia, o el nombre del pagador es el del responsable de pago</td><td>Viene marcado: revíselo</td></tr>
+  <tr><td>Revisar</td><td>Una señal débil (un número que podría ser la unidad)</td><td>Confirme la unidad antes de marcarlo</td></tr>
+  <tr><td>Sin unidad</td><td>No se reconoció</td><td>Elija la unidad en la lista, o déjelo como «No es cuota»</td></tr>
+</table>
+<figure><img src="jpg/conciliar-revisar.jpg"><figcaption>Revisión: unidad sugerida, confianza y motivo de cada movimiento.</figcaption></figure>
+<ol class="pasos">
+  <li>Revise la columna <b>Unidad</b>: puede cambiarla en la lista. Para lo que no es una cuota (rendimientos, devoluciones, otros ingresos), elija <span class="ui">No es cuota…</span>.</li>
+  <li>Use los filtros <span class="ui">Por revisar</span> y <span class="ui">Seleccionados</span> para concentrarse en lo dudoso.</li>
+  <li>Abajo verá cuántos pagos y por cuánto dinero va a registrar. Pulse <span class="ui">Registrar N pagos</span>.</li>
+</ol>
+<figure><img src="jpg/conciliar-resultado.jpg"><figcaption>Resultado: los pagos quedan registrados, cada uno con su recibo.</figcaption></figure>
+<p>Cada pago se aplica igual que uno registrado a mano: primero a intereses, luego a la deuda más antigua, y lo que sobre
+queda a favor. Cada uno genera su recibo de caja, y la referencia del banco queda guardada en el recibo.</p>
+<div class="tip"><b>Sin pagos duplicados</b>Si vuelve a subir el mismo extracto, o uno que se cruza con otro ya conciliado,
+los pagos ya registrados aparecen como <b>«Ya registrado · Recibo N»</b> y no se pueden registrar otra vez. Puede
+conciliar cada semana con el extracto acumulado del mes sin riesgo.</div>
+<figure><img src="jpg/conciliar-ya-registrados.jpg"><figcaption>Al volver a subir el extracto, lo ya registrado se marca y queda bloqueado.</figcaption></figure>
+<div class="nota"><b>Para que se reconozcan más pagos</b>Pida a los residentes, por circular, que escriban la <b>torre y el
+apartamento en la referencia</b> de la transferencia (por ejemplo «T1 APTO 502»). Lo usan solo la administración y
+contabilidad.</div>
+
 <h3>Estado de cuenta y paz y salvo</h3>
 <p>Desde la ficha de la unidad (<span class="ui">Estado de cuenta</span>) o desde Morosos verá el saldo, lo pendiente por
 pagar y todos los movimientos con el saldo acumulado.</p>
@@ -757,7 +791,8 @@ Reportada → En ejecución → Cerrada, con trazabilidad. «Demoradas» son las
   <tr><th>Tarea</th><th>Dónde</th><th>Sección</th></tr>
   <tr><td>Aprobar las consignaciones y verificarlas en el extracto</td><td>Recaudos → Conciliación</td><td>14</td></tr>
   <tr><td>Verificar transferencias recibidas</td><td>Recaudos → Movimientos (estado «Por verificar») → Verificar en extracto</td><td>14</td></tr>
-  <tr><td>Registrar pagos de cuotas</td><td>Cartera → Registrar pago</td><td>13</td></tr>
+  <tr><td>Registrar los pagos que llegan al banco, de una vez</td><td>Cartera → Conciliar extracto</td><td>13</td></tr>
+  <tr><td>Registrar un pago suelto</td><td>Cartera → Registrar pago</td><td>13</td></tr>
   <tr><td>Revisar alertas de auditoría</td><td>Recaudos → Alertas</td><td>14</td></tr>
   <tr><td>Informes para la contabilidad</td><td>Recaudos → Reportes (Excel)</td><td>14</td></tr>
 </table>
