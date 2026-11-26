@@ -123,6 +123,38 @@ export function RespaldosSeccion() {
         El archivo descargado contiene todos los datos de todas las copropiedades: guárdelo en un lugar seguro. Cómo restaurarlo:
         docs/RESPALDOS.md.
       </p>
+      <AlertasDeErrores />
     </section>
+  );
+}
+
+/** Comprueba que las alertas de errores (Sentry) llegan: envía un error de prueba. */
+function AlertasDeErrores() {
+  const [enviando, setEnviando] = useState(false);
+  async function probar() {
+    setEnviando(true);
+    try {
+      const r = await api<{ activas: boolean; detail: string }>("/plataforma/probar-alerta", { method: "POST" });
+      if (r.activas) toast.success(r.detail);
+      else toast.warning(r.detail);
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "No se pudo enviar la alerta de prueba.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card px-4 py-3">
+      <div>
+        <p className="text-sm font-medium">Alertas de errores</p>
+        <p className="text-xs text-muted-foreground">
+          Si algo falla en la plataforma, le llega un correo de Sentry. Compruebe que funcionan enviando una alerta de prueba.
+        </p>
+      </div>
+      <Button variant="outline" size="sm" onClick={() => void probar()} disabled={enviando}>
+        {enviando ? <Loader2 className="size-4 animate-spin" /> : <AlertTriangle className="size-4" />}
+        Enviar alerta de prueba
+      </Button>
+    </div>
   );
 }

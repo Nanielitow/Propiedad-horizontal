@@ -141,3 +141,27 @@ async def test_panel_de_respaldos(
     for clave in ("tenants/x/documents/y.pdf", "respaldos/diarios/ph-2020-01-01-0300.dump"):
         r = await http.post("/api/v1/plataforma/respaldos/descargar", json={"clave": clave}, headers=h)
         assert r.status_code in (404, 422), clave
+
+
+async def test_alerta_de_prueba(http: httpx.AsyncClient, mundo: Mundo, monkeypatch: pytest.MonkeyPatch) -> None:
+    enviados: list[BaseException] = []
+    monkeypatch.setattr("app.api.v1.plataforma.sentry_sdk.capture_exception", enviados.append)
+    monkeypatch.setattr("app.api.v1.plataforma.sentry_sdk.flush", lambda *_: None)
+    dueno = (
+        await mundo.db.execute(
+            text(
+                "INSERT INTO users (email, full_name, password_hash, is_platform_admin) VALUES (:e, 'D', 'x', true) RETURNING id"
+            ),
+            {"e": f"{uuid.uuid4().hex[:8]}@ejemplo.co"},
+        )
+    ).scalar_one()
+    h = {"Authorization": f"Bearer {create_access_token(dueno)[0]}"}
+    sin = (await http.post("/api/v1/plataforma/probar-alerta", headers=h)).json()
+    assert sin["activas"] is False and enviados == []
+    monkeypatch.setattr(
+        "app.api.v1.plataforma.get_settings", lambda: type("S", (), {"sentry_dsn": "https://x@sentry.test/1"})()
+    )
+    con = (await http.post("/api/v1/plataforma/probar-alerta", headers=h)).json()
+    assert con["activas"] is True and len(enviados) == 1
+    otro = {"Authorization": f"Bearer {create_access_token(mundo.usuarios['ADMIN'])[0]}"}
+    assert (await http.post("/api/v1/plataforma/probar-alerta", headers=otro)).status_code == 404

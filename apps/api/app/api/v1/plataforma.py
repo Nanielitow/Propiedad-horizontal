@@ -6,10 +6,12 @@ Responde 404 a quien no es dueño (no revela que el panel existe).
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import sentry_sdk
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.concurrency import run_in_threadpool
 
 from app.api.deps import DbSession, PlatformAdmin
+from app.core.config import get_settings
 from app.core.rate_limit import BACKUPS_PER_USER, INVITES_PER_USER, enforce
 from app.schemas.cuentas import (
     CopropiedadCreada,
@@ -108,3 +110,18 @@ async def descargar_respaldo(body: DescargaRespaldoIn, _: PlatformAdmin) -> dict
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Respaldo no encontrado")
     nombre = body.clave.rsplit("/", 1)[-1]
     return {"url": storage.presign_get(body.clave, nombre, "application/octet-stream")}
+
+
+class AlertaDePrueba(RuntimeError):
+    """Error intencional para comprobar que las alertas de errores (Sentry) llegan."""
+
+
+@router.post("/probar-alerta", status_code=status.HTTP_202_ACCEPTED)
+async def probar_alerta(dueno: PlatformAdmin, request: Request) -> dict[str, object]:
+    """Envía a Sentry un error de prueba (sin datos personales) y responde si las alertas están activas."""
+    await enforce(request, BACKUPS_PER_USER, str(dueno.id))
+    if not get_settings().sentry_dsn:
+        return {"activas": False, "detail": "Las alertas no están activas: falta SENTRY_DSN en el servidor."}
+    sentry_sdk.capture_exception(AlertaDePrueba("Alerta de prueba enviada desde el panel de la plataforma"))
+    await run_in_threadpool(sentry_sdk.flush, 5)
+    return {"activas": True, "detail": "Alerta de prueba enviada: llegará a su correo de Sentry en unos minutos."}
