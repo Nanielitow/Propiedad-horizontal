@@ -126,7 +126,7 @@ al mes por conjunto.**
   Se cambia en la variable `EXTRACTION_MODEL` de `api` y `worker`.
 - `gemini-embedding-001` se apaga el **14 de mayo de 2028**; su reemplazo es `gemini-embedding-2`. Cambiarlo
   exige re-indexar los documentos: planéelo con tiempo.
-- Use la **capa paga** de Gemini, no la gratuita: en la gratuita Google puede usar los datos para entrenar sus
+- **Activada la capa paga (prepago, 26 nov 2026).** Úsela siempre, no la gratuita: en la gratuita Google puede usar los datos para entrenar sus
   modelos, y aquí hay documentos de terceros.
 - **Recomendado:** Google Cloud → *Billing → Budgets & alerts*, presupuesto mensual (p. ej. US$15 ≈ $49.500) con
   alertas.
@@ -139,6 +139,17 @@ al mes por conjunto.**
 - Los dominios `.app` exigen HTTPS. Ya está así.
 
 ---
+
+## Controles de gasto configurados (26 nov 2026)
+
+| Servicio | Aviso | Tope | Qué pasa al llegar al tope |
+|---|---|---|---|
+| Railway | Correo a US$25 (≈ $82.500) | US$75 (≈ $247.500) | **Se apagan todos los servicios** (la app se cae). Se reactiva subiendo el tope en railway.com/workspace/usage |
+| Neon | Correo a US$25 (spending notifications) | Autoscaling de 0,25 a 1 CU, con scale to zero | Nunca se apaga: solo limita la capacidad (peor caso ~US$77/mes) |
+| Gemini | — | **Prepago**: US$10 cargados, sin recarga automática | Se detienen el buscador con IA y el análisis de documentos hasta recargar; el resto de la app sigue |
+
+Con prepago, Google no usa los datos para entrenar (capa paga). Revise el saldo cada mes en AI Studio → Billing; cuando
+conozca el gasto mensual, puede activar la recarga automática con un monto pequeño.
 
 ## 3. Qué hace subir la factura
 
@@ -272,7 +283,8 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 | Cuándo | Qué |
 |---|---|
 | Antes de invitar residentes | Pasar Resend a Pro (US$20 ≈ $66.000 al mes) |
-| Ya | Límites de gasto en Railway, Neon y Google Cloud; renovación automática del dominio |
+| Hecho (26 nov) | Límites de gasto en Railway, Neon y Gemini (prepago) |
+| Ya | Renovación automática del dominio |
 | Ya | Copia de `.env` en un gestor de contraseñas; monitor de disponibilidad |
 | Antes de usar la app con datos reales | Revisión de `/privacidad` por un abogado y contrato de encargo con cada copropiedad |
 | Antes del 1 ene 2027 | Decidir el modelo de extracción (`EXTRACTION_MODEL`): su precio se duplica ese día |
