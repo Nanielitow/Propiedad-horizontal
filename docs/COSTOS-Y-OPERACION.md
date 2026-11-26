@@ -265,9 +265,11 @@ Si un usuario ve «Demasiados intentos», se libera solo al pasar la ventana.
 
 - **Ley 1581 de 2012 (datos personales):**
   - Cada copropiedad es la **responsable** de los datos y usted (PH Gestión) es el **encargado**.
-  - La política está en `/privacidad` y se acepta al activar la cuenta. **Pida a un abogado que la revise** y
-    agregue un correo de contacto real, en la variable `NEXT_PUBLIC_CONTACT_EMAIL` del servicio `web`.
-  - Firme con cada copropiedad un **contrato de transmisión de datos** (encargo), que exige la ley.
+  - La política (versión 26 nov 2026, con identificación del encargado y contacto) está en `/privacidad`. Se acepta al
+    activar la cuenta y, si cambia de fondo, al entrar (se sube `POLITICA_VERSION` en la API y en `apps/web/src/lib/politica.ts`).
+  - **Borradores para el abogado** en `docs/legal/` (Word): contrato de transmisión de datos (encargo, que exige la
+    ley), contrato de prestación de servicios y una nota con las preguntas concretas a validar. Firme ambos contratos
+    con cada copropiedad.
   - Los datos se guardan fuera de Colombia (EE. UU.). La política lo informa, pero confirme con el abogado los
     requisitos de transferencia internacional.
   - El **Registro Nacional de Bases de Datos (RNBD)** de la SIC solo es obligatorio para empresas por encima de
